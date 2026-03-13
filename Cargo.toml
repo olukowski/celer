@@ -6,3 +6,9 @@ license = "MIT OR Apache-2.0"
 description = "A framework for building fast software"
 repository = "https://github.com/olukowski/celer"
 readme = "README.md"
+
+[workspace]
+members = ["system/linux/syscalls"]
+
+[workspace.dependencies]
+libc = "0.2.183"
