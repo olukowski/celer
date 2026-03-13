@@ -7,9 +7,12 @@ description = "Linux syscalls for Celer"
 repository = "https://github.com/olukowski/celer"
 readme = "README.md"
 
-[dev-dependencies]
+[dependencies]
 libc.workspace = true
 
 [[example]]
 name = "hello"
 test = false
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
