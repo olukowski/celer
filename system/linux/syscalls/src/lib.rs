@@ -1,4 +1,5 @@
 #![cfg_attr(not(test), no_std)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(target_arch = "aarch64")]
 mod aarch64;
@@ -14,95 +15,283 @@ pub mod arch {
     pub use super::x86_64::*;
 }
 
-#[cfg(all(test, not(miri)))]
+use libc::{c_char, c_int, c_void, mode_t, off_t, pid_t, size_t, ssize_t};
+
+#[cfg(not(miri))]
+use arch::{
+    Sysno, syscall0, syscall1, syscall2, syscall3, syscall4, syscall5, syscall6,
+};
+
+/// <https://man7.org/linux/man-pages/man2/getpid.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn getpid() -> pid_t {
+    // SAFETY: getpid is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall0(Sysno::Getpid) } as _;
+
+    // SAFETY: getpid is safe to call.
+    #[cfg(miri)]
+    unsafe {
+        libc::getpid()
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/close.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn close(fd: c_int) -> c_int {
+    // SAFETY: close is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Close, fd as _) } as _;
+
+    // SAFETY: close is safe to call.
+    #[cfg(miri)]
+    unsafe {
+        libc::close(fd)
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/exit.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub fn exit(status: c_int) -> ! {
+    #[cfg(not(miri))]
+    {
+        use core::hint::unreachable_unchecked;
+
+        // SAFETY: exit is safe to call.
+        unsafe { syscall1(Sysno::Exit, status as _) };
+        // SAFETY: exit never returns.
+        unsafe { unreachable_unchecked() }
+    }
+
+    // SAFETY: exit is safe to call.
+    #[cfg(miri)]
+    unsafe {
+        libc::exit(status)
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/kill.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn kill(pid: pid_t, sig: c_int) -> c_int {
+    // SAFETY: kill is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Kill, pid as _, sig as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = pid;
+        _ = sig;
+        0
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/write.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `buf` must be readable for at least `count` bytes (see [`core::ptr::read`]).
+pub unsafe fn write(fd: c_int, buf: *const c_void, count: size_t) -> ssize_t {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall3(Sysno::Write, fd as _, buf as _, count as _) }
+        as _;
+
+    // SAFETY: guaranteed by caller.
+    #[cfg(miri)]
+    unsafe {
+        libc::write(fd, buf, count)
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/openat.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+pub unsafe fn openat(
+    dirfd: c_int,
+    path: *const c_char,
+    flags: c_int,
+    mode: mode_t,
+) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe {
+        syscall4(Sysno::Openat, dirfd as _, path as _, flags as _, mode as _)
+    } as _;
+
+    #[cfg(miri)]
+    {
+        _ = dirfd;
+        _ = path;
+        _ = flags;
+        _ = mode;
+        -1
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/mremap.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - If `flags` contains [`libc::MREMAP_FIXED`], the range
+///   `[new_address, new_address + new_size)` must not overlap any existing
+///   mapping that should be preserved; the kernel will silently clobber it,
+///   invalidating any pointers or references into that region.
+/// - After a successful call where the mapping was moved, any pointers or
+///   references into the old range `[old_address, old_address + old_size)`
+///   are invalidated and must not be used.
+pub unsafe fn mremap(
+    old_address: *mut c_void,
+    old_size: usize,
+    new_size: usize,
+    flags: c_int,
+    new_address: *mut c_void,
+) -> *mut c_void {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe {
+        syscall5(
+            Sysno::Mremap,
+            old_address as _,
+            old_size as _,
+            new_size as _,
+            flags as _,
+            new_address as _,
+        )
+    } as _;
+
+    // SAFETY: guaranteed by caller.
+    #[cfg(miri)]
+    unsafe {
+        libc::mremap(old_address, old_size, new_size, flags, new_address)
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/mmap.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)` must
+///   not overlap any existing mapping that should be preserved; the kernel
+///   will silently clobber it, invalidating any pointers or references into
+///   that region.
+pub unsafe fn mmap(
+    addr: *mut c_void,
+    length: usize,
+    prot: c_int,
+    flags: c_int,
+    fd: c_int,
+    offset: off_t,
+) -> *mut c_void {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe {
+        syscall6(
+            Sysno::Mmap,
+            addr as _,
+            length as _,
+            prot as _,
+            flags as _,
+            fd as _,
+            offset as _,
+        )
+    } as _;
+
+    // SAFETY: guaranteed by caller.
+    #[cfg(miri)]
+    unsafe {
+        libc::mmap(addr, length, prot, flags, fd, offset)
+    }
+}
+
+#[cfg(test)]
 mod tests {
-    use super::arch::{
-        Sysno, syscall0, syscall1, syscall2, syscall3, syscall4, syscall5,
-        syscall6,
-    };
+    use core::ptr;
+
+    use super::{close, getpid, kill, mmap, mremap, openat, write};
 
     #[test]
-    fn test_syscall0() {
-        // SAFETY: `Sysno::Getpid` is always safe.
-        let pid = unsafe { syscall0(Sysno::Getpid) };
-
-        assert!(pid > 0);
+    fn test_getpid() {
+        assert!(getpid() > 0);
     }
 
     #[test]
-    fn test_syscall1() {
-        // SAFETY: `Sysno::Close` with `-1` is always safe.
-        let ret = unsafe { syscall1(Sysno::Close, usize::MAX) };
+    fn test_close() {
+        let ret = close(-1);
 
         assert!(ret < 0);
     }
 
     #[test]
-    fn test_syscall2() {
-        // SAFETY: `Sysno::Getpid` is always safe.
-        let pid = unsafe { syscall0(Sysno::Getpid) };
+    fn test_kill() {
+        let pid = getpid();
 
-        // SAFETY: `Sysno::Kill` with `pid` and `0` is always safe.
-        let ret = unsafe { syscall2(Sysno::Kill, pid as usize, 0) };
+        let ret = kill(pid, 0);
 
         assert_eq!(ret, 0);
     }
 
     #[test]
-    fn test_syscall3() {
+    fn test_write() {
         let msg = b"test\n";
 
-        // SAFETY: `Sysno::Write` with `1` (stdout), `msg.as_ptr().addr()`,
-        // and `msg.len()` is safe.
-        let ret = unsafe {
-            syscall3(Sysno::Write, 1, msg.as_ptr().addr(), msg.len())
-        };
+        // SAFETY: `buf.as_ptr()` is readable for `msg.len()` bytes.
+        let ret = unsafe { write(1, msg.as_ptr().cast(), msg.len()) };
 
-        assert_eq!(ret as usize, msg.len());
+        assert!(ret >= 0 && ret as usize <= msg.len());
     }
 
     #[test]
-    fn test_syscall4() {
-        // SAFETY: `Sysno::Openat` with `AT_FDCWD`, `""`, `O_RDONLY`,
-        // and `0` is safe, but will fail due to empty path.
-        let ret = unsafe {
-            syscall4(
-                Sysno::Openat,
-                libc::AT_FDCWD as usize,
-                c"".as_ptr().addr(),
-                libc::O_RDONLY as usize,
-                0,
-            )
-        };
+    fn test_openat() {
+        // SAFETY: the provided path pointer is readable until the null terminator.
+        let ret =
+            unsafe { openat(libc::AT_FDCWD, c"".as_ptr(), libc::O_RDONLY, 0) };
 
         assert!(ret < 0);
     }
 
     #[test]
-    fn test_syscall5() {
-        // SAFETY: `Sysno::Mremap` with `1`, `1`, `1`, `0`, and `0` is safe.
-        let ret = unsafe { syscall5(Sysno::Mremap, 1, 1, 1, 0, 0) };
+    fn test_mremap() {
+        // SAFETY: we are not using `libc::MREMAP_FIXED`, and this won't
+        // succeed so nothing will be invalidated.
+        let ret = unsafe { mremap(ptr::null_mut(), 1, 1, 0, ptr::null_mut()) };
 
-        assert!(ret < 0);
+        assert!((ret.addr() as isize) < 0);
     }
 
     #[test]
-    fn test_syscall6() {
-        // SAFETY: `Sysno::Mmap` with `0`, `4096`, `libc::PROT_READ`,
-        // `libc::MAP_PRIVATE | libc::MAP_ANONYMOUS`, `usize::MAX`,
-        // and `0` is safe.
-        let addr = unsafe {
-            syscall6(
-                Sysno::Mmap,
-                0,
+    fn test_mmap() {
+        // SAFETY: we are not using `libc::MAP_FIXED`.
+        let ret = unsafe {
+            mmap(
+                ptr::null_mut(),
                 4096,
-                libc::PROT_READ as usize,
-                (libc::MAP_PRIVATE | libc::MAP_ANONYMOUS) as usize,
-                usize::MAX,
+                libc::PROT_READ | libc::PROT_WRITE,
+                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+                -1,
                 0,
             )
         };
 
-        assert!(addr > 0);
+        assert!((ret.addr() as isize) > 0);
     }
 }
