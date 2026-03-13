@@ -1,0 +1,8 @@
+[package]
+name = "celer"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A framework for building fast software"
+repository = "https://github.com/olukowski/celer"
+readme = "README.md"

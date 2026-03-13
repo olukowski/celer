@@ -1,0 +1,25 @@
+coverage:
+  precision: 2
+  round: down
+
+  status:
+    project:
+      default:
+        target: 100%
+        threshold: 0%
+        if_not_found: failure
+        if_ci_failed: error
+        informational: false
+
+    patch:
+      default:
+        target: 100%
+        threshold: 0%
+        if_not_found: failure
+        if_ci_failed: error
+        informational: false
+
+comment:
+  layout: "header, diff, files, tree"
+  behavior: default
+  require_changes: true
