@@ -161,8 +161,8 @@ pub unsafe fn openat(
 ///   are invalidated and must not be used.
 pub unsafe fn mremap(
     old_address: *mut c_void,
-    old_size: usize,
-    new_size: usize,
+    old_size: size_t,
+    new_size: size_t,
     flags: c_int,
     new_address: *mut c_void,
 ) -> *mut c_void {
@@ -198,7 +198,7 @@ pub unsafe fn mremap(
 ///   that region.
 pub unsafe fn mmap(
     addr: *mut c_void,
-    length: usize,
+    length: size_t,
     prot: c_int,
     flags: c_int,
     fd: c_int,
