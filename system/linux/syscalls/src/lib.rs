@@ -360,6 +360,24 @@ pub unsafe fn delete_module(name: *const c_char, flags: c_int) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn fchmod(fd: c_int, mode: mode_t) -> c_int {
+    // SAFETY: fchmod is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Fchmod, fd as _, mode as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = fd;
+        _ = mode;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/dup2.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -652,7 +670,7 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            fchdir, kill, openat,
+            fchdir, fchmod, kill, openat,
         },
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, timex},
@@ -798,6 +816,14 @@ mod tests {
     #[cfg(not(target_arch = "aarch64"))]
     fn test_dup2() {
         let ret = dup2(-1, -1);
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_fchmod() {
+        let ret = fchmod(-1, 0);
 
         assert!(ret < 0);
     }

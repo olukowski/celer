@@ -41,6 +41,8 @@ pub enum Sysno {
     Creat = 85,
     /// <https://man7.org/linux/man-pages/man2/chmod.2.html>
     Chmod = 90,
+    /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
+    Fchmod = 91,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
     Adjtimex = 159,
     /// <https://man7.org/linux/man-pages/man2/chroot.2.html>

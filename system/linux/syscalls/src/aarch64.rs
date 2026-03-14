@@ -13,6 +13,8 @@ pub enum Sysno {
     Fchdir = 50,
     /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
     Chroot = 51,
+    /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
+    Fchmod = 52,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 56,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
