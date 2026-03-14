@@ -7,12 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.2](https://github.com/olukowski/celer/compare/celer-v0.1.1...celer-v0.1.2) - 2026-03-14
+## [0.1.1](https://github.com/olukowski/celer/compare/celer_system_linux_syscalls-v0.1.0...celer_system_linux_syscalls-v0.1.1) - 2026-03-14
 
 ### Added
 
 - create very thin wrappers for syscalls
-- *(system)* add linux syscalls crate
 
 ### Fixed
 
@@ -23,11 +22,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *(syscalls)* use strict provenance APIs
 - *(coverage)* use coveralls and branch coverage
 - *(miri)* return -ENOSYS for unsupported syscalls and skip
-- *(codecov)* use files instead of file
-- *(coverage)* run coverage with nightly toolchain
-
-## [0.1.1](https://github.com/olukowski/celer/compare/v0.1.0...v0.1.1) - 2026-03-13
-
-### Other
-
-- initial commit
