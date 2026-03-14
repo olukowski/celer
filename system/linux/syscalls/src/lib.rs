@@ -15,7 +15,12 @@ pub mod arch {
     pub use super::x86_64::*;
 }
 
-use libc::{c_char, c_int, c_void, mode_t, off_t, pid_t, size_t, ssize_t};
+use libc::{
+    c_char, c_int, c_void, mode_t, off_t, pid_t, size_t, ssize_t, timex,
+};
+
+#[cfg(not(target_arch = "aarch64"))]
+use libc::c_uint;
 
 #[cfg(not(miri))]
 use arch::{
@@ -35,6 +40,90 @@ pub fn getpid() -> pid_t {
     #[cfg(miri)]
     unsafe {
         libc::getpid()
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/acct.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]),
+///   or [`core::ptr::null()`] to disable accounting.
+pub unsafe fn acct(path: *const c_char) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Acct, path as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `buf` must be a valid pointer to a [`timex`] struct,
+///   that must be readable/writable until the syscall completes
+///   (see [`core::ptr::read`] and [`core::ptr::write`] for details).
+pub unsafe fn adjtimex(buf: *mut timex) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Adjtimex, buf as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = buf;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/alarm.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+#[cfg(not(target_arch = "aarch64"))]
+pub fn alarm(seconds: c_uint) -> c_uint {
+    // SAFETY: alarm is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Alarm, seconds as _) } as _;
+
+    // Syscall not supported by Miri
+    #[cfg(miri)]
+    {
+        _ = seconds;
+        0
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/brk.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// On success, any pointers or references to memory with an address greater
+/// than or equal to `addr` are no longer valid.
+pub unsafe fn brk(addr: *mut c_void) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Brk, addr.addr()) } as _;
+
+    // SAFETY: guaranteed by caller.
+    #[cfg(miri)]
+    {
+        _ = addr;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
     }
 }
 
@@ -74,6 +163,29 @@ pub fn exit(status: c_int) -> ! {
     #[cfg(miri)]
     unsafe {
         libc::exit(status)
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/access.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+#[cfg(not(target_arch = "aarch64"))]
+pub unsafe fn access(path: *const c_char, mode: c_int) -> c_int {
+    // SAFETY: access is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Access, path as _, mode as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        _ = mode;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
     }
 }
 
@@ -237,8 +349,15 @@ mod tests {
 
     use super::{close, getpid, mmap, mremap, write};
 
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
+    use super::{access, alarm};
+
     #[cfg(not(miri))]
-    use super::{kill, openat};
+    use {
+        super::{acct, adjtimex, brk, kill, openat},
+        core::mem::MaybeUninit,
+        libc::timex,
+    };
 
     #[test]
     fn test_getpid() {
@@ -246,8 +365,54 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
+    fn test_acct() {
+        // will fail due to lack of permission
+        let ret = unsafe { acct(ptr::null()) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_adjtimex() {
+        let mut tx: MaybeUninit<timex> = MaybeUninit::zeroed();
+
+        // SAFETY: we are passing a valid pointer to a `timex` struct.
+        let ret = unsafe { adjtimex((&raw mut tx).cast()) };
+
+        assert!(ret >= 0);
+    }
+
+    #[test]
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
+    fn test_alarm() {
+        _ = alarm(0); // cancel any pending alarm
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_brk() {
+        // SAFETY: we are passing a obviously invalid pointer to `brk`, which
+        // should return the current program break instead of changing it.
+        let ret = unsafe { brk(ptr::null_mut()) };
+
+        assert!(ret >= 0);
+    }
+
+    #[test]
     fn test_close() {
         let ret = close(-1);
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
+    fn test_access() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { access(c"".as_ptr(), 0) };
 
         assert!(ret < 0);
     }

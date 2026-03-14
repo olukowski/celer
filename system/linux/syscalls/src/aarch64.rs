@@ -11,12 +11,18 @@ pub enum Sysno {
     Close = 57,
     /// <https://man7.org/linux/man-pages/man2/write.2.html>
     Write = 64,
+    /// <https://man7.org/linux/man-pages/man2/acct.2.html>
+    Acct = 89,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
     Exit = 93,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
     Kill = 129,
+    /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
+    Adjtimex = 171,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 172,
+    /// <https://man7.org/linux/man-pages/man2/brk.2.html>
+    Brk = 214,
     /// <https://man7.org/linux/man-pages/man2/mremap.2.html>
     Mremap = 216,
     /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
