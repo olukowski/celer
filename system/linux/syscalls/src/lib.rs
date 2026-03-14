@@ -111,7 +111,6 @@ pub fn alarm(seconds: c_uint) -> c_uint {
 /// <https://man7.org/linux/man-pages/man2/brk.2.html>
 ///
 /// Returns the raw kernel return value.
-/// Negative values in `[-4095, -1]` represent `errno`.
 ///
 /// # Safety
 /// On success, any pointers or references to memory with an address greater
