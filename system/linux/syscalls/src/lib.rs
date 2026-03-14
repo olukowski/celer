@@ -569,7 +569,7 @@ pub unsafe fn mmap(
 mod tests {
     use core::ptr;
 
-    use super::{close, getpid, mmap, mremap, write};
+    use super::{close, dup, getpid, mmap, mremap, write};
 
     #[cfg(not(any(miri, target_arch = "aarch64")))]
     use super::{access, alarm, chmod, creat, create_module};
@@ -577,8 +577,8 @@ mod tests {
     #[cfg(not(miri))]
     use {
         super::{
-            acct, adjtimex, brk, chdir, chroot, clone, delete_module, dup,
-            kill, openat,
+            acct, adjtimex, brk, chdir, chroot, clone, delete_module, kill,
+            openat,
         },
         core::mem::MaybeUninit,
         libc::{c_ulong, timex},
@@ -653,7 +653,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))]
     fn test_dup() {
         let ret = dup(-1);
 
