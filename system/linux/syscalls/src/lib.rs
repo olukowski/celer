@@ -188,6 +188,22 @@ pub fn close(fd: c_int) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/dup.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn dup(oldfd: c_int) -> c_int {
+    // SAFETY: dup is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Dup, oldfd as _) } as _;
+
+    // SAFETY: dup is safe to call.
+    #[cfg(miri)]
+    unsafe {
+        libc::dup(oldfd)
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/exit.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -561,8 +577,8 @@ mod tests {
     #[cfg(not(miri))]
     use {
         super::{
-            acct, adjtimex, brk, chdir, chroot, clone, delete_module, kill,
-            openat,
+            acct, adjtimex, brk, chdir, chroot, clone, delete_module, dup,
+            kill, openat,
         },
         core::mem::MaybeUninit,
         libc::{c_ulong, timex},
@@ -632,6 +648,14 @@ mod tests {
     #[test]
     fn test_close() {
         let ret = close(-1);
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_dup() {
+        let ret = dup(-1);
 
         assert!(ret < 0);
     }

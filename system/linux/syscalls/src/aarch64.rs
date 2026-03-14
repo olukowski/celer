@@ -5,6 +5,8 @@ use core::arch::asm;
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Sysno {
+    /// <https://man7.org/linux/man-pages/man2/dup.2.html>
+    Dup = 23,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 49,
     /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
