@@ -90,7 +90,8 @@ pub fn kill(pid: pid_t, sig: c_int) -> c_int {
     {
         _ = pid;
         _ = sig;
-        0
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
     }
 }
 
@@ -140,7 +141,8 @@ pub unsafe fn openat(
         _ = path;
         _ = flags;
         _ = mode;
-        -1
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
     }
 }
 
@@ -227,7 +229,10 @@ pub unsafe fn mmap(
 mod tests {
     use core::ptr;
 
-    use super::{close, getpid, kill, mmap, mremap, openat, write};
+    use super::{close, getpid, mmap, mremap, write};
+
+    #[cfg(not(miri))]
+    use super::{kill, openat};
 
     #[test]
     fn test_getpid() {
@@ -242,6 +247,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn test_kill() {
         let pid = getpid();
 
@@ -261,6 +267,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn test_openat() {
         // SAFETY: the provided path pointer is readable until the null terminator.
         let ret =
