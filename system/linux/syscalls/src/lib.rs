@@ -105,7 +105,7 @@ pub fn kill(pid: pid_t, sig: c_int) -> c_int {
 pub unsafe fn write(fd: c_int, buf: *const c_void, count: size_t) -> ssize_t {
     // SAFETY: guaranteed by caller.
     #[cfg(not(miri))]
-    return unsafe { syscall3(Sysno::Write, fd as _, buf as _, count as _) }
+    return unsafe { syscall3(Sysno::Write, fd as _, buf.addr(), count as _) }
         as _;
 
     // SAFETY: guaranteed by caller.
@@ -132,7 +132,13 @@ pub unsafe fn openat(
     // SAFETY: guaranteed by caller.
     #[cfg(not(miri))]
     return unsafe {
-        syscall4(Sysno::Openat, dirfd as _, path as _, flags as _, mode as _)
+        syscall4(
+            Sysno::Openat,
+            dirfd as _,
+            path.addr(),
+            flags as _,
+            mode as _,
+        )
     } as _;
 
     #[cfg(miri)]
@@ -171,11 +177,11 @@ pub unsafe fn mremap(
     return unsafe {
         syscall5(
             Sysno::Mremap,
-            old_address as _,
+            old_address.addr(),
             old_size as _,
             new_size as _,
             flags as _,
-            new_address as _,
+            new_address.addr(),
         )
     } as _;
 
@@ -209,7 +215,7 @@ pub unsafe fn mmap(
     return unsafe {
         syscall6(
             Sysno::Mmap,
-            addr as _,
+            addr.addr(),
             length as _,
             prot as _,
             flags as _,
