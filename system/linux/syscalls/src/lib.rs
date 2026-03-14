@@ -378,6 +378,43 @@ pub fn kill(pid: pid_t, sig: c_int) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/execve.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+/// On success, this function does not return (the process image is replaced).
+///
+/// # Safety
+/// - `path` must be a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+/// - `argv` must be a pointer to an array of pointers to null-terminated
+///   strings, terminated by a null pointer. Each string must be readable
+///   until the null terminator.
+/// - `envp` must be a pointer to an array of pointers to null-terminated
+///   strings (or [`core::ptr::null()`] for an empty environment), terminated
+///   by a null pointer. Each string must be readable until the null
+///   terminator.
+pub unsafe fn execve(
+    path: *const c_char,
+    argv: *const *const c_char,
+    envp: *const *const c_char,
+) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe {
+        syscall3(Sysno::Execve, path.addr(), argv.addr(), envp.addr())
+    } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        _ = argv;
+        _ = envp;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/write.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -597,11 +634,11 @@ mod tests {
     #[cfg(not(miri))]
     use {
         super::{
-            acct, adjtimex, brk, chdir, chroot, clone, delete_module, kill,
-            openat,
+            acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
+            kill, openat,
         },
         core::mem::MaybeUninit,
-        libc::{c_ulong, timex},
+        libc::{c_char, c_ulong, timex},
     };
 
     #[test]
@@ -729,6 +766,19 @@ mod tests {
         let ret = unsafe { delete_module(c"".as_ptr(), 0) };
 
         // will fail due to lack of permission and invalid module name
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_execve() {
+        // SAFETY: the pointers we are passing point to valid null-terminated
+        // strings/arrays, and execve will fail due to invalid path.
+        let argv = [ptr::null::<c_char>()];
+        let envp = [ptr::null::<c_char>()];
+        let ret = unsafe { execve(c"".as_ptr(), argv.as_ptr(), envp.as_ptr()) };
+
+        // execve will fail with an empty path
         assert!(ret < 0);
     }
 

@@ -27,6 +27,8 @@ pub enum Sysno {
     Getpid = 39,
     /// <https://man7.org/linux/man-pages/man2/clone.2.html>
     Clone = 56,
+    /// <https://man7.org/linux/man-pages/man2/execve.2.html>
+    Execve = 59,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
     Exit = 60,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>

@@ -35,6 +35,8 @@ pub enum Sysno {
     Mremap = 216,
     /// <https://man7.org/linux/man-pages/man2/clone.2.html>
     Clone = 220,
+    /// <https://man7.org/linux/man-pages/man2/execve.2.html>
+    Execve = 221,
     /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
     Mmap = 222,
 }
