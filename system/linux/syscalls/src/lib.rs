@@ -304,6 +304,29 @@ pub unsafe fn create_module(name: *const c_char, size: size_t) -> c_long {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/delete_module.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `name` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+pub unsafe fn delete_module(name: *const c_char, flags: c_int) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::DeleteModule, name.addr(), flags as _) }
+        as _;
+
+    #[cfg(miri)]
+    {
+        _ = name;
+        _ = flags;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/kill.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -537,7 +560,10 @@ mod tests {
 
     #[cfg(not(miri))]
     use {
-        super::{acct, adjtimex, brk, chdir, chroot, clone, kill, openat},
+        super::{
+            acct, adjtimex, brk, chdir, chroot, clone, delete_module, kill,
+            openat,
+        },
         core::mem::MaybeUninit,
         libc::{c_ulong, timex},
     };
@@ -649,6 +675,17 @@ mod tests {
 
         // will most likely be -ENOSYS since the syscall was removed in
         // Linux 2.6.
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_delete_module() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { delete_module(c"".as_ptr(), 0) };
+
+        // will fail due to lack of permission and invalid module name
         assert!(ret < 0);
     }
 

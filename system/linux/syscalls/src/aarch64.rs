@@ -19,6 +19,8 @@ pub enum Sysno {
     Acct = 89,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
     Exit = 93,
+    /// <https://man7.org/linux/man-pages/man2/delete_module.2.html>
+    DeleteModule = 106,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
     Kill = 129,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>

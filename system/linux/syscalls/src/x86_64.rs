@@ -41,6 +41,8 @@ pub enum Sysno {
     Acct = 163,
     /// <https://man7.org/linux/man-pages/man2/create_module.2.html>
     CreateModule = 174,
+    /// <https://man7.org/linux/man-pages/man2/delete_module.2.html>
+    DeleteModule = 176,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 257,
 }
