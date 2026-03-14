@@ -227,6 +227,23 @@ pub fn exit(status: c_int) -> ! {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn fchdir(fd: c_int) -> c_int {
+    // SAFETY: fchdir is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Fchdir, fd as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = fd;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/access.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -635,7 +652,7 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            kill, openat,
+            fchdir, kill, openat,
         },
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, timex},
@@ -717,6 +734,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
+    fn test_fchdir() {
+        let ret = fchdir(-1);
+
+        assert!(ret < 0);
+    }
+
+    #[test]
     #[cfg(not(any(miri, target_arch = "aarch64")))]
     fn test_access() {
         // SAFETY: the pointer we are passing is readable until the null
@@ -770,19 +795,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))]
-    fn test_execve() {
-        // SAFETY: the pointers we are passing point to valid null-terminated
-        // strings/arrays, and execve will fail due to invalid path.
-        let argv = [ptr::null::<c_char>()];
-        let envp = [ptr::null::<c_char>()];
-        let ret = unsafe { execve(c"".as_ptr(), argv.as_ptr(), envp.as_ptr()) };
-
-        // execve will fail with an empty path
-        assert!(ret < 0);
-    }
-
-    #[test]
     #[cfg(not(target_arch = "aarch64"))]
     fn test_dup2() {
         let ret = dup2(-1, -1);
@@ -798,6 +810,19 @@ mod tests {
         let ret = kill(pid, 0);
 
         assert_eq!(ret, 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_execve() {
+        // SAFETY: the pointers we are passing point to valid null-terminated
+        // strings/arrays, and execve will fail due to invalid path.
+        let argv = [ptr::null::<c_char>()];
+        let envp = [ptr::null::<c_char>()];
+        let ret = unsafe { execve(c"".as_ptr(), argv.as_ptr(), envp.as_ptr()) };
+
+        // execve will fail with an empty path
+        assert!(ret < 0);
     }
 
     #[test]

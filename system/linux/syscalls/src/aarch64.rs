@@ -9,6 +9,8 @@ pub enum Sysno {
     Dup = 23,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 49,
+    /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
+    Fchdir = 50,
     /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
     Chroot = 51,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>

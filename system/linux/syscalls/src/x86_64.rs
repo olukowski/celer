@@ -35,6 +35,8 @@ pub enum Sysno {
     Kill = 62,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 80,
+    /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
+    Fchdir = 81,
     /// <https://man7.org/linux/man-pages/man2/creat.2.html>
     Creat = 85,
     /// <https://man7.org/linux/man-pages/man2/chmod.2.html>
