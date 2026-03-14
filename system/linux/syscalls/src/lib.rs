@@ -27,6 +27,9 @@ use arch::{
     Sysno, syscall0, syscall1, syscall2, syscall3, syscall4, syscall5, syscall6,
 };
 
+#[cfg(miri)]
+use core::ptr;
+
 /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -113,17 +116,16 @@ pub fn alarm(seconds: c_uint) -> c_uint {
 /// # Safety
 /// On success, any pointers or references to memory with an address greater
 /// than or equal to `addr` are no longer valid.
-pub unsafe fn brk(addr: *mut c_void) -> c_int {
+pub unsafe fn brk(addr: *mut c_void) -> *mut c_void {
     // SAFETY: guaranteed by caller.
     #[cfg(not(miri))]
     return unsafe { syscall1(Sysno::Brk, addr.addr()) } as _;
 
-    // SAFETY: guaranteed by caller.
     #[cfg(miri)]
     {
         _ = addr;
         // Syscall not supported by Miri
-        -libc::ENOSYS as c_int
+        ptr::null_mut()
     }
 }
 
@@ -395,9 +397,7 @@ mod tests {
     fn test_brk() {
         // SAFETY: we are passing a obviously invalid pointer to `brk`, which
         // should return the current program break instead of changing it.
-        let ret = unsafe { brk(ptr::null_mut()) };
-
-        assert!(ret >= 0);
+        _ = unsafe { brk(ptr::null_mut()) };
     }
 
     #[test]
