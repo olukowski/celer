@@ -19,6 +19,8 @@ pub enum Sysno {
     Mremap = 25,
     /// <https://man7.org/linux/man-pages/man2/dup.2.html>
     Dup = 32,
+    /// <https://man7.org/linux/man-pages/man2/dup2.2.html>
+    Dup2 = 33,
     /// <https://man7.org/linux/man-pages/man2/alarm.2.html>
     Alarm = 37,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>

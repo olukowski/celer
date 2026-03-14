@@ -343,6 +343,23 @@ pub unsafe fn delete_module(name: *const c_char, flags: c_int) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/dup2.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+#[cfg(not(target_arch = "aarch64"))]
+pub fn dup2(oldfd: c_int, newfd: c_int) -> c_int {
+    // SAFETY: dup2 is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Dup2, oldfd as _, newfd as _) } as _;
+
+    // SAFETY: dup2 is safe to call.
+    #[cfg(miri)]
+    unsafe {
+        libc::dup2(oldfd, newfd)
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/kill.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -571,6 +588,9 @@ mod tests {
 
     use super::{close, dup, getpid, mmap, mremap, write};
 
+    #[cfg(not(target_arch = "aarch64"))]
+    use super::dup2;
+
     #[cfg(not(any(miri, target_arch = "aarch64")))]
     use super::{access, alarm, chmod, creat, create_module};
 
@@ -709,6 +729,14 @@ mod tests {
         let ret = unsafe { delete_module(c"".as_ptr(), 0) };
 
         // will fail due to lack of permission and invalid module name
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "aarch64"))]
+    fn test_dup2() {
+        let ret = dup2(-1, -1);
+
         assert!(ret < 0);
     }
 
