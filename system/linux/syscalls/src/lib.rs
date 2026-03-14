@@ -263,7 +263,8 @@ mod tests {
         // SAFETY: `buf.as_ptr()` is readable for `msg.len()` bytes.
         let ret = unsafe { write(1, msg.as_ptr().cast(), msg.len()) };
 
-        assert!(ret >= 0 && ret as usize <= msg.len());
+        assert!(ret >= 0);
+        assert!(ret as usize <= msg.len());
     }
 
     #[test]

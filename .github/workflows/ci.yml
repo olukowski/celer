@@ -62,14 +62,13 @@ jobs:
       - uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Run coverage
-        run: cargo +nightly llvm-cov nextest --all-features --workspace --lib --tests --codecov --output-path codecov.json --no-tests pass
+        run: cargo +nightly llvm-cov nextest --branch --all-features --workspace --lib --tests --lcov --output-path lcov.info --no-tests pass
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+      - name: Upload coverage
+        uses: coverallsapp/github-action@v2
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: codecov.json
-          fail_ci_if_error: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: lcov.info
 
   miri:
     name: Miri
