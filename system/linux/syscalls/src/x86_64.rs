@@ -21,14 +21,26 @@ pub enum Sysno {
     Alarm = 37,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 39,
+    /// <https://man7.org/linux/man-pages/man2/clone.2.html>
+    Clone = 56,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
     Exit = 60,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
     Kill = 62,
+    /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
+    Chdir = 80,
+    /// <https://man7.org/linux/man-pages/man2/creat.2.html>
+    Creat = 85,
+    /// <https://man7.org/linux/man-pages/man2/chmod.2.html>
+    Chmod = 90,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
     Adjtimex = 159,
+    /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
+    Chroot = 161,
     /// <https://man7.org/linux/man-pages/man2/acct.2.html>
     Acct = 163,
+    /// <https://man7.org/linux/man-pages/man2/create_module.2.html>
+    CreateModule = 174,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 257,
 }

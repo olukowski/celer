@@ -5,6 +5,10 @@ use core::arch::asm;
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Sysno {
+    /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
+    Chdir = 49,
+    /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
+    Chroot = 51,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 56,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
@@ -25,6 +29,8 @@ pub enum Sysno {
     Brk = 214,
     /// <https://man7.org/linux/man-pages/man2/mremap.2.html>
     Mremap = 216,
+    /// <https://man7.org/linux/man-pages/man2/clone.2.html>
+    Clone = 220,
     /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
     Mmap = 222,
 }

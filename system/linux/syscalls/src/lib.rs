@@ -16,7 +16,8 @@ pub mod arch {
 }
 
 use libc::{
-    c_char, c_int, c_void, mode_t, off_t, pid_t, size_t, ssize_t, timex,
+    c_char, c_int, c_long, c_ulong, c_void, mode_t, off_t, pid_t, size_t,
+    ssize_t, timex,
 };
 
 #[cfg(not(target_arch = "aarch64"))]
@@ -58,7 +59,7 @@ pub fn getpid() -> pid_t {
 pub unsafe fn acct(path: *const c_char) -> c_int {
     // SAFETY: guaranteed by caller.
     #[cfg(not(miri))]
-    return unsafe { syscall1(Sysno::Acct, path as _) } as _;
+    return unsafe { syscall1(Sysno::Acct, path.addr()) } as _;
 
     #[cfg(miri)]
     {
@@ -80,7 +81,7 @@ pub unsafe fn acct(path: *const c_char) -> c_int {
 pub unsafe fn adjtimex(buf: *mut timex) -> c_int {
     // SAFETY: guaranteed by caller.
     #[cfg(not(miri))]
-    return unsafe { syscall1(Sysno::Adjtimex, buf as _) } as _;
+    return unsafe { syscall1(Sysno::Adjtimex, buf.addr()) } as _;
 
     #[cfg(miri)]
     {
@@ -114,7 +115,8 @@ pub fn alarm(seconds: c_uint) -> c_uint {
 ///
 /// # Safety
 /// On success, any pointers or references to memory with an address greater
-/// than or equal to `addr` are no longer valid.
+/// than or equal to `addr` are no longer valid if `addr` is less than the
+/// current program break value.
 pub unsafe fn brk(addr: *mut c_void) -> *mut c_void {
     // SAFETY: guaranteed by caller.
     #[cfg(not(miri))]
@@ -125,6 +127,48 @@ pub unsafe fn brk(addr: *mut c_void) -> *mut c_void {
         _ = addr;
         // Syscall not supported by Miri
         ptr::null_mut()
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/chdir.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+pub unsafe fn chdir(path: *const c_char) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Chdir, path.addr()) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        // Syscall not supported by Miri (when isolation is enabled)
+        -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/chroot.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+pub unsafe fn chroot(path: *const c_char) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Chroot, path.addr()) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
     }
 }
 
@@ -179,7 +223,7 @@ pub fn exit(status: c_int) -> ! {
 pub unsafe fn access(path: *const c_char, mode: c_int) -> c_int {
     // SAFETY: access is safe to call.
     #[cfg(not(miri))]
-    return unsafe { syscall2(Sysno::Access, path as _, mode as _) } as _;
+    return unsafe { syscall2(Sysno::Access, path.addr(), mode as _) } as _;
 
     #[cfg(miri)]
     {
@@ -187,6 +231,76 @@ pub unsafe fn access(path: *const c_char, mode: c_int) -> c_int {
         _ = mode;
         // Syscall not supported by Miri
         -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/chmod.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+#[cfg(not(target_arch = "aarch64"))]
+pub unsafe fn chmod(path: *const c_char, mode: mode_t) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Chmod, path.addr(), mode as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        _ = mode;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/creat.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `path` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+#[cfg(not(target_arch = "aarch64"))]
+pub unsafe fn creat(path: *const c_char, mode: mode_t) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Creat, path.addr(), mode as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = path;
+        _ = mode;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/create_module.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `name` must a pointer to a null-terminated string,
+///   that must be readable until the null terminator (see [`core::ptr::read`]).
+#[cfg(not(target_arch = "aarch64"))]
+pub unsafe fn create_module(name: *const c_char, size: size_t) -> c_long {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::CreateModule, name.addr(), size as _) }
+        as _;
+
+    #[cfg(miri)]
+    {
+        _ = name;
+        _ = size;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_long
     }
 }
 
@@ -262,6 +376,74 @@ pub unsafe fn openat(
         _ = mode;
         // Syscall not supported by Miri
         -libc::ENOSYS as c_int
+    }
+}
+
+/// <https://man7.org/linux/man-pages/man2/clone.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - If this call succeeds, execution continues in both the parent and the
+///   child. The caller must ensure that running the child with the provided
+///   `flags` is sound.
+/// - If the child will run on `stack`, `stack` must point to writable memory
+///   that is valid for use as the child stack.
+/// - If `flags` contains [`libc::CLONE_PARENT_SETTID`], `parent_tid` must be a
+///   valid writable pointer to a [`c_int`] until the syscall completes.
+/// - If `flags` contains [`libc::CLONE_CHILD_SETTID`], `child_tid` must point
+///   to writable memory where the kernel may store the child TID in the child.
+/// - If `flags` contains [`libc::CLONE_CHILD_CLEARTID`], `child_tid` must
+///   point to writable memory that remains valid until the child exits,
+///   because the kernel may clear it at thread exit.
+/// - If `flags` contains [`libc::CLONE_SETTLS`], `tls` must be a valid TLS
+///   value for the new thread.
+/// - If the child shares memory with the parent, the caller must ensure that no
+///   pointers, references, or other Rust aliasing assumptions are violated.
+pub unsafe fn clone(
+    flags: c_ulong,
+    stack: *mut c_void,
+    parent_tid: *mut c_int,
+    child_tid: *mut c_int,
+    tls: c_ulong,
+) -> c_long {
+    #[cfg(not(miri))]
+    {
+        #[cfg(target_arch = "x86_64")]
+        return unsafe {
+            syscall5(
+                Sysno::Clone,
+                flags as _,
+                stack.addr(),
+                parent_tid.addr(),
+                child_tid.addr(),
+                tls as _,
+            )
+        } as _;
+
+        #[cfg(target_arch = "aarch64")]
+        return unsafe {
+            syscall5(
+                Sysno::Clone,
+                flags as _,
+                stack.addr(),
+                parent_tid.addr(),
+                tls as _,
+                child_tid.addr(),
+            )
+        } as _;
+    }
+
+    #[cfg(miri)]
+    {
+        _ = flags;
+        _ = stack;
+        _ = parent_tid;
+        _ = child_tid;
+        _ = tls;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_long
     }
 }
 
@@ -351,13 +533,13 @@ mod tests {
     use super::{close, getpid, mmap, mremap, write};
 
     #[cfg(not(any(miri, target_arch = "aarch64")))]
-    use super::{access, alarm};
+    use super::{access, alarm, chmod, creat, create_module};
 
     #[cfg(not(miri))]
     use {
-        super::{acct, adjtimex, brk, kill, openat},
+        super::{acct, adjtimex, brk, chdir, chroot, clone, kill, openat},
         core::mem::MaybeUninit,
-        libc::timex,
+        libc::{c_ulong, timex},
     };
 
     #[test]
@@ -400,6 +582,28 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
+    fn test_chdir() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { chdir(c"".as_ptr()) };
+
+        assert!(ret < 0); // chdir should fail with an empty path
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_chroot() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { chroot(c"".as_ptr()) };
+
+        // chroot should fail with an empty path, and lack
+        // of permissions
+        assert!(ret < 0);
+    }
+
+    #[test]
     fn test_close() {
         let ret = close(-1);
 
@@ -413,6 +617,38 @@ mod tests {
         // terminator (which is the only byte).
         let ret = unsafe { access(c"".as_ptr(), 0) };
 
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
+    fn test_chmod() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { chmod(c"".as_ptr(), 0) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
+    fn test_creat() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { creat(c"".as_ptr(), 0) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
+    fn test_create_module() {
+        // SAFETY: the pointer we are passing is readable until the null
+        // terminator (which is the only byte).
+        let ret = unsafe { create_module(c"".as_ptr(), 0) };
+
+        // will most likely be -ENOSYS since the syscall was removed in
+        // Linux 2.6.
         assert!(ret < 0);
     }
 
@@ -443,6 +679,23 @@ mod tests {
         // SAFETY: the provided path pointer is readable until the null terminator.
         let ret =
             unsafe { openat(libc::AT_FDCWD, c"".as_ptr(), libc::O_RDONLY, 0) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_clone() {
+        // SAFETY: the call will fail due to invalid flags
+        let ret = unsafe {
+            clone(
+                (libc::CLONE_SIGHAND | libc::CLONE_CLEAR_SIGHAND) as c_ulong,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                0,
+            )
+        };
 
         assert!(ret < 0);
     }
