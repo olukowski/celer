@@ -411,10 +411,12 @@ pub unsafe fn fstat(fd: c_int, statbuf: *mut stat) -> c_int {
     #[cfg(not(miri))]
     return unsafe { syscall2(Sysno::Fstat, fd as _, statbuf.addr()) } as _;
 
-    // SAFETY: guaranteed by caller.
     #[cfg(miri)]
-    unsafe {
-        libc::fstat(fd, statbuf)
+    {
+        _ = fd;
+        _ = statbuf;
+        // Syscall not supported by Miri (when isolation is enabled)
+        -libc::ENOSYS as c_int
     }
 }
 
@@ -736,10 +738,6 @@ mod tests {
 
     use super::{close, dup, fcntl, fstat, getpid, mmap, mremap, write};
 
-    use core::mem::MaybeUninit;
-
-    use libc::stat;
-
     #[cfg(not(target_arch = "aarch64"))]
     use super::dup2;
 
@@ -752,7 +750,8 @@ mod tests {
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
             fchdir, fchmod, fchown, kill, openat,
         },
-        libc::{c_char, c_ulong, timex},
+        core::mem::MaybeUninit,
+        libc::{c_char, c_ulong, stat, timex},
     };
 
     #[test]
@@ -916,6 +915,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn test_fstat() {
         let mut statbuf: MaybeUninit<stat> = MaybeUninit::uninit();
 
