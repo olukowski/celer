@@ -31,6 +31,25 @@ use arch::{
 #[cfg(miri)]
 use core::ptr;
 
+/// <https://man7.org/linux/man-pages/man2/fork.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+/// On success, the child process receives 0 and the parent receives the child's
+/// PID.
+#[cfg(not(target_arch = "aarch64"))]
+pub fn fork() -> pid_t {
+    // SAFETY: fork is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall0(Sysno::Fork) } as _;
+
+    #[cfg(miri)]
+    {
+        // Syscall not supported by Miri
+        -libc::ENOSYS as pid_t
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -657,8 +676,8 @@ pub unsafe fn mremap(
 /// Negative values in `[-4095, -1]` represent `errno`.
 ///
 /// # Safety
-/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)` must
-///   not overlap any existing mapping that should be preserved; the kernel
+/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)`
+///   must not overlap any existing mapping that should be preserved; the kernel
 ///   will silently clobber it, invalidating any pointers or references into
 ///   that region.
 pub unsafe fn mmap(
@@ -700,7 +719,7 @@ mod tests {
     use super::dup2;
 
     #[cfg(not(any(miri, target_arch = "aarch64")))]
-    use super::{access, alarm, chmod, creat, create_module};
+    use super::{access, alarm, chmod, creat, create_module, fork};
 
     #[cfg(not(miri))]
     use {
@@ -711,6 +730,14 @@ mod tests {
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, timex},
     };
+
+    #[test]
+    #[cfg(not(target_arch = "aarch64"))]
+    fn test_fork() {
+        fork();
+        // Both parent and child continue here without checking result
+        // to maintain determinism.
+    }
 
     #[test]
     fn test_getpid() {
