@@ -39,6 +39,8 @@ pub enum Sysno {
     Kill = 62,
     /// <https://man7.org/linux/man-pages/man2/fcntl.2.html>
     Fcntl = 72,
+    /// <https://man7.org/linux/man-pages/man2/fsync.2.html>
+    Fsync = 74,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 80,
     /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>

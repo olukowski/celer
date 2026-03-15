@@ -443,6 +443,23 @@ pub unsafe fn fstatfs(fd: c_int, buf: *mut statfs) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fsync.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn fsync(fd: c_int) -> c_int {
+    // SAFETY: fsync is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall1(Sysno::Fsync, fd as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = fd;
+        // Syscall not supported by Miri (when isolation is enabled)
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/dup2.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -771,7 +788,7 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            fchdir, fchmod, fchown, fstatfs, kill, openat,
+            fchdir, fchmod, fchown, fstatfs, fsync, kill, openat,
         },
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, stat, statfs, timex},
@@ -955,6 +972,14 @@ mod tests {
 
         // SAFETY: we are passing a valid pointer to a `statfs` struct.
         let ret = unsafe { fstatfs(-1, (&raw mut buf).cast()) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_fsync() {
+        let ret = fsync(-1);
 
         assert!(ret < 0);
     }

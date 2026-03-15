@@ -29,6 +29,8 @@ pub enum Sysno {
     Write = 64,
     /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
     Fstat = 80,
+    /// <https://man7.org/linux/man-pages/man2/fsync.2.html>
+    Fsync = 82,
     /// <https://man7.org/linux/man-pages/man2/acct.2.html>
     Acct = 89,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
