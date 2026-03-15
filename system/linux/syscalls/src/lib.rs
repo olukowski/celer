@@ -443,6 +443,24 @@ pub unsafe fn fstatfs(fd: c_int, buf: *mut statfs) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/ftruncate.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn ftruncate(fd: c_int, length: off_t) -> c_int {
+    // SAFETY: ftruncate is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Ftruncate, fd as _, length as _) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = fd;
+        _ = length;
+        // Syscall not supported by Miri (when isolation is enabled)
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/fsync.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -788,7 +806,8 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            fchdir, fchmod, fchown, fstat, fstatfs, fsync, kill, openat,
+            fchdir, fchmod, fchown, fstat, fstatfs, fsync, ftruncate, kill,
+            openat,
         },
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, stat, statfs, timex},
@@ -972,6 +991,14 @@ mod tests {
 
         // SAFETY: we are passing a valid pointer to a `statfs` struct.
         let ret = unsafe { fstatfs(-1, (&raw mut buf).cast()) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_ftruncate() {
+        let ret = ftruncate(-1, 0);
 
         assert!(ret < 0);
     }

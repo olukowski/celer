@@ -11,6 +11,8 @@ pub enum Sysno {
     Fcntl = 25,
     /// <https://man7.org/linux/man-pages/man2/fstatfs.2.html>
     Fstatfs = 44,
+    /// <https://man7.org/linux/man-pages/man2/ftruncate.2.html>
+    Ftruncate = 46,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 49,
     /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
