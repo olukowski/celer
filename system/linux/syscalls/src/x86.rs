@@ -5,22 +5,22 @@ use core::arch::asm;
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Sysno {
-    /// <https://man7.org/linux/man-pages/man2/write.2.html>
-    Write = 1,
-    /// <https://man7.org/linux/man-pages/man2/close.2.html>
-    Close = 3,
-    /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
-    Mmap = 9,
-    /// <https://man7.org/linux/man-pages/man2/mremap.2.html>
-    Mremap = 25,
-    /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
-    Getpid = 39,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
-    Exit = 60,
+    Exit = 1,
+    /// <https://man7.org/linux/man-pages/man2/write.2.html>
+    Write = 4,
+    /// <https://man7.org/linux/man-pages/man2/close.2.html>
+    Close = 6,
+    /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
+    Getpid = 20,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
-    Kill = 62,
+    Kill = 37,
+    /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
+    Mmap = 90,
+    /// <https://man7.org/linux/man-pages/man2/mremap.2.html>
+    Mremap = 163,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
-    Openat = 257,
+    Openat = 295,
 }
 
 /// Invoke a syscall with `0` arguments.
@@ -37,19 +37,17 @@ pub enum Sysno {
 /// range `[-4095, -1]` indicate errno codes; the caller is responsible for
 /// interpreting them.
 pub unsafe fn syscall0(sysno: Sysno) -> isize {
-    let ret: isize;
+    let mut ret: isize;
 
-    // SAFETY: `syscall` is the correct x86_64 Linux syscall instruction.
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
+            "int 0x80",
+            in("eax") sysno as usize,
+            lateout("eax") ret,
             options(nostack, preserves_flags),
-        )
-    };
+        );
+    }
 
     ret
 }
@@ -74,20 +72,18 @@ pub unsafe fn syscall0(sysno: Sysno) -> isize {
 /// interpreting them. Note that diverging syscalls (e.g. [`Sysno::Exit`])
 /// never return.
 pub unsafe fn syscall1(sysno: Sysno, arg0: usize) -> isize {
-    let ret: isize;
+    let mut ret: isize;
 
-    // SAFETY: See `syscall0`.
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            in("rdi") arg0,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
+            "int 0x80",
+            in("eax") sysno as usize,
+            in("ebx") arg0,
+            lateout("eax") ret,
             options(nostack, preserves_flags),
-        )
-    };
+        );
+    }
 
     ret
 }
@@ -115,13 +111,11 @@ pub unsafe fn syscall2(sysno: Sysno, arg0: usize, arg1: usize) -> isize {
     // SAFETY: See `syscall0`.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            in("rdi") arg0,
-            in("rsi") arg1,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
+            "int 0x80",
+            in("eax") sysno as isize,
+            in("ebx") arg0,
+            in("ecx") arg1,
+            lateout("eax") ret,
             options(nostack, preserves_flags),
         )
     };
@@ -157,14 +151,12 @@ pub unsafe fn syscall3(
     // SAFETY: See `syscall0`.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            in("rdi") arg0,
-            in("rsi") arg1,
-            in("rdx") arg2,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
+            "int 0x80",
+            in("eax") sysno as isize,
+            in("ebx") arg0,
+            in("ecx") arg1,
+            in("edx") arg2,
+            lateout("eax") ret,
             options(nostack, preserves_flags),
         )
     };
@@ -201,16 +193,17 @@ pub unsafe fn syscall4(
     // SAFETY: See `syscall0`.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            in("rdi") arg0,
-            in("rsi") arg1,
-            in("rdx") arg2,
-            in("r10") arg3,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
-            options(nostack, preserves_flags),
+            "push esi",
+            "mov esi, {arg3_reg}",
+            "int 0x80",
+            "pop esi",
+            in("eax") sysno as isize,
+            in("ebx") arg0,
+            in("ecx") arg1,
+            in("edx") arg2,
+            arg3_reg = in(reg) arg3,
+            lateout("eax") ret,
+            options(preserves_flags),
         )
     };
 
@@ -247,17 +240,18 @@ pub unsafe fn syscall5(
     // SAFETY: See `syscall0`.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            in("rdi") arg0,
-            in("rsi") arg1,
-            in("rdx") arg2,
-            in("r10") arg3,
-            in("r8") arg4,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
-            options(nostack, preserves_flags),
+            "push esi",
+            "mov esi, {arg3_reg}",
+            "int 0x80",
+            "pop esi",
+            in("eax") sysno as isize,
+            in("ebx") arg0,
+            in("ecx") arg1,
+            in("edx") arg2,
+            arg3_reg = in(reg) arg3,
+            in("edi") arg4,
+            lateout("eax") ret,
+            options(preserves_flags),
         )
     };
 
@@ -298,18 +292,22 @@ pub unsafe fn syscall6(
     // SAFETY: See `syscall0`.
     unsafe {
         asm!(
-            "syscall",
-            in("rax") sysno as isize,
-            in("rdi") arg0,
-            in("rsi") arg1,
-            in("rdx") arg2,
-            in("r10") arg3,
-            in("r8") arg4,
-            in("r9") arg5,
-            lateout("rax") ret,
-            lateout("rcx") _,
-            lateout("r11") _,
-            options(nostack, preserves_flags),
+            "push ebp",
+            "push esi",
+            "mov esi, {arg3_reg}",
+            "mov ebp, {arg5_reg}",
+            "int 0x80",
+            "pop esi",
+            "pop ebp",
+            in("eax") sysno as isize,
+            in("ebx") arg0,
+            in("ecx") arg1,
+            in("edx") arg2,
+            arg3_reg = in(reg) arg3,
+            in("edi") arg4,
+            arg5_reg = in(reg) arg5,
+            lateout("eax") ret,
+            options(preserves_flags),
         )
     };
 

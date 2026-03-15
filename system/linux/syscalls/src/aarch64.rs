@@ -45,7 +45,7 @@ pub unsafe fn syscall0(sysno: Sysno) -> isize {
             "svc #0",
             in("x8") sysno as isize,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
@@ -81,7 +81,7 @@ pub unsafe fn syscall1(sysno: Sysno, arg0: usize) -> isize {
             in("x8") sysno as isize,
             in("x0") arg0,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
@@ -116,7 +116,7 @@ pub unsafe fn syscall2(sysno: Sysno, arg0: usize, arg1: usize) -> isize {
             in("x0") arg0,
             in("x1") arg1,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
@@ -157,7 +157,7 @@ pub unsafe fn syscall3(
             in("x1") arg1,
             in("x2") arg2,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
@@ -200,7 +200,7 @@ pub unsafe fn syscall4(
             in("x2") arg2,
             in("x3") arg3,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
@@ -245,7 +245,7 @@ pub unsafe fn syscall5(
             in("x3") arg3,
             in("x4") arg4,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
@@ -295,7 +295,7 @@ pub unsafe fn syscall6(
             in("x4") arg4,
             in("x5") arg5,
             lateout("x0") ret,
-            options(nostack)
+            options(nostack, preserves_flags)
         )
     };
 
