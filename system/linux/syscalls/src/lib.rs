@@ -22,13 +22,12 @@ pub mod arch {
     pub use super::x86_64::*;
 }
 
-use libc::{c_char, c_int, c_void, mode_t, pid_t, size_t, ssize_t};
+use libc::{c_char, c_int, c_void, mode_t, off_t, pid_t, size_t, ssize_t};
 
 #[cfg(not(miri))]
-use arch::{Sysno, syscall0, syscall1, syscall2, syscall3, syscall4, syscall5};
-
-#[cfg(any(not(target_arch = "x86"), miri))]
-use {arch::syscall6, libc::off_t};
+use arch::{
+    Sysno, syscall0, syscall1, syscall2, syscall3, syscall4, syscall5, syscall6,
+};
 
 #[cfg(all(target_arch = "x86", not(miri)))]
 use libc::c_ulong;
@@ -275,6 +274,38 @@ pub unsafe fn old_mmap(args: *const mmap_arg_struct) -> *mut c_void {
     (unsafe { syscall1(Sysno::Mmap, args.addr()) }) as _
 }
 
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)`
+///   must not overlap any existing mapping that should be preserved; the kernel
+///   will silently clobber it, invalidating any pointers or references into
+///   that region.
+#[cfg(all(target_arch = "x86", not(miri)))]
+pub unsafe fn mmap2(
+    addr: *mut c_void,
+    length: size_t,
+    prot: c_int,
+    flags: c_int,
+    fd: c_int,
+    offset: off_t,
+) -> *mut c_void {
+    // SAFETY: guaranteed by caller.
+    (unsafe {
+        syscall6(
+            Sysno::Mmap,
+            addr.addr(),
+            length as _,
+            prot as _,
+            flags as _,
+            fd as _,
+            offset as _,
+        )
+    }) as _
+}
+
 #[cfg(test)]
 mod tests {
     use core::ptr;
@@ -288,7 +319,7 @@ mod tests {
     use super::{kill, openat};
 
     #[cfg(all(target_arch = "x86", not(miri)))]
-    use super::{mmap_arg_struct, old_mmap};
+    use super::{mmap_arg_struct, mmap2, old_mmap};
 
     fn is_error(ret: isize) -> bool {
         (-4095..0).contains(&ret)
@@ -379,6 +410,24 @@ mod tests {
         // SAFETY: we are not using `libc::MAP_FIXED`, and `args` is a valid
         // pointer to a `mmap_arg_struct`.
         let ret = unsafe { old_mmap(&raw const args) };
+
+        assert!(!is_error(ret as isize));
+    }
+
+    #[test]
+    #[cfg(all(target_arch = "x86", not(miri)))]
+    fn test_mmap2() {
+        // SAFETY: we are not using `libc::MAP_FIXED`.
+        let ret = unsafe {
+            mmap2(
+                ptr::null_mut(),
+                4096,
+                libc::PROT_READ | libc::PROT_WRITE,
+                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+                -1,
+                0,
+            )
+        };
 
         assert!(!is_error(ret as isize));
     }

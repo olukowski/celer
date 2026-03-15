@@ -19,6 +19,8 @@ pub enum Sysno {
     Mmap = 90,
     /// <https://man7.org/linux/man-pages/man2/mremap.2.html>
     Mremap = 163,
+    /// <https://www.man7.org/linux/man-pages/man2/mmap2.2.html>
+    Mmap2 = 192,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 295,
 }
