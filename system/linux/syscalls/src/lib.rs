@@ -776,7 +776,7 @@ pub unsafe fn mmap(
 mod tests {
     use core::ptr;
 
-    use super::{close, dup, fcntl, fstat, getpid, mmap, mremap, write};
+    use super::{close, dup, fcntl, getpid, mmap, mremap, write};
 
     #[cfg(not(target_arch = "aarch64"))]
     use super::dup2;
@@ -788,7 +788,7 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            fchdir, fchmod, fchown, fstatfs, fsync, kill, openat,
+            fchdir, fchmod, fchown, fstat, fstatfs, fsync, kill, openat,
         },
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, stat, statfs, timex},
