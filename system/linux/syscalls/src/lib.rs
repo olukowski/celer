@@ -17,7 +17,7 @@ pub mod arch {
 
 use libc::{
     c_char, c_int, c_long, c_ulong, c_void, gid_t, mode_t, off_t, pid_t,
-    size_t, ssize_t, timex, uid_t,
+    size_t, ssize_t, stat, timex, uid_t,
 };
 
 #[cfg(not(target_arch = "aarch64"))]
@@ -397,6 +397,27 @@ pub fn fchmod(fd: c_int, mode: mode_t) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fstat.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `statbuf` must be a valid pointer to a [`stat`] struct,
+///   that must be writable for the duration of the syscall
+///   (see [`core::ptr::write`] for details).
+pub unsafe fn fstat(fd: c_int, statbuf: *mut stat) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Fstat, fd as _, statbuf.addr()) } as _;
+
+    // SAFETY: guaranteed by caller.
+    #[cfg(miri)]
+    unsafe {
+        libc::fstat(fd, statbuf)
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/dup2.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -713,7 +734,11 @@ pub unsafe fn mmap(
 mod tests {
     use core::ptr;
 
-    use super::{close, dup, fcntl, getpid, mmap, mremap, write};
+    use super::{close, dup, fcntl, fstat, getpid, mmap, mremap, write};
+
+    use core::mem::MaybeUninit;
+
+    use libc::stat;
 
     #[cfg(not(target_arch = "aarch64"))]
     use super::dup2;
@@ -727,7 +752,6 @@ mod tests {
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
             fchdir, fchmod, fchown, kill, openat,
         },
-        core::mem::MaybeUninit,
         libc::{c_char, c_ulong, timex},
     };
 
@@ -887,6 +911,16 @@ mod tests {
     #[cfg(not(miri))]
     fn test_fchmod() {
         let ret = fchmod(-1, 0);
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    fn test_fstat() {
+        let mut statbuf: MaybeUninit<stat> = MaybeUninit::uninit();
+
+        // SAFETY: we are passing a valid pointer to a `stat` struct.
+        let ret = unsafe { fstat(-1, (&raw mut statbuf).cast()) };
 
         assert!(ret < 0);
     }

@@ -25,6 +25,8 @@ pub enum Sysno {
     Close = 57,
     /// <https://man7.org/linux/man-pages/man2/write.2.html>
     Write = 64,
+    /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
+    Fstat = 80,
     /// <https://man7.org/linux/man-pages/man2/acct.2.html>
     Acct = 89,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>

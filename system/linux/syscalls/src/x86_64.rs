@@ -9,6 +9,8 @@ pub enum Sysno {
     Write = 1,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
     Close = 3,
+    /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
+    Fstat = 5,
     /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
     Mmap = 9,
     /// <https://man7.org/linux/man-pages/man2/brk.2.html>
