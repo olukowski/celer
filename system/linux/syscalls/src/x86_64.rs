@@ -9,16 +9,64 @@ pub enum Sysno {
     Write = 1,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
     Close = 3,
+    /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
+    Fstat = 5,
     /// <https://man7.org/linux/man-pages/man2/mmap.2.html>
     Mmap = 9,
+    /// <https://man7.org/linux/man-pages/man2/brk.2.html>
+    Brk = 12,
+    /// <https://man7.org/linux/man-pages/man2/access.2.html>
+    Access = 21,
     /// <https://man7.org/linux/man-pages/man2/mremap.2.html>
     Mremap = 25,
+    /// <https://man7.org/linux/man-pages/man2/dup.2.html>
+    Dup = 32,
+    /// <https://man7.org/linux/man-pages/man2/dup2.2.html>
+    Dup2 = 33,
+    /// <https://man7.org/linux/man-pages/man2/alarm.2.html>
+    Alarm = 37,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 39,
+    /// <https://man7.org/linux/man-pages/man2/clone.2.html>
+    Clone = 56,
+    /// <https://man7.org/linux/man-pages/man2/fork.2.html>
+    Fork = 57,
+    /// <https://man7.org/linux/man-pages/man2/execve.2.html>
+    Execve = 59,
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
     Exit = 60,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
     Kill = 62,
+    /// <https://man7.org/linux/man-pages/man2/fcntl.2.html>
+    Fcntl = 72,
+    /// <https://man7.org/linux/man-pages/man2/fsync.2.html>
+    Fsync = 74,
+    /// <https://man7.org/linux/man-pages/man2/ftruncate.2.html>
+    Ftruncate = 77,
+    /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
+    Chdir = 80,
+    /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
+    Fchdir = 81,
+    /// <https://man7.org/linux/man-pages/man2/creat.2.html>
+    Creat = 85,
+    /// <https://man7.org/linux/man-pages/man2/chmod.2.html>
+    Chmod = 90,
+    /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
+    Fchmod = 91,
+    /// <https://man7.org/linux/man-pages/man2/fchown.2.html>
+    Fchown = 93,
+    /// <https://man7.org/linux/man-pages/man2/fstatfs.2.html>
+    Fstatfs = 138,
+    /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
+    Adjtimex = 159,
+    /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
+    Chroot = 161,
+    /// <https://man7.org/linux/man-pages/man2/acct.2.html>
+    Acct = 163,
+    /// <https://man7.org/linux/man-pages/man2/create_module.2.html>
+    CreateModule = 174,
+    /// <https://man7.org/linux/man-pages/man2/delete_module.2.html>
+    DeleteModule = 176,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 257,
 }
