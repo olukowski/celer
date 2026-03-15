@@ -474,7 +474,7 @@ pub fn fchown(fd: c_int, owner: uid_t, group: gid_t) -> c_int {
 ///
 /// Returns the raw kernel return value.
 /// Negative values in `[-4095, -1]` represent `errno`.
-pub fn fcntl(fd: c_int, cmd: c_int, arg: c_ulong) -> c_int {
+pub fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int {
     // SAFETY: fcntl is safe to call.
     #[cfg(not(miri))]
     return unsafe { syscall3(Sysno::Fcntl, fd as _, cmd as _, arg as _) } as _;
