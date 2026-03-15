@@ -51,6 +51,8 @@ pub enum Sysno {
     Fchmod = 91,
     /// <https://man7.org/linux/man-pages/man2/fchown.2.html>
     Fchown = 93,
+    /// <https://man7.org/linux/man-pages/man2/fstatfs.2.html>
+    Fstatfs = 138,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
     Adjtimex = 159,
     /// <https://man7.org/linux/man-pages/man2/chroot.2.html>

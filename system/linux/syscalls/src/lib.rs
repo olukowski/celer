@@ -17,7 +17,7 @@ pub mod arch {
 
 use libc::{
     c_char, c_int, c_long, c_ulong, c_void, gid_t, mode_t, off_t, pid_t,
-    size_t, ssize_t, stat, timex, uid_t,
+    size_t, ssize_t, stat, statfs, timex, uid_t,
 };
 
 #[cfg(not(target_arch = "aarch64"))]
@@ -420,6 +420,29 @@ pub unsafe fn fstat(fd: c_int, statbuf: *mut stat) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fstatfs.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `buf` must be a valid pointer to a [`statfs`] struct,
+///   that must be writable for the duration of the syscall
+///   (see [`core::ptr::write`] for details).
+pub unsafe fn fstatfs(fd: c_int, buf: *mut statfs) -> c_int {
+    // SAFETY: guaranteed by caller.
+    #[cfg(not(miri))]
+    return unsafe { syscall2(Sysno::Fstatfs, fd as _, buf.addr()) } as _;
+
+    #[cfg(miri)]
+    {
+        _ = fd;
+        _ = buf;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/dup2.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -748,10 +771,10 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            fchdir, fchmod, fchown, kill, openat,
+            fchdir, fchmod, fchown, fstatfs, kill, openat,
         },
         core::mem::MaybeUninit,
-        libc::{c_char, c_ulong, stat, timex},
+        libc::{c_char, c_ulong, stat, statfs, timex},
     };
 
     #[test]
@@ -921,6 +944,17 @@ mod tests {
 
         // SAFETY: we are passing a valid pointer to a `stat` struct.
         let ret = unsafe { fstat(-1, (&raw mut statbuf).cast()) };
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_fstatfs() {
+        let mut buf: MaybeUninit<statfs> = MaybeUninit::uninit();
+
+        // SAFETY: we are passing a valid pointer to a `statfs` struct.
+        let ret = unsafe { fstatfs(-1, (&raw mut buf).cast()) };
 
         assert!(ret < 0);
     }
