@@ -470,6 +470,22 @@ pub fn fchown(fd: c_int, owner: uid_t, group: gid_t) -> c_int {
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fcntl.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn fcntl(fd: c_int, cmd: c_int, arg: c_ulong) -> c_int {
+    // SAFETY: fcntl is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall3(Sysno::Fcntl, fd as _, cmd as _, arg as _) } as _;
+
+    // SAFETY: fcntl is safe to call.
+    #[cfg(miri)]
+    unsafe {
+        libc::fcntl(fd, cmd, arg)
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/write.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -678,7 +694,7 @@ pub unsafe fn mmap(
 mod tests {
     use core::ptr;
 
-    use super::{close, dup, getpid, mmap, mremap, write};
+    use super::{close, dup, fcntl, getpid, mmap, mremap, write};
 
     #[cfg(not(target_arch = "aarch64"))]
     use super::dup2;
@@ -875,6 +891,13 @@ mod tests {
     #[cfg(not(miri))]
     fn test_fchown() {
         let ret = fchown(-1, 0, 0);
+
+        assert!(ret < 0);
+    }
+
+    #[test]
+    fn test_fcntl() {
+        let ret = fcntl(-1, 0, 0);
 
         assert!(ret < 0);
     }
