@@ -732,7 +732,7 @@ mod tests {
     };
 
     #[test]
-    #[cfg(not(target_arch = "aarch64"))]
+    #[cfg(not(any(miri, target_arch = "aarch64")))]
     fn test_fork() {
         fork();
         // Both parent and child continue here without checking result
