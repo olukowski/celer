@@ -290,6 +290,10 @@ mod tests {
     #[cfg(all(target_arch = "x86", not(miri)))]
     use super::{mmap_arg_struct, old_mmap};
 
+    fn is_error(ret: isize) -> bool {
+        ret >= -4095 && ret < 0
+    }
+
     #[test]
     fn test_getpid() {
         assert!(getpid() > 0);
@@ -299,7 +303,7 @@ mod tests {
     fn test_close() {
         let ret = close(-1);
 
-        assert!(ret < 0);
+        assert!(is_error(ret as isize));
     }
 
     #[test]
@@ -319,7 +323,7 @@ mod tests {
         // SAFETY: `buf.as_ptr()` is readable for `msg.len()` bytes.
         let ret = unsafe { write(1, msg.as_ptr().cast(), msg.len()) };
 
-        assert!(ret >= 0);
+        assert!(!is_error(ret));
         assert!(ret as usize <= msg.len());
     }
 
@@ -330,7 +334,7 @@ mod tests {
         let ret =
             unsafe { openat(libc::AT_FDCWD, c"".as_ptr(), libc::O_RDONLY, 0) };
 
-        assert!(ret < 0);
+        assert!(is_error(ret as isize));
     }
 
     #[test]
@@ -339,7 +343,7 @@ mod tests {
         // succeed so nothing will be invalidated.
         let ret = unsafe { mremap(ptr::null_mut(), 1, 1, 0, ptr::null_mut()) };
 
-        assert!((ret.addr() as isize) < 0);
+        assert!(is_error(ret as isize));
     }
 
     #[test]
@@ -357,7 +361,7 @@ mod tests {
             )
         };
 
-        assert!((ret.addr() as isize) > 0);
+        assert!(!is_error(ret as isize));
     }
 
     #[test]
@@ -376,9 +380,6 @@ mod tests {
         // pointer to a `mmap_arg_struct`.
         let ret = unsafe { old_mmap(&raw const args) };
 
-        let raw = ret.addr() as isize;
-
-        eprintln!("old_mmap raw return = {raw}");
-        assert!(raw >= 0, "old_mmap failed: raw={raw}, errno={}", -raw);
+        assert!(!is_error(ret as isize));
     }
 }
