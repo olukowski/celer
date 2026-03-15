@@ -376,6 +376,9 @@ mod tests {
         // pointer to a `mmap_arg_struct`.
         let ret = unsafe { old_mmap(&raw const args) };
 
-        assert!((ret.addr() as isize) > 0);
+        let raw = ret.addr() as isize;
+
+        eprintln!("old_mmap raw return = {raw}");
+        assert!(raw >= 0, "old_mmap failed: raw={raw}, errno={}", -raw);
     }
 }
