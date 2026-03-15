@@ -1,3 +1,4 @@
+#![cfg(target_os = "linux")]
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
