@@ -295,7 +295,7 @@ pub unsafe fn mmap2(
     // SAFETY: guaranteed by caller.
     (unsafe {
         syscall6(
-            Sysno::Mmap,
+            Sysno::Mmap2,
             addr.addr(),
             length as _,
             prot as _,
