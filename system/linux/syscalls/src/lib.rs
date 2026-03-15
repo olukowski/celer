@@ -2,6 +2,9 @@
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+#[cfg(target_arch = "x86")]
+mod x86;
+
 #[cfg(target_arch = "aarch64")]
 mod aarch64;
 
@@ -9,6 +12,9 @@ mod aarch64;
 mod x86_64;
 
 pub mod arch {
+    #[cfg(target_arch = "x86")]
+    pub use super::x86::*;
+
     #[cfg(target_arch = "aarch64")]
     pub use super::aarch64::*;
 
@@ -22,6 +28,9 @@ use libc::{c_char, c_int, c_void, mode_t, off_t, pid_t, size_t, ssize_t};
 use arch::{
     Sysno, syscall0, syscall1, syscall2, syscall3, syscall4, syscall5, syscall6,
 };
+
+#[cfg(all(target_arch = "x86", not(miri)))]
+use libc::c_ulong;
 
 /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
 ///
@@ -199,10 +208,11 @@ pub unsafe fn mremap(
 /// Negative values in `[-4095, -1]` represent `errno`.
 ///
 /// # Safety
-/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)` must
-///   not overlap any existing mapping that should be preserved; the kernel
+/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)`
+///   must not overlap any existing mapping that should be preserved; the kernel
 ///   will silently clobber it, invalidating any pointers or references into
 ///   that region.
+#[cfg(any(not(target_arch = "x86"), miri))]
 pub unsafe fn mmap(
     addr: *mut c_void,
     length: size_t,
@@ -232,14 +242,88 @@ pub unsafe fn mmap(
     }
 }
 
+/// Argument struct for [`old_mmap`].
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[cfg(all(target_arch = "x86", not(miri)))]
+pub struct mmap_arg_struct {
+    addr: *mut c_void,
+    length: c_ulong,
+    prot: c_int,
+    flags: c_int,
+    fd: c_int,
+    offset: c_ulong,
+}
+
+/// <https://man7.org/linux/man-pages/man2/mmap.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - `args` must be a valid pointer to a [`mmap_arg_struct`],
+///   that must be readable until the syscall completes
+///   (see [`core::ptr::read`] for details).
+/// - If `args.flags` contains [`libc::MAP_FIXED`], the range
+///   `[args.addr, args.addr + args.length)`  must not overlap any existing
+///   mapping that should be preserved; the kernel will silently clobber it,
+///   invalidating any pointers or references into that region.
+#[cfg(all(target_arch = "x86", not(miri)))]
+pub unsafe fn old_mmap(args: *const mmap_arg_struct) -> *mut c_void {
+    // SAFETY: guaranteed by caller.
+    (unsafe { syscall1(Sysno::Mmap, args.addr()) }) as _
+}
+
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+///
+/// # Safety
+/// - If `flags` contains [`libc::MAP_FIXED`], the range `[addr, addr + length)`
+///   must not overlap any existing mapping that should be preserved; the kernel
+///   will silently clobber it, invalidating any pointers or references into
+///   that region.
+#[cfg(all(target_arch = "x86", not(miri)))]
+pub unsafe fn mmap2(
+    addr: *mut c_void,
+    length: size_t,
+    prot: c_int,
+    flags: c_int,
+    fd: c_int,
+    offset: off_t,
+) -> *mut c_void {
+    // SAFETY: guaranteed by caller.
+    (unsafe {
+        syscall6(
+            Sysno::Mmap2,
+            addr.addr(),
+            length as _,
+            prot as _,
+            flags as _,
+            fd as _,
+            offset as _,
+        )
+    }) as _
+}
+
 #[cfg(test)]
 mod tests {
     use core::ptr;
 
-    use super::{close, getpid, mmap, mremap, write};
+    use super::{close, getpid, mremap, write};
+
+    #[cfg(any(not(target_arch = "x86"), miri))]
+    use super::mmap;
 
     #[cfg(not(miri))]
     use super::{kill, openat};
+
+    #[cfg(all(target_arch = "x86", not(miri)))]
+    use super::{mmap_arg_struct, mmap2, old_mmap};
+
+    fn is_error(ret: isize) -> bool {
+        (-4095..0).contains(&ret)
+    }
 
     #[test]
     fn test_getpid() {
@@ -250,7 +334,7 @@ mod tests {
     fn test_close() {
         let ret = close(-1);
 
-        assert!(ret < 0);
+        assert!(is_error(ret as isize));
     }
 
     #[test]
@@ -270,7 +354,7 @@ mod tests {
         // SAFETY: `buf.as_ptr()` is readable for `msg.len()` bytes.
         let ret = unsafe { write(1, msg.as_ptr().cast(), msg.len()) };
 
-        assert!(ret >= 0);
+        assert!(!is_error(ret));
         assert!(ret as usize <= msg.len());
     }
 
@@ -281,7 +365,7 @@ mod tests {
         let ret =
             unsafe { openat(libc::AT_FDCWD, c"".as_ptr(), libc::O_RDONLY, 0) };
 
-        assert!(ret < 0);
+        assert!(is_error(ret as isize));
     }
 
     #[test]
@@ -290,10 +374,11 @@ mod tests {
         // succeed so nothing will be invalidated.
         let ret = unsafe { mremap(ptr::null_mut(), 1, 1, 0, ptr::null_mut()) };
 
-        assert!((ret.addr() as isize) < 0);
+        assert!(is_error(ret as isize));
     }
 
     #[test]
+    #[cfg(any(not(target_arch = "x86"), miri))]
     fn test_mmap() {
         // SAFETY: we are not using `libc::MAP_FIXED`.
         let ret = unsafe {
@@ -307,6 +392,43 @@ mod tests {
             )
         };
 
-        assert!((ret.addr() as isize) > 0);
+        assert!(!is_error(ret as isize));
+    }
+
+    #[test]
+    #[cfg(all(target_arch = "x86", not(miri)))]
+    fn test_old_mmap() {
+        let args = mmap_arg_struct {
+            addr: ptr::null_mut(),
+            length: 4096,
+            prot: libc::PROT_READ | libc::PROT_WRITE,
+            flags: libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+            fd: -1,
+            offset: 0,
+        };
+
+        // SAFETY: we are not using `libc::MAP_FIXED`, and `args` is a valid
+        // pointer to a `mmap_arg_struct`.
+        let ret = unsafe { old_mmap(&raw const args) };
+
+        assert!(!is_error(ret as isize));
+    }
+
+    #[test]
+    #[cfg(all(target_arch = "x86", not(miri)))]
+    fn test_mmap2() {
+        // SAFETY: we are not using `libc::MAP_FIXED`.
+        let ret = unsafe {
+            mmap2(
+                ptr::null_mut(),
+                4096,
+                libc::PROT_READ | libc::PROT_WRITE,
+                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+                -1,
+                0,
+            )
+        };
+
+        assert!(!is_error(ret as isize));
     }
 }
