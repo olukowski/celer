@@ -291,7 +291,7 @@ mod tests {
     use super::{mmap_arg_struct, old_mmap};
 
     fn is_error(ret: isize) -> bool {
-        ret >= -4095 && ret < 0
+        (-4095..0).contains(&ret)
     }
 
     #[test]
