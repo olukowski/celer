@@ -16,8 +16,8 @@ pub mod arch {
 }
 
 use libc::{
-    c_char, c_int, c_long, c_ulong, c_void, mode_t, off_t, pid_t, size_t,
-    ssize_t, timex,
+    c_char, c_int, c_long, c_ulong, c_void, gid_t, mode_t, off_t, pid_t,
+    size_t, ssize_t, timex, uid_t,
 };
 
 #[cfg(not(target_arch = "aarch64"))]
@@ -450,6 +450,26 @@ pub unsafe fn execve(
     }
 }
 
+/// <https://man7.org/linux/man-pages/man2/fchown.2.html>
+///
+/// Returns the raw kernel return value.
+/// Negative values in `[-4095, -1]` represent `errno`.
+pub fn fchown(fd: c_int, owner: uid_t, group: gid_t) -> c_int {
+    // SAFETY: fchown is safe to call.
+    #[cfg(not(miri))]
+    return unsafe { syscall3(Sysno::Fchown, fd as _, owner as _, group as _) }
+        as _;
+
+    #[cfg(miri)]
+    {
+        _ = fd;
+        _ = owner;
+        _ = group;
+        // Syscall not supported by Miri
+        -libc::ENOSYS as c_int
+    }
+}
+
 /// <https://man7.org/linux/man-pages/man2/write.2.html>
 ///
 /// Returns the raw kernel return value.
@@ -670,7 +690,7 @@ mod tests {
     use {
         super::{
             acct, adjtimex, brk, chdir, chroot, clone, delete_module, execve,
-            fchdir, fchmod, kill, openat,
+            fchdir, fchmod, fchown, kill, openat,
         },
         core::mem::MaybeUninit,
         libc::{c_char, c_ulong, timex},
@@ -848,6 +868,14 @@ mod tests {
         let ret = unsafe { execve(c"".as_ptr(), argv.as_ptr(), envp.as_ptr()) };
 
         // execve will fail with an empty path
+        assert!(ret < 0);
+    }
+
+    #[test]
+    #[cfg(not(miri))]
+    fn test_fchown() {
+        let ret = fchown(-1, 0, 0);
+
         assert!(ret < 0);
     }
 

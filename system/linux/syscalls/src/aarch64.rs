@@ -15,6 +15,8 @@ pub enum Sysno {
     Chroot = 51,
     /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
     Fchmod = 52,
+    /// <https://man7.org/linux/man-pages/man2/fchown.2.html>
+    Fchown = 55,
     /// <https://man7.org/linux/man-pages/man2/openat.2.html>
     Openat = 56,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
