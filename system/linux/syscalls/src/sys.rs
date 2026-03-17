@@ -15,6 +15,8 @@
 //! the caller is responsible for interpreting them.
 //! Note: there are some system calls that cannot fail.
 
+mod exit;
 mod getpid;
 
+pub use exit::exit;
 pub use getpid::getpid;

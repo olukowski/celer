@@ -22,7 +22,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n728)
 ///
 /// # Historical References
-/// - First appearance: Linux [0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n352)
+/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n352)
 pub fn getpid() -> PidT {
     // SAFETY: `getpid` is always safe to call.
     (unsafe { syscall0(Sysno::Getpid) }) as PidT
