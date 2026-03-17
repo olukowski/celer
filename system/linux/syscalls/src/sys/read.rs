@@ -71,7 +71,7 @@ pub unsafe fn read(fd: UnsignedInt, buf: *mut Char, count: SizeT) -> Long {
 mod tests {
     use std::{
         env,
-        fs::{self, File},
+        fs::{self, OpenOptions},
         io::Write as _,
         os::fd::AsRawFd as _,
         path::PathBuf,
@@ -97,7 +97,13 @@ mod tests {
     #[test]
     fn test_read() {
         let path = create_temp_path();
-        let mut file = File::create(&path).unwrap();
+        let mut file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .read(true)
+            .open(&path)
+            .unwrap();
 
         let mut contents_to_check: &[u8] = b"Hello, World!";
         file.write_all(contents_to_check).unwrap();
@@ -115,9 +121,12 @@ mod tests {
 
             assert_ne!(n, 0); // we should NOT reach EOF
 
-            assert_eq!(&buf[..n], &contents_to_check[..n]);
+            // just retry on error
+            if n > 0 {
+                assert_eq!(&buf[..n], &contents_to_check[..n]);
 
-            contents_to_check = &contents_to_check[n..];
+                contents_to_check = &contents_to_check[n..];
+            }
         }
 
         fs::remove_file(&path).unwrap()
