@@ -72,7 +72,7 @@ mod tests {
     use std::{
         env,
         fs::{self, OpenOptions},
-        io::Write as _,
+        io::{Seek as _, Write as _},
         os::fd::AsRawFd as _,
         path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},
@@ -107,6 +107,7 @@ mod tests {
 
         let mut contents_to_check: &[u8] = b"Hello, World!";
         file.write_all(contents_to_check).unwrap();
+        file.rewind().unwrap();
 
         let mut buf = [0u8; 32];
 
