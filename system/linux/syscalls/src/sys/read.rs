@@ -120,14 +120,11 @@ mod tests {
                 )
             } as usize;
 
-            assert_ne!(n, 0); // we should NOT reach EOF
+            assert!(n > 0); // we should NOT reach EOF, or get an error
 
-            // just retry on error
-            if n > 0 {
-                assert_eq!(&buf[..n], &contents_to_check[..n]);
+            assert_eq!(&buf[..n], &contents_to_check[..n]);
 
-                contents_to_check = &contents_to_check[n..];
-            }
+            contents_to_check = &contents_to_check[n..];
         }
 
         fs::remove_file(&path).unwrap()
