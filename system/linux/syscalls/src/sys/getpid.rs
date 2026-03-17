@@ -1,6 +1,5 @@
 use celer_system_linux_ctypes::PidT;
 
-#[cfg(not(miri))]
 use crate::arch::current::{Sysno, syscall0};
 
 /// Returns the process ID (PID) of the calling process.
@@ -26,19 +25,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: Linux [0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n352)
 pub fn getpid() -> PidT {
     // SAFETY: `getpid` is always safe to call.
-    #[cfg(not(miri))]
-    return unsafe { syscall0(Sysno::Getpid) } as PidT;
-
-    #[cfg(miri)]
-    {
-        // SAFETY: This is the signature Miri recognizes
-        unsafe extern "C" {
-            fn getpid() -> PidT;
-        }
-
-        // SAFETY: `getpid` is always safe to call.
-        unsafe { getpid() }
-    }
+    (unsafe { syscall0(Sysno::Getpid) }) as PidT
 }
 
 #[cfg(test)]
