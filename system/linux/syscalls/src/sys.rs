@@ -16,7 +16,9 @@
 //! Note: there are some system calls that cannot fail.
 
 mod exit;
+mod fork;
 mod getpid;
 
 pub use exit::exit;
+pub use fork::fork;
 pub use getpid::getpid;

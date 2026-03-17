@@ -7,6 +7,8 @@ use core::arch::asm;
 pub enum Sysno {
     /// <https://man7.org/linux/man-pages/man2/exit.2.html>
     Exit = 1,
+    /// <https://man7.org/linux/man-pages/man2/fork.2.html>
+    Fork = 2,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
 }
