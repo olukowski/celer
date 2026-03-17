@@ -1,0 +1,8 @@
+[package]
+name = "celer_system_linux_ctypes"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Linux C types for Celer"
+repository = "https://github.com/olukowski/celer"
+readme = "README.md"

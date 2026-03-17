@@ -8,7 +8,8 @@ repository = "https://github.com/olukowski/celer"
 readme = "README.md"
 
 [workspace]
-members = ["system/linux/syscalls"]
+members = ["system/linux/ctypes", "system/linux/syscalls"]
 
 [workspace.dependencies]
-libc = "0.2.183"
+celer_system_linux_ctypes = { path = "system/linux/ctypes", version = "0.1.0" }
+celer_system_linux_syscalls = { path = "system/linux/syscalls", version = "0.1.0" }
