@@ -112,6 +112,8 @@ mod tests {
         let mut buf = [0u8; 32];
 
         while !contents_to_check.is_empty() {
+            // SAFETY: `buf.as_mut_ptr()` is writable for `32` bytes,
+            // which is more than `contents_to_check.len()`
             let n = unsafe {
                 read(
                     file.as_raw_fd() as UnsignedInt,

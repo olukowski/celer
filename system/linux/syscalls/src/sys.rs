@@ -19,8 +19,10 @@ mod exit;
 mod fork;
 mod getpid;
 mod read;
+mod write;
 
 pub use exit::exit;
 pub use fork::fork;
 pub use getpid::getpid;
 pub use read::read;
+pub use write::write;

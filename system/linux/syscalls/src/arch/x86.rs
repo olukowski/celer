@@ -11,6 +11,8 @@ pub enum Sysno {
     Fork = 2,
     /// <https://man7.org/linux/man-pages/man2/read.2.html>
     Read = 3,
+    /// <https://man7.org/linux/man-pages/man2/write.2.html>
+    Write = 4,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
 }
