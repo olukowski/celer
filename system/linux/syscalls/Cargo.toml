@@ -8,11 +8,7 @@ repository = "https://github.com/olukowski/celer"
 readme = "README.md"
 
 [dependencies]
-libc.workspace = true
-
-[[example]]
-name = "hello"
-test = false
+celer_system_linux_ctypes.workspace = true
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
