@@ -39,11 +39,11 @@ pub fn exit(error_code: Int) -> ! {
 
 #[cfg(test)]
 mod tests {
-    use core::{
-        hint::spin_loop,
-        sync::atomic::{AtomicBool, Ordering},
+    use core::sync::atomic::{AtomicBool, Ordering};
+    use std::{
+        sync::{Arc, Barrier},
+        thread,
     };
-    use std::thread;
 
     use super::exit;
 
@@ -53,20 +53,20 @@ mod tests {
     // - code after `exit` is not observed in practice
     #[test]
     fn test_exit() {
-        static STARTED: AtomicBool = AtomicBool::new(false);
+        let barrier = Arc::new(Barrier::new(2));
+        let b = barrier.clone();
+
         static AFTER: AtomicBool = AtomicBool::new(false);
 
-        thread::spawn(|| {
-            STARTED.store(true, Ordering::Release);
+        thread::spawn(move || {
+            b.wait(); // sync point
             exit(0);
+
             #[allow(unreachable_code)]
             AFTER.store(true, Ordering::Relaxed);
         });
 
-        // Wait until thread definitely started
-        while !STARTED.load(Ordering::Acquire) {
-            spin_loop()
-        }
+        barrier.wait(); // release child
 
         // Give scheduler a chance
         thread::yield_now();
