@@ -61,9 +61,15 @@ mod tests {
     #[test]
     fn test_waitpid() {
         let pid = fork();
-        if pid == 0 {
-            exit(0);
+
+        #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
+        fn use_pid(pid: PidT) {
+            if pid == 0 {
+                exit(0);
+            }
         }
+
+        use_pid(pid);
 
         let mut status: Int = 0;
         let waited = unsafe { waitpid(pid, &mut status, 0) };
