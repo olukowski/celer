@@ -52,6 +52,9 @@ pub type UModeT = UnsignedShort;
 /// Equivalent to the `off_t` type in the Linux kernel.
 pub type OffT = Long;
 
+/// Equivalent to the `time_t` type in the Linux kernel.
+pub type TimeT = Long;
+
 /// Equivalent to the `pid_t` type in the Linux kernel.
 pub type PidT = Int;
 
