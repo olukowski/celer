@@ -41,6 +41,8 @@ pub enum Sysno {
     Dup = 41,
     /// <https://man7.org/linux/man-pages/man2/pipe.2.html>
     Pipe = 42,
+    /// <https://man7.org/linux/man-pages/man2/times.2.html>
+    Times = 43,
     /// <https://man7.org/linux/man-pages/man2/waitpid.2.html>
     Waitpid = 7,
     /// <https://man7.org/linux/man-pages/man2/creat.2.html>

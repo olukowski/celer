@@ -85,3 +85,13 @@ pub struct Utimbuf {
     pub actime: TimeT,
     pub modtime: TimeT,
 }
+
+/// Linux `struct tms` used by the `times` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Tms {
+    pub tms_utime: Long,
+    pub tms_stime: Long,
+    pub tms_cutime: Long,
+    pub tms_cstime: Long,
+}
