@@ -57,6 +57,8 @@ pub enum Sysno {
     Ptrace = 26,
     /// <https://man7.org/linux/man-pages/man2/alarm.2.html>
     Alarm = 27,
+    /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
+    Fstat = 28,
 }
 
 /// Invoke a syscall with `0` arguments.
