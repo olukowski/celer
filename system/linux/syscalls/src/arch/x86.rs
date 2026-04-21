@@ -19,6 +19,8 @@ pub enum Sysno {
     Open = 5,
     /// <https://man7.org/linux/man-pages/man2/chmod.2.html>
     Chmod = 15,
+    /// <https://man7.org/linux/man-pages/man2/stat.2.html>
+    Stat = 18,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 12,
     /// <https://man7.org/linux/man-pages/man2/unlink.2.html>

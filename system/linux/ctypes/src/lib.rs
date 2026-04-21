@@ -54,3 +54,20 @@ pub type OffT = Long;
 
 /// Equivalent to the `pid_t` type in the Linux kernel.
 pub type PidT = Int;
+
+/// Linux `struct __old_kernel_stat` used by the 32-bit `stat` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Stat {
+    pub st_dev: UnsignedShort,
+    pub st_ino: UnsignedShort,
+    pub st_mode: UnsignedShort,
+    pub st_nlink: UnsignedShort,
+    pub st_uid: UnsignedShort,
+    pub st_gid: UnsignedShort,
+    pub st_rdev: UnsignedShort,
+    pub st_size: UnsignedLong,
+    pub st_atime: UnsignedLong,
+    pub st_mtime: UnsignedLong,
+    pub st_ctime: UnsignedLong,
+}
