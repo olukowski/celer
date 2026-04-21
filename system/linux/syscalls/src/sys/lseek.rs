@@ -38,12 +38,7 @@ use crate::arch::current::{Sysno, syscall3};
 pub fn lseek(fd: UnsignedInt, offset: OffT, whence: UnsignedInt) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {
-        syscall3(
-            Sysno::Lseek,
-            fd as isize,
-            offset as isize,
-            whence as isize,
-        )
+        syscall3(Sysno::Lseek, fd as isize, offset as isize, whence as isize)
     }) as Long
 }
 

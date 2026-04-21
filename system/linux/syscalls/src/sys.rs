@@ -34,8 +34,8 @@ mod read;
 mod setuid;
 mod stat;
 mod time;
-mod unlink;
 mod umount;
+mod unlink;
 mod waitpid;
 mod write;
 
@@ -58,7 +58,7 @@ pub use read::read;
 pub use setuid::setuid;
 pub use stat::stat;
 pub use time::time;
-pub use unlink::unlink;
 pub use umount::umount;
+pub use unlink::unlink;
 pub use waitpid::waitpid;
 pub use write::write;

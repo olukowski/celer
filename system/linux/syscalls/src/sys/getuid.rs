@@ -25,7 +25,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n362)
 pub fn getuid() -> UidT {
     // SAFETY: `getuid` is always safe to call.
-    unsafe { syscall0(Sysno::Getuid) } as UidT
+    (unsafe { syscall0(Sysno::Getuid) }) as UidT
 }
 
 #[cfg(test)]
