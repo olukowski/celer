@@ -81,6 +81,8 @@ pub enum Sysno {
     Sync = 36,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
     Kill = 37,
+    /// <https://man7.org/linux/man-pages/man2/signal.2.html>
+    Signal = 48,
     /// <https://man7.org/linux/man-pages/man2/rename.2.html>
     Rename = 38,
     /// <https://man7.org/linux/man-pages/man2/mkdir.2.html>
