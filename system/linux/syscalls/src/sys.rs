@@ -16,6 +16,7 @@
 //! Note: there are some system calls that cannot fail.
 
 mod close;
+mod creat;
 mod exit;
 mod fork;
 mod getpid;
@@ -25,6 +26,7 @@ mod waitpid;
 mod write;
 
 pub use close::close;
+pub use creat::creat;
 pub use exit::exit;
 pub use fork::fork;
 pub use getpid::getpid;
