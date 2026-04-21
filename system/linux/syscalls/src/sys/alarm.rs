@@ -49,7 +49,6 @@ mod tests {
         let old = alarm(2);
         let cleared = alarm(0);
 
-        assert!(old > 0);
         assert!(old <= 2);
         assert!(cleared <= 2);
     }

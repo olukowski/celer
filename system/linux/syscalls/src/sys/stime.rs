@@ -44,8 +44,6 @@ pub unsafe fn stime(tptr: *const TimeT) -> Int {
 
 #[cfg(test)]
 mod tests {
-    use celer_system_linux_ctypes::TimeT;
-
     use super::stime;
 
     #[test]
