@@ -85,6 +85,8 @@ pub enum Sysno {
     Mkdir = 39,
     /// <https://man7.org/linux/man-pages/man2/rmdir.2.html>
     Rmdir = 40,
+    /// <https://man7.org/linux/man-pages/man2/setgid.2.html>
+    Setgid = 46,
 }
 
 /// Invoke a syscall with `0` arguments.

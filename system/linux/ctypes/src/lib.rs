@@ -61,6 +61,10 @@ pub type PidT = Int;
 /// Equivalent to the `uid_t` type in the Linux kernel.
 pub type UidT = UnsignedInt;
 
+/// Equivalent to the legacy 16-bit `old_gid_t` type used by the i386
+/// `setgid` syscall ABI.
+pub type OldGidT = UnsignedShort;
+
 /// Linux `struct __old_kernel_stat` used by the 32-bit `stat` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
