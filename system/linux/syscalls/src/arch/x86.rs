@@ -55,6 +55,8 @@ pub enum Sysno {
     Getuid = 24,
     /// <https://man7.org/linux/man-pages/man2/ptrace.2.html>
     Ptrace = 26,
+    /// <https://man7.org/linux/man-pages/man2/alarm.2.html>
+    Alarm = 27,
 }
 
 /// Invoke a syscall with `0` arguments.
