@@ -37,6 +37,8 @@ pub enum Sysno {
     Unlink = 10,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
     Close = 6,
+    /// <https://man7.org/linux/man-pages/man2/brk.2.html>
+    Brk = 45,
     /// <https://man7.org/linux/man-pages/man2/dup.2.html>
     Dup = 41,
     /// <https://man7.org/linux/man-pages/man2/pipe.2.html>

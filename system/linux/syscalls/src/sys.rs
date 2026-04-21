@@ -12,11 +12,14 @@
 //!
 //! The return value of a system call is the raw kernel return value.
 //! Negative values in the range `[-4095, -1]` indicate errno codes;
-//! the caller is responsible for interpreting them.
+//! the caller is responsible for interpreting them, except for syscalls such
+//! as `brk` that return raw address values instead of signed errno-shaped
+//! values.
 //! Note: there are some system calls that cannot fail.
 
 mod access;
 mod alarm;
+mod brk;
 mod chdir;
 mod chmod;
 mod close;
@@ -57,6 +60,7 @@ mod write;
 
 pub use access::access;
 pub use alarm::alarm;
+pub use brk::brk;
 pub use chdir::chdir;
 pub use chmod::chmod;
 pub use close::close;
