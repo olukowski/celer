@@ -49,6 +49,8 @@ pub enum Sysno {
     Lchown = 16,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
+    /// <https://man7.org/linux/man-pages/man2/getuid.2.html>
+    Getuid = 24,
 }
 
 /// Invoke a syscall with `0` arguments.
