@@ -42,7 +42,10 @@ pub unsafe fn acct(name: *const Char) -> Int {
 
 #[cfg(test)]
 mod tests {
-    use std::{env, time::{SystemTime, UNIX_EPOCH}};
+    use std::{
+        env,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
     use celer_system_linux_ctypes::Char;
 
