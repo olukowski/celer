@@ -33,7 +33,7 @@ pub fn setuid(uid: UidT) -> Int {
 
 #[cfg(test)]
 mod tests {
-    use celer_system_linux_ctypes::{Int, UidT};
+    use celer_system_linux_ctypes::UidT;
 
     use super::setuid;
 

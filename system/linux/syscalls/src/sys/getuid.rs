@@ -30,12 +30,16 @@ pub fn getuid() -> UidT {
 
 #[cfg(test)]
 mod tests {
+    use crate::arch::current::{Sysno, syscall0};
+
     use super::getuid;
+    use celer_system_linux_ctypes::UidT;
 
     #[test]
     fn test_getuid() {
         let uid = getuid();
+        let expected = (unsafe { syscall0(Sysno::Getuid) }) as UidT;
 
-        assert!(uid >= 0, "getuid should return a non-negative value");
+        assert_eq!(uid, expected, "getuid should match the raw syscall");
     }
 }

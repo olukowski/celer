@@ -46,7 +46,7 @@ pub fn lseek(fd: UnsignedInt, offset: OffT, whence: UnsignedInt) -> Long {
 mod tests {
     use std::{
         fs::{self, OpenOptions},
-        io::{Seek as _, SeekFrom, Write as _},
+        io::{Seek as _, Write as _},
         os::fd::AsRawFd as _,
         path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},
@@ -82,7 +82,7 @@ mod tests {
         file.write_all(b"Hello, World!").unwrap();
         file.rewind().unwrap();
 
-        let expected = file.seek(SeekFrom::Current(0)).unwrap() as OffT;
+        let expected = file.stream_position().unwrap() as OffT;
 
         // SAFETY: `file.as_raw_fd()` is a valid open descriptor and `SEEK_CUR`
         // is a supported seek mode.
