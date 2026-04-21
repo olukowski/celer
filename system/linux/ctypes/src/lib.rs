@@ -58,6 +58,9 @@ pub type TimeT = Long;
 /// Equivalent to the `pid_t` type in the Linux kernel.
 pub type PidT = Int;
 
+/// Equivalent to the `uid_t` type in the Linux kernel.
+pub type UidT = UnsignedInt;
+
 /// Linux `struct __old_kernel_stat` used by the 32-bit `stat` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
