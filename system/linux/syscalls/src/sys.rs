@@ -20,6 +20,7 @@ mod fork;
 mod getpid;
 mod open;
 mod read;
+mod waitpid;
 mod write;
 
 pub use exit::exit;
@@ -27,4 +28,5 @@ pub use fork::fork;
 pub use getpid::getpid;
 pub use open::open;
 pub use read::read;
+pub use waitpid::waitpid;
 pub use write::write;

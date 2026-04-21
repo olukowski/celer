@@ -15,6 +15,8 @@ pub enum Sysno {
     Write = 4,
     /// <https://man7.org/linux/man-pages/man2/open.2.html>
     Open = 5,
+    /// <https://man7.org/linux/man-pages/man2/waitpid.2.html>
+    Waitpid = 7,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
 }
