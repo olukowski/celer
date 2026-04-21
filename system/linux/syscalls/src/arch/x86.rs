@@ -13,6 +13,8 @@ pub enum Sysno {
     Read = 3,
     /// <https://man7.org/linux/man-pages/man2/write.2.html>
     Write = 4,
+    /// <https://man7.org/linux/man-pages/man2/open.2.html>
+    Open = 5,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
 }
