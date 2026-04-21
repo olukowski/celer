@@ -16,6 +16,7 @@
 //! Note: there are some system calls that cannot fail.
 
 mod chdir;
+mod chmod;
 mod close;
 mod creat;
 mod execve;
@@ -31,6 +32,7 @@ mod waitpid;
 mod write;
 
 pub use chdir::chdir;
+pub use chmod::chmod;
 pub use close::close;
 pub use creat::creat;
 pub use execve::execve;
