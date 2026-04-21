@@ -75,6 +75,8 @@ pub enum Sysno {
     Rename = 38,
     /// <https://man7.org/linux/man-pages/man2/mkdir.2.html>
     Mkdir = 39,
+    /// <https://man7.org/linux/man-pages/man2/rmdir.2.html>
+    Rmdir = 40,
 }
 
 /// Invoke a syscall with `0` arguments.
