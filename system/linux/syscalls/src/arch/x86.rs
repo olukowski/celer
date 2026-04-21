@@ -67,6 +67,8 @@ pub enum Sysno {
     Access = 33,
     /// <https://man7.org/linux/man-pages/man2/nice.2.html>
     Nice = 34,
+    /// <https://man7.org/linux/man-pages/man2/sync.2.html>
+    Sync = 36,
 }
 
 /// Invoke a syscall with `0` arguments.
