@@ -15,8 +15,8 @@
 //! the caller is responsible for interpreting them.
 //! Note: there are some system calls that cannot fail.
 
-mod exit;
 mod close;
+mod exit;
 mod fork;
 mod getpid;
 mod open;

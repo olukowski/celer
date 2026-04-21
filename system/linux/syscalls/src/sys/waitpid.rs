@@ -53,6 +53,8 @@ pub unsafe fn waitpid(pid: PidT, stat_addr: *mut Int, options: Int) -> PidT {
 
 #[cfg(test)]
 mod tests {
+    use celer_system_linux_ctypes::Int;
+
     use super::waitpid;
     use crate::sys::{exit, fork};
 

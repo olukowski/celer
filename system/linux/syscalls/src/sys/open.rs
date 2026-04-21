@@ -58,10 +58,7 @@ mod tests {
     use std::{
         env,
         fs::{self, File},
-        os::{
-            fd::{AsRawFd as _, FromRawFd as _},
-            unix::ffi::OsStrExt as _,
-        },
+        os::fd::{AsRawFd as _, FromRawFd as _},
         path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},
     };
@@ -93,11 +90,7 @@ mod tests {
         // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
         // of the syscall.
         let fd = unsafe {
-            open(
-                path_bytes.as_ptr().cast::<Char>(),
-                0 as Int,
-                0 as UModeT,
-            )
+            open(path_bytes.as_ptr().cast::<Char>(), 0 as Int, 0 as UModeT)
         };
 
         assert!(fd >= 0, "open failed: {}", fd);
