@@ -69,6 +69,8 @@ pub enum Sysno {
     Nice = 34,
     /// <https://man7.org/linux/man-pages/man2/sync.2.html>
     Sync = 36,
+    /// <https://man7.org/linux/man-pages/man2/kill.2.html>
+    Kill = 37,
 }
 
 /// Invoke a syscall with `0` arguments.
