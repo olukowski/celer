@@ -21,6 +21,8 @@ pub enum Sysno {
     Waitpid = 7,
     /// <https://man7.org/linux/man-pages/man2/creat.2.html>
     Creat = 8,
+    /// <https://man7.org/linux/man-pages/man2/link.2.html>
+    Link = 9,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
 }
