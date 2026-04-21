@@ -25,6 +25,7 @@ mod getpid;
 mod link;
 mod open;
 mod read;
+mod unlink;
 mod waitpid;
 mod write;
 
@@ -38,5 +39,6 @@ pub use getpid::getpid;
 pub use link::link;
 pub use open::open;
 pub use read::read;
+pub use unlink::unlink;
 pub use waitpid::waitpid;
 pub use write::write;
