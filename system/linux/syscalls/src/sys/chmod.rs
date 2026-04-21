@@ -40,7 +40,6 @@ mod tests {
     use std::{
         env,
         fs::{self, File},
-        os::fd::{AsRawFd as _, FromRawFd as _},
         os::unix::fs::PermissionsExt as _,
         path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},
