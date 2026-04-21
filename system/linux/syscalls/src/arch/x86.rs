@@ -67,6 +67,8 @@ pub enum Sysno {
     Geteuid = 49,
     /// <https://man7.org/linux/man-pages/man2/getegid.2.html>
     Getegid = 50,
+    /// <https://man7.org/linux/man-pages/man2/acct.2.html>
+    Acct = 51,
     /// <https://man7.org/linux/man-pages/man2/ptrace.2.html>
     Ptrace = 26,
     /// <https://man7.org/linux/man-pages/man2/alarm.2.html>
