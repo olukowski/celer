@@ -71,6 +71,8 @@ pub enum Sysno {
     Sync = 36,
     /// <https://man7.org/linux/man-pages/man2/kill.2.html>
     Kill = 37,
+    /// <https://man7.org/linux/man-pages/man2/rename.2.html>
+    Rename = 38,
 }
 
 /// Invoke a syscall with `0` arguments.
