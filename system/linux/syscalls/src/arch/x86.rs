@@ -59,6 +59,8 @@ pub enum Sysno {
     Alarm = 27,
     /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
     Fstat = 28,
+    /// <https://man7.org/linux/man-pages/man2/pause.2.html>
+    Pause = 29,
 }
 
 /// Invoke a syscall with `0` arguments.
