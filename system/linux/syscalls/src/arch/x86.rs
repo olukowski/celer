@@ -73,6 +73,8 @@ pub enum Sysno {
     Kill = 37,
     /// <https://man7.org/linux/man-pages/man2/rename.2.html>
     Rename = 38,
+    /// <https://man7.org/linux/man-pages/man2/mkdir.2.html>
+    Mkdir = 39,
 }
 
 /// Invoke a syscall with `0` arguments.
