@@ -27,6 +27,8 @@ pub enum Sysno {
     Stat = 18,
     /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
     Chdir = 12,
+    /// <https://man7.org/linux/man-pages/man2/umount.2.html>
+    Umount = 22,
     /// <https://man7.org/linux/man-pages/man2/time.2.html>
     Time = 13,
     /// <https://man7.org/linux/man-pages/man2/unlink.2.html>
