@@ -9,6 +9,8 @@ pub enum Sysno {
     Exit = 1,
     /// <https://man7.org/linux/man-pages/man2/fork.2.html>
     Fork = 2,
+    /// <https://man7.org/linux/man-pages/man2/execve.2.html>
+    Execve = 11,
     /// <https://man7.org/linux/man-pages/man2/read.2.html>
     Read = 3,
     /// <https://man7.org/linux/man-pages/man2/write.2.html>
