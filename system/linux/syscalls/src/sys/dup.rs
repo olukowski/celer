@@ -75,7 +75,7 @@ mod tests {
         let fd = file.into_raw_fd();
         let dup_fd = dup(fd as UnsignedInt);
         assert!(dup_fd >= 0, "dup failed: {dup_fd}");
-        assert_ne!(dup_fd, fd as i32);
+        assert_ne!(dup_fd, fd);
 
         crate::sys::close(dup_fd);
         crate::sys::close(fd);

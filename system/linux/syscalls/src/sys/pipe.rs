@@ -1,4 +1,4 @@
-use celer_system_linux_ctypes::{Int, UnsignedInt};
+use celer_system_linux_ctypes::Int;
 
 use crate::arch::current::{Sysno, syscall1};
 
