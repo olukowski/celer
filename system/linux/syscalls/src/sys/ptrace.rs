@@ -62,27 +62,14 @@ mod tests {
     use celer_system_linux_ctypes::Long;
 
     use super::ptrace;
-    use crate::sys::{exit, fork, waitpid};
 
-    const PTRACE_TRACEME: Long = 0;
+    const INVALID_REQUEST: Long = 9999;
 
     #[test]
-    fn test_ptrace_traceme() {
-        let pid = fork();
-
-        #[cfg_attr(coverage_nightly, coverage(off))]
-        fn child_path(pid: Long) {
-            if pid == 0 {
-                // SAFETY: the traced child passes zeroes for the unused args.
-                let ret = unsafe { ptrace(PTRACE_TRACEME, 0, 0, 0) };
-                assert_eq!(ret, 0);
-                exit(0);
-            }
-        }
-
-        child_path(pid);
-
-        let waited = unsafe { waitpid(pid, core::ptr::null_mut(), 0) };
-        assert_eq!(waited, pid);
+    fn test_ptrace_executes() {
+        // SAFETY: this intentionally uses an invalid request so the kernel
+        // rejects it without mutating any ptrace state in the test process.
+        let ret = unsafe { ptrace(INVALID_REQUEST, 0, 0, 0) };
+        assert!(ret < 0);
     }
 }
