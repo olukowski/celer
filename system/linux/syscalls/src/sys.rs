@@ -15,6 +15,7 @@
 //! the caller is responsible for interpreting them.
 //! Note: there are some system calls that cannot fail.
 
+mod access;
 mod alarm;
 mod chdir;
 mod chmod;
@@ -45,6 +46,7 @@ mod utime;
 mod waitpid;
 mod write;
 
+pub use access::access;
 pub use alarm::alarm;
 pub use chdir::chdir;
 pub use chmod::chmod;
