@@ -56,8 +56,7 @@ pub unsafe fn mknod(
 #[cfg(test)]
 mod tests {
     use std::{
-        env,
-        fs,
+        env, fs,
         path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},
     };

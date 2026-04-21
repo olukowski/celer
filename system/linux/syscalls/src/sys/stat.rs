@@ -98,10 +98,7 @@ mod tests {
         // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
         // of the syscall, and `statbuf` is writable for a full `Stat`.
         let ret = unsafe {
-            stat(
-                path_bytes.as_ptr().cast::<Char>(),
-                &raw mut statbuf,
-            )
+            stat(path_bytes.as_ptr().cast::<Char>(), &raw mut statbuf)
         };
 
         assert_eq!(ret, 0, "stat failed: {ret}");
