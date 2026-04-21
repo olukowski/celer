@@ -77,3 +77,11 @@ pub struct Stat {
     pub st_mtime: UnsignedLong,
     pub st_ctime: UnsignedLong,
 }
+
+/// Linux `struct utimbuf` used by the `utime` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Utimbuf {
+    pub actime: TimeT,
+    pub modtime: TimeT,
+}

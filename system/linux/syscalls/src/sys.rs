@@ -41,6 +41,7 @@ mod stime;
 mod time;
 mod umount;
 mod unlink;
+mod utime;
 mod waitpid;
 mod write;
 
@@ -70,5 +71,6 @@ pub use stime::stime;
 pub use time::time;
 pub use umount::umount;
 pub use unlink::unlink;
+pub use utime::utime;
 pub use waitpid::waitpid;
 pub use write::write;

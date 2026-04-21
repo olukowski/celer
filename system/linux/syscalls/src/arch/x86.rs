@@ -61,6 +61,8 @@ pub enum Sysno {
     Fstat = 28,
     /// <https://man7.org/linux/man-pages/man2/pause.2.html>
     Pause = 29,
+    /// <https://man7.org/linux/man-pages/man2/utime.2.html>
+    Utime = 30,
 }
 
 /// Invoke a syscall with `0` arguments.
