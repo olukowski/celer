@@ -33,6 +33,8 @@ pub enum Sysno {
     Link = 9,
     /// <https://man7.org/linux/man-pages/man2/mknod.2.html>
     Mknod = 14,
+    /// <https://man7.org/linux/man-pages/man2/lchown.2.html>
+    Lchown = 16,
     /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
     Getpid = 20,
 }
