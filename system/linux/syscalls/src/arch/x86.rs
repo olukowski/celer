@@ -65,6 +65,8 @@ pub enum Sysno {
     Utime = 30,
     /// <https://man7.org/linux/man-pages/man2/access.2.html>
     Access = 33,
+    /// <https://man7.org/linux/man-pages/man2/nice.2.html>
+    Nice = 34,
 }
 
 /// Invoke a syscall with `0` arguments.
