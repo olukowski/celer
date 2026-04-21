@@ -1,6 +1,6 @@
 use celer_system_linux_ctypes::{Char, Long};
 
-use crate::arch::current::{syscall3, Sysno};
+use crate::arch::current::{Sysno, syscall3};
 
 /// Replace the current process image with a new program.
 ///
@@ -63,7 +63,8 @@ mod tests {
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 let filename = b"/bin/true\0";
-                let argv: [*const Char; 2] = [filename.as_ptr().cast(), core::ptr::null()];
+                let argv: [*const Char; 2] =
+                    [filename.as_ptr().cast(), core::ptr::null()];
                 let envp: [*const Char; 1] = [core::ptr::null()];
 
                 let ret = unsafe {

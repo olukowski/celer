@@ -1,4 +1,4 @@
-use celer_system_linux_ctypes::{Char, Int, Long, UModeT};
+use celer_system_linux_ctypes::{Char, Long, UModeT};
 
 use crate::arch::current::{Sysno, syscall2};
 
