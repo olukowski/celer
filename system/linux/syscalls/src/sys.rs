@@ -15,6 +15,7 @@
 //! the caller is responsible for interpreting them.
 //! Note: there are some system calls that cannot fail.
 
+mod chdir;
 mod close;
 mod creat;
 mod execve;
@@ -27,6 +28,7 @@ mod read;
 mod waitpid;
 mod write;
 
+pub use chdir::chdir;
 pub use close::close;
 pub use creat::creat;
 pub use execve::execve;

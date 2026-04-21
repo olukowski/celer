@@ -17,6 +17,8 @@ pub enum Sysno {
     Write = 4,
     /// <https://man7.org/linux/man-pages/man2/open.2.html>
     Open = 5,
+    /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
+    Chdir = 12,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
     Close = 6,
     /// <https://man7.org/linux/man-pages/man2/waitpid.2.html>
