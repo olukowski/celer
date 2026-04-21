@@ -31,6 +31,8 @@ pub enum Sysno {
     Umount = 22,
     /// <https://man7.org/linux/man-pages/man2/time.2.html>
     Time = 13,
+    /// <https://man7.org/linux/man-pages/man2/stime.2.html>
+    Stime = 25,
     /// <https://man7.org/linux/man-pages/man2/unlink.2.html>
     Unlink = 10,
     /// <https://man7.org/linux/man-pages/man2/close.2.html>
