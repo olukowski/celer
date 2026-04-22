@@ -52,10 +52,10 @@ pub unsafe fn sigpending(set: *mut OldSigsetT) -> Int {
 mod tests {
     use std::sync::Mutex;
 
-    use celer_system_linux_ctypes::{Int, OldSigsetT};
+    use celer_system_linux_ctypes::{Int, OldSigsetT, PidT};
 
     use crate::arch::current::{Sysno, syscall1};
-    use crate::sys::{getpid, kill, ssetmask};
+    use crate::sys::{exit, fork, getpid, kill, ssetmask, waitpid};
 
     use super::sigpending;
 
@@ -84,43 +84,67 @@ mod tests {
         }
     }
 
+    fn assert_clean_exit(status: Int) {
+        assert_eq!(status & 0x7f, 0, "child should not die from a signal");
+        assert_eq!((status >> 8) & 0xff, 0, "child should exit with status 0");
+    }
+
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_sigpending_reports_blocked_pending_signal() {
         let _guard = SIGPENDING_LOCK.lock().unwrap();
 
-        let previous =
-            crate::sys::signal(SIGUSR1, noop_handler as *const () as usize);
-        assert!(
-            previous >= 0,
-            "installing temporary handler failed: {previous}"
-        );
-        let _restore_handler = RestoreHandler {
-            sig: SIGUSR1,
-            old: previous as usize,
-        };
+        let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
 
-        let blocked = (1 as OldSigsetT) << (SIGUSR1 - 1);
-        let original_mask = ssetmask(blocked);
-        let _restore_mask = RestoreMask(original_mask);
+        fn exercise_sigpending_in_child(pid: PidT) {
+            if pid == 0 {
+                let previous = crate::sys::signal(
+                    SIGUSR1,
+                    noop_handler as *const () as usize,
+                );
+                assert!(
+                    previous >= 0,
+                    "installing temporary handler failed: {previous}"
+                );
+                let _restore_handler = RestoreHandler {
+                    sig: SIGUSR1,
+                    old: previous as usize,
+                };
 
-        let rc = kill(getpid(), SIGUSR1);
-        assert_eq!(rc, 0, "sending SIGUSR1 to self failed: {rc}");
+                let blocked = (1 as OldSigsetT) << (SIGUSR1 - 1);
+                let original_mask = ssetmask(blocked);
+                let _restore_mask = RestoreMask(original_mask);
 
-        let mut pending = 0 as OldSigsetT;
-        // SAFETY: `pending` is writable for one `OldSigsetT`.
-        let rc = unsafe { sigpending(&raw mut pending) };
-        assert_eq!(rc, 0, "sigpending failed: {rc}");
-        assert_eq!(
-            pending & blocked,
-            blocked,
-            "SIGUSR1 should be reported as blocked and pending"
-        );
+                let rc = kill(getpid(), SIGUSR1);
+                assert_eq!(rc, 0, "sending SIGUSR1 to self failed: {rc}");
 
-        let clear_mask = ssetmask(original_mask);
-        assert_eq!(
-            clear_mask, blocked,
-            "unblocking should return the blocked pending mask"
-        );
+                let mut pending = 0 as OldSigsetT;
+                // SAFETY: `pending` is writable for one `OldSigsetT`.
+                let rc = unsafe { sigpending(&raw mut pending) };
+                assert_eq!(rc, 0, "sigpending failed: {rc}");
+                assert_eq!(
+                    pending & blocked,
+                    blocked,
+                    "SIGUSR1 should be reported as blocked and pending"
+                );
+
+                let clear_mask = ssetmask(original_mask);
+                assert_eq!(
+                    clear_mask, blocked,
+                    "unblocking should return the blocked pending mask"
+                );
+
+                exit(0);
+            }
+        }
+
+        exercise_sigpending_in_child(pid);
+
+        let mut status = 0;
+        let waited = unsafe { waitpid(pid, &raw mut status, 0) };
+        assert_eq!(waited, pid);
+        assert_clean_exit(status);
     }
 
     #[test]
