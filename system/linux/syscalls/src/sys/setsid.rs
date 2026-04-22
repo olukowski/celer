@@ -58,7 +58,7 @@ mod tests {
         let ret = setsid();
 
         assert!(
-            ret > 0 || ret == -1,
+            ret != 0 && !(2..).contains(-ret),
             "setsid should either succeed or report EPERM, got {ret}"
         );
     }

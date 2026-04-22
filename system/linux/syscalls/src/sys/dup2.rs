@@ -191,7 +191,7 @@ mod tests {
         let ret = dup2(fd as UnsignedInt, 256 as UnsignedInt);
 
         assert!(
-            ret == 256 || ret == -9,
+            [256, -9].contains(ret),
             "expected dup2(fd, 256) to succeed on modern kernels or return EBADF like Linux 1.0, got {ret}"
         );
         assert_eq!(crate::sys::close(fd), 0);
