@@ -5,7 +5,9 @@ use crate::arch::current::{Sysno, syscall2};
 /// Copy the current process resource limits for one historical Linux resource.
 ///
 /// This wrapper exposes the original i386 syscall number 76 ABI from Linux
-/// 1.0, which uses two 32-bit signed fields in [`Rlimit`].
+/// 1.0, which on current x86 kernels is implemented by the legacy
+/// `old_getrlimit` entrypoint and uses the 32-bit `struct rlimit` layout in
+/// [`Rlimit`].
 ///
 /// # Safety
 /// - `rlim` must point to writable memory for one [`Rlimit`] value for the
@@ -14,16 +16,19 @@ use crate::arch::current::{Sysno, syscall2};
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: newer x86 kernels keep syscall number 76 as the legacy
-///   `old_getrlimit` entrypoint, clamping returned values to `0x7fffffff`
-///   when the modern internal limit exceeds the historical ABI range.
+///   `old_getrlimit` entrypoint, accept the current `RLIM_NLIMITS` resource
+///   range, and clamp returned values to `0x7fffffff` when the modern
+///   internal limit exceeds the historical ABI range.
 /// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - `resource` selects one of the six Linux 1.0 resource slots:
-///   `RLIMIT_CPU` through `RLIMIT_RSS`.
+/// - On Linux 1.0, `resource` selected one of the six historical resource
+///   slots: `RLIMIT_CPU` through `RLIMIT_RSS`.
+/// - On current kernels, this legacy entrypoint accepts the current
+///   `RLIM_NLIMITS` range instead of the six Linux 1.0 slots.
 /// - On success, the kernel writes the current soft limit to `rlim_cur` and
 ///   the hard limit to `rlim_max`.
 /// - Linux 1.0 validates `resource` before touching `rlim`.
@@ -31,7 +36,8 @@ use crate::arch::current::{Sysno, syscall2};
 ///   `ugetrlimit` or `prlimit64` interfaces.
 ///
 /// # Errors
-/// - `EINVAL`: `resource` is not one of the six Linux 1.0 resource slots.
+/// - `EINVAL`: `resource` is out of range for the kernel's `RLIM_NLIMITS`
+///   table.
 /// - `EFAULT`: `rlim` is not writable for one [`Rlimit`] value.
 ///
 /// # References
@@ -57,7 +63,7 @@ mod tests {
     use super::getrlimit;
 
     const RLIMIT_CPU: UnsignedInt = 0;
-    const RLIM_NLIMITS: UnsignedInt = 6;
+    const CURRENT_RLIM_NLIMITS: UnsignedInt = 16;
 
     #[test]
     fn test_getrlimit_layout() {
@@ -93,7 +99,7 @@ mod tests {
         };
 
         // SAFETY: `rlim` is writable for a full `Rlimit`.
-        let ret = unsafe { getrlimit(RLIM_NLIMITS, &raw mut rlim) };
+        let ret = unsafe { getrlimit(CURRENT_RLIM_NLIMITS, &raw mut rlim) };
 
         assert_eq!(
             ret, -22,
