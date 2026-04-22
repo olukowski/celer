@@ -121,6 +121,8 @@ pub enum Sysno {
     Setsid = 66,
     /// <https://man7.org/linux/man-pages/man2/sigaction.2.html>
     Sigaction = 67,
+    /// <https://man7.org/linux/man-pages/man2/sigprocmask.2.html>
+    Sgetmask = 68,
 }
 
 /// Invoke a syscall with `0` arguments.
