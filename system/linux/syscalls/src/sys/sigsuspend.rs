@@ -61,7 +61,9 @@ mod tests {
 
     use celer_system_linux_ctypes::{Int, Long, OldSigsetT, PidT};
 
-    use crate::sys::{exit, fork, getpid, kill, sgetmask, signal, ssetmask, waitpid};
+    use crate::sys::{
+        exit, fork, getpid, kill, sgetmask, signal, ssetmask, waitpid,
+    };
 
     use super::sigsuspend;
 
@@ -103,7 +105,11 @@ mod tests {
     }
 
     #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
-    fn spawn_signal_sender(target: PidT, first: Int, second: Option<(u64, Int)>) -> PidT {
+    fn spawn_signal_sender(
+        target: PidT,
+        first: Int,
+        second: Option<(u64, Int)>,
+    ) -> PidT {
         let pid = fork();
         assert!(pid >= 0, "fork for signal sender failed: {pid}");
 
@@ -157,7 +163,8 @@ mod tests {
 
                 let rc = sigsuspend(0);
                 let mut sender_status = 0;
-                let waited = unsafe { waitpid(sender, &raw mut sender_status, 0) };
+                let waited =
+                    unsafe { waitpid(sender, &raw mut sender_status, 0) };
 
                 assert_eq!(waited, sender);
                 assert_clean_exit(sender_status);
@@ -208,13 +215,17 @@ mod tests {
                     old_handler: old_usr2,
                 };
 
-                let sender =
-                    spawn_signal_sender(getpid(), SIGUSR1, Some((200, SIGUSR2)));
+                let sender = spawn_signal_sender(
+                    getpid(),
+                    SIGUSR1,
+                    Some((200, SIGUSR2)),
+                );
 
                 let rc = sigsuspend(0);
 
                 let mut sender_status = 0;
-                let waited = unsafe { waitpid(sender, &raw mut sender_status, 0) };
+                let waited =
+                    unsafe { waitpid(sender, &raw mut sender_status, 0) };
 
                 assert_eq!(waited, sender);
                 assert_clean_exit(sender_status);
