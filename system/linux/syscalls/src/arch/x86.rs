@@ -113,6 +113,8 @@ pub enum Sysno {
     Ustat = 62,
     /// <https://man7.org/linux/man-pages/man2/dup.2.html>
     Dup2 = 63,
+    /// <https://man7.org/linux/man-pages/man2/getppid.2.html>
+    Getppid = 64,
 }
 
 /// Invoke a syscall with `0` arguments.
