@@ -84,6 +84,18 @@ mod tests {
 
     use super::getgroups16;
 
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    fn buffer_for_count(count: Int) -> (Vec<OldGidT>, *mut OldGidT) {
+        let mut groups = vec![OldGidT::MAX; count as usize];
+        let ptr = if groups.is_empty() {
+            core::ptr::null_mut()
+        } else {
+            groups.as_mut_ptr()
+        };
+
+        (groups, ptr)
+    }
+
     #[test]
     fn test_getgroups_sysno() {
         assert_eq!(Sysno::Getgroups as isize, 80);
@@ -106,12 +118,7 @@ mod tests {
         let count = unsafe { getgroups16(0, core::ptr::null_mut()) };
         assert!(count >= 0, "getgroups16 count probe failed: {count}");
 
-        let mut groups = vec![OldGidT::MAX; count as usize];
-        let ptr = if groups.is_empty() {
-            core::ptr::null_mut()
-        } else {
-            groups.as_mut_ptr()
-        };
+        let (_groups, ptr) = buffer_for_count(count);
 
         // SAFETY: `ptr` is null only for the zero-sized probe case;
         // otherwise it is writable for `count` entries.
@@ -152,6 +159,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_getgroups_undersized_buffer_returns_einval_when_nonempty() {
         // SAFETY: `grouplist` may be null when `gidsetsize == 0`.
         let count = unsafe { getgroups16(0, core::ptr::null_mut()) };
@@ -178,6 +186,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_getgroups_invalid_pointer_returns_efault() {
         // SAFETY: `grouplist` may be null when `gidsetsize == 0`.
         let count = unsafe { getgroups16(0, core::ptr::null_mut()) };
