@@ -72,6 +72,10 @@ pub type GidT = UnsignedInt;
 /// `setgid` syscall ABI.
 pub type OldGidT = UnsignedShort;
 
+/// Equivalent to the legacy `old_sigset_t` type used by the i386
+/// `sigaction` syscall ABI.
+pub type OldSigsetT = UnsignedLong;
+
 /// Linux `struct __old_kernel_stat` used by the 32-bit `stat` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -107,6 +111,19 @@ pub struct OldOldUtsname {
     pub release: [Char; 9],
     pub version: [Char; 9],
     pub machine: [Char; 9],
+}
+
+/// Linux `struct old_sigaction` used by the i386 `sigaction` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct OldSigaction {
+    /// User-space handler value, including special dispositions such as
+    /// `SIG_DFL` (`0`) and `SIG_IGN` (`1`).
+    pub sa_handler: usize,
+    pub sa_mask: OldSigsetT,
+    pub sa_flags: UnsignedLong,
+    /// User-space restorer address passed through to the kernel as data.
+    pub sa_restorer: usize,
 }
 
 /// Linux `struct tms` used by the `times` syscall ABI.
