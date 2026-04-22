@@ -39,6 +39,8 @@ pub enum Sysno {
     Close = 6,
     /// <https://man7.org/linux/man-pages/man2/ioctl.2.html>
     Ioctl = 54,
+    /// <https://man7.org/linux/man-pages/man2/fcntl.2.html>
+    Fcntl = 55,
     /// <https://man7.org/linux/man-pages/man2/brk.2.html>
     Brk = 45,
     /// <https://man7.org/linux/man-pages/man2/dup.2.html>
