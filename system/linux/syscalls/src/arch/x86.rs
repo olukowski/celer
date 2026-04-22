@@ -111,6 +111,8 @@ pub enum Sysno {
     Chroot = 61,
     /// <https://man7.org/linux/man-pages/man2/ustat.2.html>
     Ustat = 62,
+    /// <https://man7.org/linux/man-pages/man2/dup.2.html>
+    Dup2 = 63,
 }
 
 /// Invoke a syscall with `0` arguments.
