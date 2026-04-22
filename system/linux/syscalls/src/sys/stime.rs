@@ -7,7 +7,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// This is the legacy `stime` entry point on x86 Linux.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Availability: x86 Linux only for now
 ///
 /// # Required Privileges
@@ -33,7 +33,6 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/stime.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/time.c?h=v6.19#n81)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/time.c?h=v6.18.18#n81)
-/// - x86 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n40)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n148)

@@ -9,7 +9,7 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `buf` must be writable for `count` bytes (see [`core::ptr::write`]).
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: always present
 ///

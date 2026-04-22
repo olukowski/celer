@@ -5,7 +5,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// Returns the process ID (PID) of the calling process.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: always present
 ///
@@ -25,7 +25,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n352)
 pub fn getpid() -> PidT {
     // SAFETY: `getpid` is always safe to call.
-    (unsafe { syscall0(Sysno::Getpid) }) as PidT
+    syscall0(Sysno::Getpid) as PidT
 }
 
 #[cfg(test)]

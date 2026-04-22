@@ -1,8 +1,9 @@
-use celer_system_linux_ctypes::{Char, Int, UnsignedInt};
+use celer_system_linux_ctypes::{Char, Int, OldGidT, OldUidT};
 
 use crate::arch::current::{Sysno, syscall3};
 
-/// Change the owner and/or group of a file without following a symlink.
+/// Change the owner and/or group of a file through the legacy i386 `lchown16`
+/// ABI without following a symlink.
 ///
 /// # Safety
 /// - `filename` must point to a NUL-terminated string that is readable for the
@@ -21,6 +22,8 @@ use crate::arch::current::{Sysno, syscall3};
 /// - The plain `chown` name now refers to the follow-symlinks variant.
 ///
 /// # Behavior
+/// - Legacy i386 syscall `16` uses 16-bit `old_uid_t` / `old_gid_t` values and
+///   widens them before delegating to the kernel's modern ownership logic.
 /// - The syscall delegates to `do_fchownat(AT_FDCWD, filename, user, group,
 ///   AT_SYMLINK_NOFOLLOW)`.
 /// - The kernel resolves the path without following the final symlink, then
@@ -34,10 +37,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n104)
-pub unsafe fn lchown(
+pub unsafe fn lchown16(
     filename: *const Char,
-    user: UnsignedInt,
-    group: UnsignedInt,
+    user: OldUidT,
+    group: OldGidT,
 ) -> Int {
     // SAFETY: guaranteed by caller.
     unsafe {
@@ -59,9 +62,9 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use celer_system_linux_ctypes::{Char, UnsignedInt};
+    use celer_system_linux_ctypes::{Char, OldGidT, OldUidT};
 
-    use super::lchown;
+    use super::lchown16;
 
     fn create_temp_file(prefix: &str) -> PathBuf {
         let mut path = env::temp_dir();
@@ -79,8 +82,7 @@ mod tests {
     #[test]
     fn test_lchown_group() {
         let path = create_temp_file("test_lchown_group");
-        let gid: UnsignedInt =
-            fs::metadata(&path).unwrap().gid() as UnsignedInt;
+        let gid = fs::metadata(&path).unwrap().gid() as OldGidT;
 
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
@@ -88,9 +90,9 @@ mod tests {
         // SAFETY: `path_bytes` is NUL-terminated and readable for the
         // duration of the syscall.
         let result = unsafe {
-            lchown(path_bytes.as_ptr().cast::<Char>(), !0 as UnsignedInt, gid)
+            lchown16(path_bytes.as_ptr().cast::<Char>(), !0 as OldUidT, gid)
         };
-        assert_eq!(result, 0, "lchown failed: {result}");
+        assert_eq!(result, 0, "lchown16 failed: {result}");
 
         let meta = fs::metadata(&path).unwrap();
         assert_eq!(meta.gid(), gid as u32);

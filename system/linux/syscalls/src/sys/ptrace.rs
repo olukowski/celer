@@ -7,7 +7,7 @@ use crate::arch::current::{Sysno, syscall4};
 /// This is the Linux `ptrace` syscall entry point.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: common Linux syscall
 ///
@@ -35,7 +35,6 @@ use crate::arch::current::{Sysno, syscall4};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/ptrace.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/ptrace.c?h=v6.19#n1387)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/ptrace.c?h=v6.18.18#n1387)
-/// - x86 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n41)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n26)

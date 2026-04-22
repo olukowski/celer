@@ -115,10 +115,7 @@ pub enum Sysno {
 ///
 /// # Safety
 ///
-/// The caller must ensure:
-/// - `sysno` identifies a syscall that takes no arguments.
-/// - Any irreversible side effects of the syscall are intended.
-pub unsafe fn syscall0(sysno: Sysno) -> isize {
+pub fn syscall0(sysno: Sysno) -> isize {
     let mut ret: isize;
 
     // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
@@ -198,7 +195,7 @@ pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes three arguments.
 /// - Any irreversible side effects of the syscall are intended.
-/// - `arg0` through `arg2` are valid arguments for `sysno`. If any encode a
+/// - `arg1` through `arg3` are valid arguments for `sysno`. If any encode a
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
 ///   validity requires for read-only and write-only pointers respectively.

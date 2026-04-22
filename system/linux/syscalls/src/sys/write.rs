@@ -9,7 +9,7 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `buf` must be readable for `count` bytes (see [`core::ptr::read`]).
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: always present
 ///
@@ -56,7 +56,7 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/write.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v6.19#n746)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n746)
-/// - First stable [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=1.0#n90)
+/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=1.0#n90)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.10#n83)

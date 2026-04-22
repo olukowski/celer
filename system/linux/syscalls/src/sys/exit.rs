@@ -7,7 +7,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// Terminates the calling thread.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: always present
 ///

@@ -5,6 +5,11 @@ use crate::arch::current::{Sysno, syscall3};
 /// Manipulate an open file descriptor `fd` with the legacy x86 32-bit
 /// `fcntl` syscall entrypoint.
 ///
+/// # Safety
+/// - Some `cmd` values cause the kernel to treat `arg` as a userspace pointer
+///   and copy to or from that address. Callers must uphold the command-specific
+///   pointer validity requirements in those cases.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: command-specific support has grown over time
@@ -39,13 +44,12 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/fcntl.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/fcntl.c?h=v6.19#n587)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/fcntl.c?h=v6.18.18#n587)
-/// - x86 table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n70)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/fcntl.c?h=1.0#n1)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/fcntl.c?h=0.10#n47)
-pub fn fcntl(fd: UnsignedInt, cmd: Int, arg: Long) -> Long {
-    // SAFETY: the syscall itself has no caller-visible memory-safety precondition.
+pub unsafe fn fcntl(fd: UnsignedInt, cmd: Int, arg: Long) -> Long {
+    // SAFETY: guaranteed by caller.
     (unsafe { syscall3(Sysno::Fcntl, fd as isize, cmd as isize, arg as isize) })
         as Long
 }
@@ -102,7 +106,8 @@ mod tests {
         let fd = unsafe { open(path_bytes.as_ptr().cast(), 0 as Int, 0 as _) };
         assert!(fd >= 0, "open failed: {fd}");
 
-        let ret = fcntl(fd as UnsignedInt, 1 as Int, 0 as Long);
+        // SAFETY: `F_GETFD` treats `arg` as a scalar.
+        let ret = unsafe { fcntl(fd as UnsignedInt, 1 as Int, 0 as Long) };
         assert_eq!(ret, 0);
 
         // SAFETY: `fd` was returned by `open` above and is uniquely owned here.
@@ -113,7 +118,8 @@ mod tests {
 
     #[test]
     fn test_fcntl_invalid_fd() {
-        let ret = fcntl(9_999 as _, 1 as Int, 0 as Long);
+        // SAFETY: `F_GETFD` treats `arg` as a scalar.
+        let ret = unsafe { fcntl(9_999 as _, 1 as Int, 0 as Long) };
         assert_eq!(ret, -(9 as Long));
     }
 }

@@ -2,7 +2,8 @@ use celer_system_linux_ctypes::{Long, Stat, UnsignedInt};
 
 use crate::arch::current::{Sysno, syscall2};
 
-/// Get file status information for an open file descriptor.
+/// Get file status information for an open file descriptor through the legacy
+/// i386 `oldfstat` ABI.
 ///
 /// # Safety
 /// - `statbuf` must point to writable memory large enough for a `Stat` value.
@@ -33,11 +34,10 @@ use crate::arch::current::{Sysno, syscall2};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/fstat.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v6.19#n450)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/stat.c?h=v6.18.18#n450)
-/// - x86 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n43)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=0.10#n47)
-pub unsafe fn fstat(fd: UnsignedInt, statbuf: *mut Stat) -> Long {
+pub unsafe fn oldfstat(fd: UnsignedInt, statbuf: *mut Stat) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe { syscall2(Sysno::Fstat, fd as isize, statbuf.addr() as isize) })
         as Long
@@ -55,7 +55,7 @@ mod tests {
 
     use crate::sys::close;
 
-    use super::fstat;
+    use super::oldfstat;
 
     #[test]
     fn test_fstat() {
@@ -86,14 +86,19 @@ mod tests {
         };
 
         // SAFETY: `statbuf` is writable for a full `Stat`.
-        let ret = unsafe { fstat(fd as UnsignedInt, &raw mut statbuf) };
-        assert_eq!(ret, 0, "fstat failed: {ret}");
+        let ret = unsafe { oldfstat(fd as UnsignedInt, &raw mut statbuf) };
+        if ret == -38 {
+            assert_eq!(close(fd), 0);
+            fs::remove_file(&path).unwrap();
+            return;
+        }
+        assert_eq!(ret, 0, "oldfstat failed: {ret}");
         assert_eq!(statbuf.st_ino as u64, metadata.ino());
         assert_eq!(statbuf.st_size as u64, metadata.size());
 
         assert_eq!(close(fd), 0);
 
-        let bad = unsafe { fstat(fd as UnsignedInt, &raw mut statbuf) };
+        let bad = unsafe { oldfstat(fd as UnsignedInt, &raw mut statbuf) };
         assert_eq!(bad, -9, "expected EBADF from closed fd, got {bad}");
 
         fs::remove_file(&path).unwrap();

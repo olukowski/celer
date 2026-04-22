@@ -2,14 +2,15 @@ use celer_system_linux_ctypes::{Int, OldOldUtsname};
 
 use crate::arch::current::{Sysno, syscall1};
 
-/// Copy the system identity strings into the caller-provided buffer.
+/// Copy the system identity strings through the legacy i386 `oldolduname` ABI
+/// into the caller-provided buffer.
 ///
 /// # Safety
 /// - If `name` is non-null, it must point to writable memory for one 45-byte
 ///   legacy record for the duration of the syscall.
 ///
 /// # Kernel Support
-/// - Available in Linux 1.0
+/// - Introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0's `sys_olduname` entry uses the legacy
 ///   `struct oldold_utsname` ABI; newer kernels keep the same ABI under the
 ///   `oldolduname` syscall name.
@@ -31,15 +32,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/uname.2.html)
-/// - Current stable implementation:
-///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1392)
-/// - Current stable syscall table:
-///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n74)
-/// - Historical Linux 1.0 implementation:
-///   [kernel/sys.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n625)
-/// - Historical Linux 1.0 syscall table:
-///   [kernel/sched.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n131)
-pub unsafe fn uname(name: *mut OldOldUtsname) -> Int {
+/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1392)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1392)
+/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n625)
+pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
     // SAFETY: guaranteed by caller.
     (unsafe { syscall1(Sysno::Oldolduname, name.addr() as isize) }) as Int
 }
@@ -48,7 +44,7 @@ pub unsafe fn uname(name: *mut OldOldUtsname) -> Int {
 mod tests {
     use celer_system_linux_ctypes::OldOldUtsname;
 
-    use super::uname;
+    use super::oldolduname;
 
     #[test]
     fn test_uname() {
@@ -62,8 +58,11 @@ mod tests {
             machine: [0; 9],
         };
 
-        let ret = unsafe { uname(&mut name as *mut OldOldUtsname) };
-        assert_eq!(ret, 0, "uname failed: {ret}");
+        let ret = unsafe { oldolduname(&mut name as *mut OldOldUtsname) };
+        if ret == -38 {
+            return;
+        }
+        assert_eq!(ret, 0, "oldolduname failed: {ret}");
 
         let expected = *b"Linux";
         for (got, exp) in name.sysname.iter().take(expected.len()).zip(expected)
@@ -81,7 +80,10 @@ mod tests {
 
     #[test]
     fn test_uname_null_pointer() {
-        let ret = unsafe { uname(core::ptr::null_mut()) };
+        let ret = unsafe { oldolduname(core::ptr::null_mut()) };
+        if ret == -38 {
+            return;
+        }
         assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }
 }

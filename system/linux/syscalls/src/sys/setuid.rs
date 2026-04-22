@@ -1,17 +1,29 @@
-use celer_system_linux_ctypes::{Int, UidT};
+use celer_system_linux_ctypes::{Int, OldUidT};
 
 use crate::arch::current::{Sysno, syscall1};
 
-/// Set the calling process's user ID.
+/// Set the calling process's user ID through the legacy i386 `setuid16` ABI.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Behavior changes: the implementation later moved into `__sys_setuid`
+/// - Behavior changes: modern i386 uses the legacy 16-bit `setuid` entry
+///   (`sys_setuid16`) which forwards to the core credential logic
 /// - Availability: always present on supported Linux kernels
 ///
 /// # Required Privileges
-/// - None for calls that do not change the process's identity.
-/// - Permission checks apply when changing to a different user ID.
+/// - None when the requested user matches the caller's real or saved user.
+/// - `CAP_SETUID` is required for other transitions, subject to namespace and
+///   LSM checks.
+///
+/// # Behavior
+/// - Legacy i386 syscall `23` uses the 16-bit `old_uid_t` entry point
+///   (`sys_setuid16`), which converts the old uid format before applying the
+///   core rules.
+/// - With `CAP_SETUID`, the kernel sets `uid`, `euid`, `suid`, and `fsuid`.
+/// - Without `CAP_SETUID`, a successful call only updates `euid` and `fsuid`,
+///   and only when the requested uid matches the caller's current real or
+///   saved uid.
+/// - Successful calls return `0`.
 ///
 /// # Errors
 /// - `EINVAL`: `uid` cannot be mapped to a valid kernel UID.
@@ -25,22 +37,25 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n125)
-pub fn setuid(uid: UidT) -> Int {
-    // SAFETY: `setuid` takes a single integer argument and has no pointer
+pub fn setuid16(uid: OldUidT) -> Int {
+    // SAFETY: `setuid16` takes a single integer argument and has no pointer
     // validity requirements.
     unsafe { syscall1(Sysno::Setuid, uid as isize) as Int }
 }
 
 #[cfg(test)]
 mod tests {
-    use celer_system_linux_ctypes::UidT;
+    use celer_system_linux_ctypes::OldUidT;
 
-    use super::setuid;
+    use crate::arch::current::{Sysno, syscall0};
+
+    use super::setuid16;
 
     #[test]
-    fn test_setuid_invalid_uid() {
-        let result = setuid(!0 as UidT);
+    fn test_setuid16_current_uid() {
+        let uid = syscall0(Sysno::Getuid) as OldUidT;
+        let result = setuid16(uid);
 
-        assert!(result < 0, "setuid should have failed: {result}");
+        assert_eq!(result, 0, "setuid16(current uid) failed: {result}");
     }
 }

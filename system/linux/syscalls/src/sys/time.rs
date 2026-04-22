@@ -8,7 +8,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// address before returning.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: always present on supported Linux kernels
 ///

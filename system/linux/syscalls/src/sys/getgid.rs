@@ -1,12 +1,13 @@
-use celer_system_linux_ctypes::GidT;
+use celer_system_linux_ctypes::OldGidT;
 
 use crate::arch::current::{Sysno, syscall0};
 
-/// Returns the real group ID (GID) of the calling process.
+/// Return the real group ID through the legacy i386 `getgid16` ABI.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes: modern i386 still uses the legacy 16-bit `getgid`
+///   entry (`sys_getgid16`)
 /// - Availability: always present
 ///
 /// # Required Privileges
@@ -23,23 +24,22 @@ use crate::arch::current::{Sysno, syscall0};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n372)
-pub fn getgid() -> GidT {
-    // SAFETY: `getgid` is always safe to call.
-    (unsafe { syscall0(Sysno::Getgid) }) as GidT
+pub fn getgid16() -> OldGidT {
+    syscall0(Sysno::Getgid) as OldGidT
 }
 
 #[cfg(test)]
 mod tests {
     use crate::arch::current::{Sysno, syscall0};
 
-    use super::getgid;
-    use celer_system_linux_ctypes::GidT;
+    use super::getgid16;
+    use celer_system_linux_ctypes::OldGidT;
 
     #[test]
     fn test_getgid() {
-        let gid = getgid();
-        let expected = (unsafe { syscall0(Sysno::Getgid) }) as GidT;
+        let gid = getgid16();
+        let expected = syscall0(Sysno::Getgid) as OldGidT;
 
-        assert_eq!(gid, expected, "getgid should match the raw syscall");
+        assert_eq!(gid, expected, "getgid16 should match the raw syscall");
     }
 }

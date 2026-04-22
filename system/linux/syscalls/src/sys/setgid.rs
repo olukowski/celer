@@ -35,12 +35,11 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/setgid.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n474)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n474)
-/// - x86 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n61)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n72)
-pub fn setgid(gid: OldGidT) -> Int {
-    // SAFETY: `setgid` takes a single integer argument and has no pointer
+pub fn setgid16(gid: OldGidT) -> Int {
+    // SAFETY: `setgid16` takes a single integer argument and has no pointer
     // validity requirements.
     unsafe { syscall1(Sysno::Setgid, gid as isize) as Int }
 }
@@ -49,12 +48,15 @@ pub fn setgid(gid: OldGidT) -> Int {
 mod tests {
     use celer_system_linux_ctypes::OldGidT;
 
-    use super::setgid;
+    use crate::arch::current::{Sysno, syscall0};
+
+    use super::setgid16;
 
     #[test]
-    fn test_setgid_invalid_gid() {
-        let result = setgid(!0 as OldGidT);
+    fn test_setgid16_current_gid() {
+        let gid = syscall0(Sysno::Getgid) as OldGidT;
+        let result = setgid16(gid);
 
-        assert!(result < 0, "setgid should have failed: {result}");
+        assert_eq!(result, 0, "setgid16(current gid) failed: {result}");
     }
 }

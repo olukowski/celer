@@ -5,7 +5,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// Close an open file descriptor.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 ///
 /// # Required Privileges
 /// - None

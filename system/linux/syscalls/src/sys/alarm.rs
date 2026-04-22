@@ -7,7 +7,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// This is the Linux `alarm` syscall entry point.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Availability: common Linux syscall
 ///
 /// # Required Privileges
@@ -28,7 +28,6 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/alarm.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/itimer.c?h=v6.19#n325)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/itimer.c?h=v6.18.18#n325)
-/// - x86 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n42)
 ///
 /// # Historical References
 /// - Linux 1.0 returned the previous alarm time using floor semantics for

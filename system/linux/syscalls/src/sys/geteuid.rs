@@ -1,12 +1,13 @@
-use celer_system_linux_ctypes::UidT;
+use celer_system_linux_ctypes::OldUidT;
 
 use crate::arch::current::{Sysno, syscall0};
 
-/// Returns the effective user ID (EUID) of the calling process.
+/// Return the effective user ID through the legacy i386 `geteuid16` ABI.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes: modern i386 still uses the legacy 16-bit `geteuid`
+///   entry (`sys_geteuid16`)
 /// - Availability: always present
 ///
 /// # Required Privileges
@@ -23,23 +24,22 @@ use crate::arch::current::{Sysno, syscall0};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n367)
-pub fn geteuid() -> UidT {
-    // SAFETY: `geteuid` is always safe to call.
-    (unsafe { syscall0(Sysno::Geteuid) }) as UidT
+pub fn geteuid16() -> OldUidT {
+    syscall0(Sysno::Geteuid) as OldUidT
 }
 
 #[cfg(test)]
 mod tests {
     use crate::arch::current::{Sysno, syscall0};
 
-    use super::geteuid;
-    use celer_system_linux_ctypes::UidT;
+    use super::geteuid16;
+    use celer_system_linux_ctypes::OldUidT;
 
     #[test]
     fn test_geteuid() {
-        let euid = geteuid();
-        let expected = (unsafe { syscall0(Sysno::Geteuid) }) as UidT;
+        let euid = geteuid16();
+        let expected = syscall0(Sysno::Geteuid) as OldUidT;
 
-        assert_eq!(euid, expected, "geteuid should match the raw syscall");
+        assert_eq!(euid, expected, "geteuid16 should match the raw syscall");
     }
 }

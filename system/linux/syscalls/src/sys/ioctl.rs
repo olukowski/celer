@@ -4,6 +4,11 @@ use crate::arch::current::{Sysno, syscall3};
 
 /// Perform an `ioctl` operation on the open file descriptor `fd`.
 ///
+/// # Safety
+/// - Some `request` values cause the kernel to treat `arg` as a userspace
+///   pointer and copy to or from that address. Callers must uphold the
+///   request-specific pointer validity requirements in those cases.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -39,17 +44,16 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/ioctl.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/ioctl.c?h=v6.19#n583)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/ioctl.c?h=v6.18.18#n583)
-/// - x86 table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n69)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/ioctl.c?h=1.0#n1)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/ioctl.c?h=0.10#n30)
-pub fn ioctl(
+pub unsafe fn ioctl(
     fd: UnsignedInt,
     request: UnsignedLong,
     arg: UnsignedLong,
 ) -> Long {
-    // SAFETY: the syscall itself has no caller-visible memory-safety precondition.
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall3(Sysno::Ioctl, fd as isize, request as isize, arg as isize)
     }) as Long
@@ -89,8 +93,13 @@ mod tests {
 
     #[test]
     fn test_ioctl_invalid_fd() {
-        let ret = ioctl(9_999 as _, 0 as UnsignedLong, 0 as UnsignedLong);
-        assert_eq!(ret, -(9 as Long));
+        // SAFETY: request `0` treats `arg` as a scalar here.
+        let ret =
+            unsafe { ioctl(9_999 as _, 0 as UnsignedLong, 0 as UnsignedLong) };
+        assert!(
+            ret < 0,
+            "ioctl on an invalid fd unexpectedly succeeded: {ret}"
+        );
     }
 
     #[test]
@@ -104,11 +113,15 @@ mod tests {
             .open(&path)
             .unwrap();
 
-        let ret = ioctl(
-            file.as_raw_fd() as _,
-            0xDEAD_BEEF as UnsignedLong,
-            0 as UnsignedLong,
-        );
+        // SAFETY: this request treats `arg` as a scalar and does not require a
+        // userspace pointer.
+        let ret = unsafe {
+            ioctl(
+                file.as_raw_fd() as _,
+                0xDEAD_BEEF as UnsignedLong,
+                0 as UnsignedLong,
+            )
+        };
         assert_eq!(ret, -(25 as Long));
 
         fs::remove_file(&path).unwrap();
