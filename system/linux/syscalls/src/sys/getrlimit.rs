@@ -70,16 +70,14 @@ mod tests {
     #[test]
     fn test_getrlimit_cpu_success() {
         let mut rlim = Rlimit {
-            rlim_cur: -1,
-            rlim_max: -1,
+            rlim_cur: u32::MAX,
+            rlim_max: u32::MAX,
         };
 
         // SAFETY: `rlim` is writable for a full `Rlimit`.
         let ret = unsafe { getrlimit(RLIMIT_CPU, &raw mut rlim) };
 
         assert_eq!(ret, 0, "getrlimit failed for RLIMIT_CPU: {ret}");
-        assert!(rlim.rlim_cur >= 0, "soft limit should be non-negative");
-        assert!(rlim.rlim_max >= 0, "hard limit should be non-negative");
         assert!(
             rlim.rlim_cur <= rlim.rlim_max,
             "soft limit should not exceed hard limit: {:?}",
