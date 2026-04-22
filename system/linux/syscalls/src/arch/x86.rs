@@ -107,6 +107,8 @@ pub enum Sysno {
     Oldolduname = 59,
     /// <https://man7.org/linux/man-pages/man2/umask.2.html>
     Umask = 60,
+    /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
+    Chroot = 61,
 }
 
 /// Invoke a syscall with `0` arguments.
