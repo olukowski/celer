@@ -59,9 +59,7 @@ mod tests {
         };
 
         let ret = unsafe { oldolduname(&mut name as *mut OldOldUtsname) };
-        if ret == -38 {
-            return;
-        }
+
         assert_eq!(ret, 0, "oldolduname failed: {ret}");
 
         let expected = *b"Linux";
