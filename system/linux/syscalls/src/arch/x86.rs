@@ -57,6 +57,8 @@ pub enum Sysno {
     Link = 9,
     /// <https://man7.org/linux/man-pages/man2/setuid.2.html>
     Setuid = 23,
+    /// <https://man7.org/linux/man-pages/man2/setpgid.2.html>
+    Setpgid = 57,
     /// <https://man7.org/linux/man-pages/man2/mknod.2.html>
     Mknod = 14,
     /// <https://man7.org/linux/man-pages/man2/lchown.2.html>
