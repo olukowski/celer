@@ -174,6 +174,8 @@ pub enum Sysno {
     Sigsuspend = 72,
     /// <https://man7.org/linux/man-pages/man2/sigpending.2.html>
     Sigpending = 73,
+    /// <https://man7.org/linux/man-pages/man2/sethostname.2.html>
+    Sethostname = 74,
 }
 
 /// Invoke a syscall with `0` arguments.
