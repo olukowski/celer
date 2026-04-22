@@ -101,12 +101,6 @@ mod tests {
         let ret = unsafe {
             oldstat(path_bytes.as_ptr().cast::<Char>(), &raw mut statbuf)
         };
-        if ret == -38 {
-            // Some modern runtimes used for local CI or containers do not
-            // expose the legacy `oldstat` entry point even on 32-bit userspace.
-            fs::remove_file(&path).unwrap();
-            return;
-        }
 
         assert_eq!(ret, 0, "oldstat failed: {ret}");
         assert_eq!(statbuf.st_ino as u64, metadata.ino());

@@ -81,9 +81,7 @@ mod tests {
     #[test]
     fn test_uname_null_pointer() {
         let ret = unsafe { oldolduname(core::ptr::null_mut()) };
-        if ret == -38 {
-            return;
-        }
+
         assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }
 }

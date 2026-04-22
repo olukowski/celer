@@ -87,11 +87,7 @@ mod tests {
 
         // SAFETY: `statbuf` is writable for a full `Stat`.
         let ret = unsafe { oldfstat(fd as UnsignedInt, &raw mut statbuf) };
-        if ret == -38 {
-            assert_eq!(close(fd), 0);
-            fs::remove_file(&path).unwrap();
-            return;
-        }
+
         assert_eq!(ret, 0, "oldfstat failed: {ret}");
         assert_eq!(statbuf.st_ino as u64, metadata.ino());
         assert_eq!(statbuf.st_size as u64, metadata.size());
