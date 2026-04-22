@@ -96,7 +96,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 77 sys_getrusage`
 - [x] ` 78 sys_gettimeofday`
 - [x] ` 79 sys_settimeofday`
-- [ ] ` 80 sys_getgroups`
+- [x] ` 80 sys_getgroups` - wrapped as `getgroups16`
 - [x] ` 81 sys_setgroups` - wrapped as `setgroups16`
 - [x] ` 82 sys_select`
 - [x] ` 83 sys_symlink`

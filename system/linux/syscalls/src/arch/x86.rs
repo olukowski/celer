@@ -111,6 +111,8 @@ pub enum Sysno {
     Gettimeofday = 78,
     /// <https://man7.org/linux/man-pages/man2/getuid.2.html>
     Getuid = 24,
+    /// <https://man7.org/linux/man-pages/man2/getgroups.2.html>
+    Getgroups = 80,
     /// <https://man7.org/linux/man-pages/man2/setgroups.2.html>
     Setgroups = 81,
     /// <https://man7.org/linux/man-pages/man2/getgid.2.html>
