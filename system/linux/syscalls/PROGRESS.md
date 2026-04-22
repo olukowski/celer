@@ -7,7 +7,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 
 ## 0-24
 
-- [ ] `  0 sys_setup`
+- [x] `  0 sys_setup`
 - [x] `  1 sys_exit`
 - [x] `  2 sys_fork`
 - [x] `  3 sys_read`

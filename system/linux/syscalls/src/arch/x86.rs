@@ -1,5 +1,46 @@
 use core::arch::asm;
 
+pub mod linux_1_0 {
+    use core::arch::asm;
+
+    /// Linux 1.0 x86 syscall numbers used by this crate.
+    #[repr(isize)]
+    #[non_exhaustive]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    pub enum Sysno {
+        /// Historical Linux bootstrap syscall used only by init.
+        Setup = 0,
+    }
+
+    /// Invoke a Linux 1.0 x86 syscall with `1` argument.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `sysno` identifies a Linux 1.0 syscall that takes one argument.
+    /// - Any irreversible side effects of the syscall are intended.
+    /// - `arg1` is a valid argument for `sysno`. If it encodes a pointer, the
+    ///   pointed-to memory must be valid for the duration of the syscall; see
+    ///   [`core::ptr::read`] and [`core::ptr::write`] for what validity
+    ///   requires for read-only and write-only pointers respectively.
+    pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
+        let mut ret: isize;
+
+        // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+        // All other safety requirements are enforced by the caller.
+        unsafe {
+            asm!(
+                "int 0x80",
+                inlateout("eax") sysno as usize => ret,
+                in("ebx") arg1,
+                options(nostack, preserves_flags),
+            );
+        }
+
+        ret
+    }
+}
+
 /// Syscall numbers.
 #[repr(isize)]
 #[non_exhaustive]
