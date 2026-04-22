@@ -49,6 +49,7 @@ pub unsafe fn sigpending(set: *mut OldSigsetT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::sync::Mutex;
 
@@ -90,7 +91,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_sigpending_reports_blocked_pending_signal() {
         let _guard = SIGPENDING_LOCK.lock().unwrap();
 
