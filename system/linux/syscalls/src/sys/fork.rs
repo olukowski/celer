@@ -44,8 +44,8 @@ pub fn fork() -> PidT {
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
-    use crate::sys::{exit, waitpid};
     use super::fork;
+    use crate::sys::{exit, waitpid};
 
     #[test]
     fn test_fork() {
