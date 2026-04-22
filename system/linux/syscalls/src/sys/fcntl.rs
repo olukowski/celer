@@ -54,7 +54,6 @@ pub fn fcntl(fd: UnsignedInt, cmd: Int, arg: Long) -> Long {
 mod tests {
     use std::{
         fs::{self, OpenOptions},
-        os::fd::AsRawFd as _,
         os::fd::FromRawFd as _,
         path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},

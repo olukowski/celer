@@ -56,6 +56,6 @@ mod tests {
     #[test]
     fn test_setpgid_negative_pgid() {
         let ret = setpgid(0 as PidT, -1 as PidT);
-        assert_eq!(ret, -(22 as _));
+        assert_eq!(ret, -22);
     }
 }
