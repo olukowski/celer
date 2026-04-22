@@ -49,6 +49,7 @@ pub unsafe fn sethostname(name: *const Char, len: SizeT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Char, SizeT};
 

@@ -52,6 +52,7 @@ pub fn sigsuspend(mask: OldSigsetT) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         sync::atomic::{AtomicBool, Ordering},

@@ -23,6 +23,7 @@ pub mod linux_1_0 {
     ///   pointed-to memory must be valid for the duration of the syscall; see
     ///   [`core::ptr::read`] and [`core::ptr::write`] for what validity
     ///   requires for read-only and write-only pointers respectively.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
         let mut ret: isize;
 
@@ -182,6 +183,7 @@ pub enum Sysno {
 ///
 /// # Safety
 ///
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn syscall0(sysno: Sysno) -> isize {
     let mut ret: isize;
 
@@ -209,6 +211,7 @@ pub fn syscall0(sysno: Sysno) -> isize {
 ///   pointed-to memory must be valid for the duration of the syscall; see
 ///   [`core::ptr::read`] and [`core::ptr::write`] for what validity requires
 ///   for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
     let mut ret: isize;
 
@@ -237,6 +240,7 @@ pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
 ///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
     let mut ret: isize;
 
@@ -266,6 +270,7 @@ pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
 ///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub unsafe fn syscall3(
     sysno: Sysno,
     arg1: isize,
@@ -301,6 +306,7 @@ pub unsafe fn syscall3(
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
 ///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub unsafe fn syscall4(
     sysno: Sysno,
     arg1: isize,
@@ -344,6 +350,7 @@ pub unsafe fn syscall4(
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
 ///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub unsafe fn syscall5(
     sysno: Sysno,
     arg1: isize,
