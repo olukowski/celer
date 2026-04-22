@@ -5,7 +5,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// Create a new process by duplicating the calling process.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: none known
 /// - Availability: always present
 ///
@@ -37,28 +37,34 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n162)
 pub fn fork() -> PidT {
     // SAFETY: `fork` is safe to call.
-    (unsafe { syscall0(Sysno::Fork) }) as PidT
+    syscall0(Sysno::Fork) as PidT
 }
 
 #[cfg(test)]
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
+    use crate::sys::{exit, waitpid};
     use super::fork;
 
     #[test]
     fn test_fork() {
         let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
 
         #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
-        fn use_pid(pid: PidT) {
+        fn handle_pid(pid: PidT) {
             if pid == 0 {
-                // child
-            } else {
-                // parent, though we might have an error here if `pid < 0`
+                exit(0);
             }
         }
 
-        use_pid(pid);
+        handle_pid(pid);
+
+        let mut status = 0;
+        let waited = unsafe { waitpid(pid, &raw mut status, 0) };
+        assert_eq!(waited, pid);
+        assert_eq!(status & 0x7f, 0);
+        assert_eq!((status >> 8) & 0xff, 0);
     }
 }
