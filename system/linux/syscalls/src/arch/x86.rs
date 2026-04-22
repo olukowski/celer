@@ -123,6 +123,8 @@ pub enum Sysno {
     Sigaction = 67,
     /// <https://man7.org/linux/man-pages/man2/sigprocmask.2.html>
     Sgetmask = 68,
+    /// <https://man7.org/linux/man-pages/man2/sigprocmask.2.html>
+    Ssetmask = 69,
 }
 
 /// Invoke a syscall with `0` arguments.
