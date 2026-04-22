@@ -118,3 +118,13 @@ pub struct Tms {
     pub tms_cutime: Long,
     pub tms_cstime: Long,
 }
+
+/// Linux `struct ustat` used by the historical `ustat` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Ustat {
+    pub f_tfree: Int,
+    pub f_tinode: UnsignedLong,
+    pub f_fname: [Char; 6],
+    pub f_fpack: [Char; 6],
+}
