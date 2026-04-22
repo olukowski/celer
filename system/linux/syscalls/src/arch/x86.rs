@@ -170,6 +170,8 @@ pub enum Sysno {
     Setreuid = 70,
     /// <https://man7.org/linux/man-pages/man2/setregid.2.html>
     Setregid = 71,
+    /// <https://man7.org/linux/man-pages/man2/sigsuspend.2.html>
+    Sigsuspend = 72,
     /// <https://man7.org/linux/man-pages/man2/sigpending.2.html>
     Sigpending = 73,
 }

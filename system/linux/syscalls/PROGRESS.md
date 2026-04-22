@@ -85,8 +85,8 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 69 sys_ssetmask`
 - [x] ` 70 sys_setreuid` - wrapped as `setreuid16`
 - [x] ` 71 sys_setregid` - wrapped as `setregid16`
-- [x] ` 72 sys_sigpending`
-- [ ] ` 73 sys_sigsuspend`
+- [x] ` 72 sys_sigsuspend`
+- [x] ` 73 sys_sigpending`
 - [ ] ` 74 sys_sethostname`
 
 ## 75-99
