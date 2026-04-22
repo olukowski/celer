@@ -93,6 +93,18 @@ pub struct Utimbuf {
     pub modtime: TimeT,
 }
 
+/// Linux `struct oldold_utsname` used by the historical `oldolduname` syscall
+/// ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct OldOldUtsname {
+    pub sysname: [Char; 9],
+    pub nodename: [Char; 9],
+    pub release: [Char; 9],
+    pub version: [Char; 9],
+    pub machine: [Char; 9],
+}
+
 /// Linux `struct tms` used by the `times` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
