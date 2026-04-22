@@ -127,6 +127,8 @@ pub enum Sysno {
     Ssetmask = 69,
     /// <https://man7.org/linux/man-pages/man2/setreuid.2.html>
     Setreuid = 70,
+    /// <https://man7.org/linux/man-pages/man2/setregid.2.html>
+    Setregid = 71,
 }
 
 /// Invoke a syscall with `0` arguments.
