@@ -76,6 +76,12 @@ pub type OldGidT = UnsignedShort;
 /// `sigaction` syscall ABI.
 pub type OldSigsetT = UnsignedLong;
 
+/// Linux `RUSAGE_SELF`.
+pub const RUSAGE_SELF: Int = 0;
+
+/// Linux `RUSAGE_CHILDREN`.
+pub const RUSAGE_CHILDREN: Int = -1;
+
 /// Linux `struct __old_kernel_stat` used by the 32-bit `stat` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -142,6 +148,36 @@ pub struct Tms {
 pub struct Rlimit {
     pub rlim_cur: Int,
     pub rlim_max: Int,
+}
+
+/// Linux `struct timeval`.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Timeval {
+    pub tv_sec: Long,
+    pub tv_usec: Long,
+}
+
+/// Linux `struct rusage`.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Rusage {
+    pub ru_utime: Timeval,
+    pub ru_stime: Timeval,
+    pub ru_maxrss: Long,
+    pub ru_ixrss: Long,
+    pub ru_idrss: Long,
+    pub ru_isrss: Long,
+    pub ru_minflt: Long,
+    pub ru_majflt: Long,
+    pub ru_nswap: Long,
+    pub ru_inblock: Long,
+    pub ru_oublock: Long,
+    pub ru_msgsnd: Long,
+    pub ru_msgrcv: Long,
+    pub ru_nsignals: Long,
+    pub ru_nvcsw: Long,
+    pub ru_nivcsw: Long,
 }
 
 /// Linux `struct ustat` used by the historical `ustat` syscall ABI.

@@ -179,6 +179,8 @@ pub enum Sysno {
     Sethostname = 74,
     /// <https://man7.org/linux/man-pages/man2/getrlimit.2.html>
     Getrlimit = 76,
+    /// <https://man7.org/linux/man-pages/man2/getrusage.2.html>
+    Getrusage = 77,
 }
 
 /// Invoke a syscall with `0` arguments.
