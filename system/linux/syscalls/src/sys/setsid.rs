@@ -57,8 +57,9 @@ mod tests {
     fn test_setsid_local_process_smoke() {
         let ret = setsid();
 
+        assert!(ret != 0);
         assert!(
-            ret != 0 && !(2..).contains(&-ret),
+            ret >= -1,
             "setsid should either succeed or report EPERM, got {ret}"
         );
     }
