@@ -105,6 +105,8 @@ pub enum Sysno {
     Setgid = 46,
     /// <https://man7.org/linux/man-pages/man2/uname.2.html>
     Oldolduname = 59,
+    /// <https://man7.org/linux/man-pages/man2/umask.2.html>
+    Umask = 60,
 }
 
 /// Invoke a syscall with `0` arguments.
