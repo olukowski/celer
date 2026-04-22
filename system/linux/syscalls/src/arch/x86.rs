@@ -180,6 +180,8 @@ pub enum Sysno {
     /// <https://man7.org/linux/man-pages/man2/sethostname.2.html>
     Sethostname = 74,
     /// <https://man7.org/linux/man-pages/man2/getrlimit.2.html>
+    Setrlimit = 75,
+    /// <https://man7.org/linux/man-pages/man2/getrlimit.2.html>
     Getrlimit = 76,
     /// <https://man7.org/linux/man-pages/man2/getrusage.2.html>
     Getrusage = 77,

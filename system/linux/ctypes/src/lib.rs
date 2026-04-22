@@ -158,20 +158,13 @@ pub struct Tms {
     pub tms_cstime: Long,
 }
 
-/// Linux `struct rlimit` used by the historical `getrlimit` syscall ABI.
+/// Linux `struct rlimit` used by the historical `getrlimit` and
+/// `setrlimit` syscall ABIs on x86.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Rlimit {
-    pub rlim_cur: Int,
-    pub rlim_max: Int,
-}
-
-/// Linux `struct timeval`.
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Timeval {
-    pub tv_sec: Long,
-    pub tv_usec: Long,
+    pub rlim_cur: UnsignedLong,
+    pub rlim_max: UnsignedLong,
 }
 
 /// Linux `struct rusage`.
