@@ -72,7 +72,7 @@ pub fn setgroups16(gidsetsize: Int, grouplist: *const OldGidT) -> Int {
 mod tests {
     use core::ptr;
 
-    use celer_system_linux_ctypes::{OldGidT, PidT};
+    use celer_system_linux_ctypes::{Int, OldGidT, PidT};
 
     use super::setgroups16;
     use crate::{
