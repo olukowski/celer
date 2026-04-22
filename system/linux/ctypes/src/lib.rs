@@ -107,6 +107,22 @@ pub struct Utimbuf {
     pub modtime: TimeT,
 }
 
+/// Linux `struct timeval` used by the historical `gettimeofday` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Timeval {
+    pub tv_sec: TimeT,
+    pub tv_usec: TimeT,
+}
+
+/// Linux `struct timezone` used by the historical `gettimeofday` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Timezone {
+    pub tz_minuteswest: Int,
+    pub tz_dsttime: Int,
+}
+
 /// Linux `struct oldold_utsname` used by the historical `oldolduname` syscall
 /// ABI.
 #[repr(C)]

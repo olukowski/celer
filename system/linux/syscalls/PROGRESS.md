@@ -94,7 +94,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [ ] ` 75 sys_setrlimit`
 - [x] ` 76 sys_getrlimit`
 - [x] ` 77 sys_getrusage`
-- [ ] ` 78 sys_gettimeofday`
+- [x] ` 78 sys_gettimeofday`
 - [ ] ` 79 sys_settimeofday`
 - [ ] ` 80 sys_getgroups`
 - [ ] ` 81 sys_setgroups`
