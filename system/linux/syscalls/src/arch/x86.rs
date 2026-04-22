@@ -177,6 +177,8 @@ pub enum Sysno {
     Sigpending = 73,
     /// <https://man7.org/linux/man-pages/man2/sethostname.2.html>
     Sethostname = 74,
+    /// <https://man7.org/linux/man-pages/man2/getrlimit.2.html>
+    Getrlimit = 76,
 }
 
 /// Invoke a syscall with `0` arguments.
