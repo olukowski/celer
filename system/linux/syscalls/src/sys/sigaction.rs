@@ -222,11 +222,20 @@ mod tests {
             old: original,
         };
 
-        let new_handler = if original.sa_handler == SIG_IGN {
-            SIG_DFL
-        } else {
-            SIG_IGN
+        let baseline = OldSigaction {
+            sa_handler: SIG_IGN,
+            sa_mask: 0,
+            sa_flags: 0,
+            sa_restorer: 0,
         };
+        // SAFETY: `baseline` is readable for one `OldSigaction`, and the null
+        // old-action pointer intentionally skips returning the previous value.
+        let rc = unsafe {
+            sigaction(SIGUSR1, &raw const baseline, core::ptr::null_mut())
+        };
+        assert_eq!(rc, 0, "installing baseline SIG_IGN failed: {rc}");
+
+        let new_handler = SIG_DFL;
         let new_action = OldSigaction {
             sa_handler: new_handler,
             sa_mask: 0,

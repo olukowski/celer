@@ -76,14 +76,24 @@ mod tests {
         }
     }
 
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    fn ssetmask_original_mask() -> Option<OldSigsetT> {
+        let original = ssetmask(0);
+        if original == ENOSYS_BITS {
+            None
+        } else {
+            Some(original)
+        }
+    }
+
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_ssetmask_strips_sigkill_and_sigstop() {
         let _guard = SSETMASK_LOCK.lock().unwrap();
 
-        let original = ssetmask(0);
-        if original == ENOSYS_BITS {
+        let Some(original) = ssetmask_original_mask() else {
             return;
-        }
+        };
         let _restore = RestoreMask(original);
 
         let requested = (1 as OldSigsetT) << 31
