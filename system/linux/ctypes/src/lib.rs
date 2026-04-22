@@ -116,6 +116,13 @@ pub struct Timeval {
     pub tv_usec: Long,
 }
 
+/// Linux `fd_set` used by the historical `select` syscall ABI on x86.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct FdSet {
+    pub fds_bits: [UnsignedLong; 8],
+}
+
 /// Linux `struct timezone` used by the historical `gettimeofday` and
 /// `settimeofday` syscall ABIs.
 #[repr(C)]

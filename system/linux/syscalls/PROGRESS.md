@@ -98,7 +98,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 79 sys_settimeofday`
 - [ ] ` 80 sys_getgroups`
 - [ ] ` 81 sys_setgroups`
-- [ ] ` 82 sys_select`
+- [x] ` 82 sys_select`
 - [x] ` 83 sys_symlink`
 - [x] ` 84 sys_lstat` - wrapped as `oldlstat`
 - [ ] ` 85 sys_readlink`

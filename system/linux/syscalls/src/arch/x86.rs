@@ -187,6 +187,8 @@ pub enum Sysno {
     Getrusage = 77,
     /// <https://man7.org/linux/man-pages/man2/settimeofday.2.html>
     Settimeofday = 79,
+    /// <https://man7.org/linux/man-pages/man2/select.2.html>
+    Select = 82,
     /// <https://man7.org/linux/man-pages/man2/symlink.2.html>
     Symlink = 83,
     /// Historical i386 `lstat` ABI; Linux 1.0 later added a newer `lstat`
