@@ -4,10 +4,6 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Rename a filesystem object from `oldname` to `newname`.
 ///
-/// # Safety
-/// - `oldname` and `newname` must point to NUL-terminated strings that are
-///   readable for the duration of the syscall.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.95
 /// - Behavior changes: Linux 0.10 and 0.12 carried a stub that returned
@@ -35,8 +31,10 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First stub: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n41)
-pub unsafe fn rename(oldname: *const Char, newname: *const Char) -> Long {
-    // SAFETY: guaranteed by caller.
+pub fn rename(oldname: *const Char, newname: *const Char) -> Long {
+    // SAFETY: this wrapper forwards the raw pathname pointers without
+    // dereferencing them in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe {
         syscall2(
             Sysno::Rename,
@@ -82,14 +80,10 @@ mod tests {
         let mut new_bytes = new_path.as_os_str().as_encoded_bytes().to_vec();
         new_bytes.push(0);
 
-        // SAFETY: both paths are NUL-terminated and readable for the duration
-        // of the syscall.
-        let rc = unsafe {
-            rename(
-                old_bytes.as_ptr().cast::<Char>(),
-                new_bytes.as_ptr().cast::<Char>(),
-            )
-        };
+        let rc = rename(
+            old_bytes.as_ptr().cast::<Char>(),
+            new_bytes.as_ptr().cast::<Char>(),
+        );
 
         assert_eq!(rc, 0, "rename failed: {rc}");
         assert!(!old_path.exists(), "rename left the old path behind");
@@ -108,12 +102,10 @@ mod tests {
         let mut new_bytes = new_path.as_os_str().as_encoded_bytes().to_vec();
         new_bytes.push(0);
 
-        let rc = unsafe {
-            rename(
-                old_bytes.as_ptr().cast::<Char>(),
-                new_bytes.as_ptr().cast::<Char>(),
-            )
-        };
+        let rc = rename(
+            old_bytes.as_ptr().cast::<Char>(),
+            new_bytes.as_ptr().cast::<Char>(),
+        );
 
         assert!(rc < 0, "rename missing source unexpectedly succeeded: {rc}");
     }

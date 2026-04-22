@@ -5,9 +5,6 @@ use crate::arch::current::{Sysno, syscall3};
 /// Write up to `count` bytes from the buffer starting at `buf`
 /// to the file referred to by the file descriptor `fd`.
 ///
-/// # Safety
-/// - `buf` must be readable for `count` bytes (see [`core::ptr::read`]).
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -60,8 +57,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.10#n83)
-pub unsafe fn write(fd: UnsignedInt, buf: *const Char, count: SizeT) -> Long {
-    // SAFETY: guaranteed by caller.
+pub fn write(fd: UnsignedInt, buf: *const Char, count: SizeT) -> Long {
+    // SAFETY: this wrapper forwards the raw user pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall3(
             Sysno::Write,
@@ -114,15 +113,11 @@ mod tests {
 
         let mut to_write: &[u8] = msg;
         while !to_write.is_empty() {
-            // SAFETY: `to_write.as_ptr()` is readable for `to_write.len()`
-            // bytes
-            let result = unsafe {
-                write(
-                    file.as_raw_fd() as UnsignedInt,
-                    to_write.as_ptr().cast(),
-                    to_write.len() as SizeT,
-                )
-            };
+            let result = write(
+                file.as_raw_fd() as UnsignedInt,
+                to_write.as_ptr().cast(),
+                to_write.len() as SizeT,
+            );
 
             assert!(result >= 0, "write failed: {}", result);
 

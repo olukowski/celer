@@ -13,6 +13,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Required Privileges
 /// - None
 ///
+/// # Safety
+/// - `addr` must not move the program break in a way that invalidates Rust or
+///   allocator-managed memory assumptions in the current process.
+///
 /// # Behavior
 /// - On success, returns the resulting break value.
 /// - If the requested break stays within the same page, the kernel updates the
@@ -30,9 +34,9 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n168)
-pub fn brk(addr: UnsignedLong) -> UnsignedLong {
-    // SAFETY: `brk` takes a scalar address and has no Rust-side safety
-    // preconditions.
+pub unsafe fn brk(addr: UnsignedLong) -> UnsignedLong {
+    // SAFETY: the caller must uphold the process-wide allocator and memory-map
+    // invariants required when changing the program break.
     unsafe { syscall1(Sysno::Brk, addr as isize) as UnsignedLong }
 }
 
@@ -44,10 +48,10 @@ mod tests {
 
     #[test]
     fn test_brk_roundtrip() {
-        let current = brk(0 as UnsignedLong);
+        let current = unsafe { brk(0 as UnsignedLong) };
         assert_ne!(current, 0);
 
-        let same = brk(current);
+        let same = unsafe { brk(current) };
         assert_eq!(same, current);
     }
 }

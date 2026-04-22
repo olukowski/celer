@@ -5,11 +5,6 @@ use crate::arch::current::{Sysno, syscall3};
 /// Change the owner and/or group of a file through the legacy i386 `lchown16`
 /// ABI without following a symlink.
 ///
-/// # Safety
-/// - `filename` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-/// - Any irreversible side effects of changing the file ownership are intended.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: the name and kernel entry point were split from the
@@ -37,12 +32,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n104)
-pub unsafe fn lchown16(
-    filename: *const Char,
-    user: OldUidT,
-    group: OldGidT,
-) -> Int {
-    // SAFETY: guaranteed by caller.
+pub fn lchown16(filename: *const Char, user: OldUidT, group: OldGidT) -> Int {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe {
         syscall3(
             Sysno::Lchown,
@@ -87,11 +80,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the
-        // duration of the syscall.
-        let result = unsafe {
-            lchown16(path_bytes.as_ptr().cast::<Char>(), !0 as OldUidT, gid)
-        };
+        let result =
+            lchown16(path_bytes.as_ptr().cast::<Char>(), !0 as OldUidT, gid);
         assert_eq!(result, 0, "lchown16 failed: {result}");
 
         let meta = fs::metadata(&path).unwrap();

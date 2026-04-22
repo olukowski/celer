@@ -29,19 +29,15 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Other pathname-lookup and permission errors may be returned by the VFS
 ///   path resolution helpers.
 ///
-/// # Safety
-/// - `name` must point to a readable NUL-terminated string for the duration of
-///   the syscall.
-/// - Any irreversible side effects of changing the root directory are
-///   intended.
-///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/chroot.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v6.19#n588)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/open.c?h=v6.18.18#n588)
 /// - First stable implementation: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n232)
-pub unsafe fn chroot(name: *const Char) -> Int {
-    // SAFETY: guaranteed by caller.
+pub fn chroot(name: *const Char) -> Int {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe { syscall1(Sysno::Chroot, name.addr() as isize) as Int }
 }
 
@@ -69,9 +65,7 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the
-        // duration of the syscall.
-        let result = unsafe { chroot(path_bytes.as_ptr().cast::<Char>()) };
+        let result = chroot(path_bytes.as_ptr().cast::<Char>());
         assert_eq!(result, -2, "chroot should fail with ENOENT: {result}");
     }
 
@@ -88,9 +82,7 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the
-        // duration of the syscall.
-        let result = unsafe { chroot(path_bytes.as_ptr().cast::<Char>()) };
+        let result = chroot(path_bytes.as_ptr().cast::<Char>());
         assert_eq!(result, -20, "chroot should fail with ENOTDIR: {result}");
 
         fs::remove_file(&path).unwrap();

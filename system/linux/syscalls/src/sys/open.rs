@@ -4,12 +4,6 @@ use crate::arch::current::{Sysno, syscall3};
 
 /// Open a file named by `filename` with the given `flags` and `mode`.
 ///
-/// # Safety
-/// - `filename` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-/// - `mode` is only used when `flags` includes `O_CREAT` or similar creation
-///   flags.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -41,8 +35,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n138)
-pub unsafe fn open(filename: *const Char, flags: Int, mode: UModeT) -> Long {
-    // SAFETY: guaranteed by caller.
+pub fn open(filename: *const Char, flags: Int, mode: UModeT) -> Long {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall3(
             Sysno::Open,
@@ -87,11 +83,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
-        // of the syscall.
-        let fd = unsafe {
-            open(path_bytes.as_ptr().cast::<Char>(), 0 as Int, 0 as UModeT)
-        };
+        let fd =
+            open(path_bytes.as_ptr().cast::<Char>(), 0 as Int, 0 as UModeT);
 
         assert!(fd >= 0, "open failed: {}", fd);
 

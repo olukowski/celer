@@ -4,11 +4,6 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Update the access and modification timestamps of a file by pathname.
 ///
-/// # Safety
-/// - `pathname` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-/// - `times`, when non-null, must point to a readable `Utimbuf` value.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -40,11 +35,13 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n24)
-pub unsafe fn utime(
+pub fn utime(
     pathname: *const celer_system_linux_ctypes::Char,
     times: *const Utimbuf,
 ) -> Long {
-    // SAFETY: guaranteed by caller.
+    // SAFETY: this wrapper forwards the raw user pointers without
+    // dereferencing them in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall2(
             Sysno::Utime,
@@ -94,9 +91,7 @@ mod tests {
             modtime: 2 as TimeT,
         };
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable, and `times`
-        // points to a readable `Utimbuf`.
-        let ret = unsafe { utime(path_bytes.as_ptr().cast::<Char>(), &times) };
+        let ret = utime(path_bytes.as_ptr().cast::<Char>(), &times);
         assert_eq!(ret, 0, "utime failed: {ret}");
 
         let metadata = fs::metadata(&path).unwrap();

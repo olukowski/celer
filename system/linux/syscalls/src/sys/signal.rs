@@ -22,6 +22,11 @@ use crate::arch::current::{Sysno, syscall2};
 /// - `EINVAL`: `sig` is not a valid signal number, or the target disposition
 ///   is immutable.
 ///
+/// # Safety
+/// - `handler` must be a signal disposition value accepted by the kernel for
+///   this ABI. If it names a user handler, that handler must remain valid for
+///   signal delivery and use the correct ABI.
+///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/signal.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/signal.c?h=v6.19#n4806)
@@ -29,9 +34,9 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=0.10#n48)
-pub fn signal(sig: Int, handler: usize) -> Long {
-    // SAFETY: `signal` takes only scalar arguments and has no Rust-side safety
-    // preconditions.
+pub unsafe fn signal(sig: Int, handler: usize) -> Long {
+    // SAFETY: the caller must uphold the ABI and lifetime requirements for any
+    // installed signal handler address.
     unsafe { syscall2(Sysno::Signal, sig as isize, handler as isize) as Long }
 }
 
@@ -43,7 +48,7 @@ mod tests {
 
     #[test]
     fn test_signal_invalid_sig() {
-        let result = signal(0 as Int, 0);
+        let result = unsafe { signal(0 as Int, 0) };
 
         assert!(result < 0, "signal should have failed: {result}");
     }

@@ -81,7 +81,7 @@ mod tests {
 
     impl Drop for RestoreHandler {
         fn drop(&mut self) {
-            let _ = crate::sys::signal(self.sig, self.old);
+            let _ = unsafe { crate::sys::signal(self.sig, self.old) };
         }
     }
 
@@ -99,10 +99,12 @@ mod tests {
 
         fn exercise_sigpending_in_child(pid: PidT) {
             if pid == 0 {
-                let previous = crate::sys::signal(
-                    SIGUSR1,
-                    noop_handler as *const () as usize,
-                );
+                let previous = unsafe {
+                    crate::sys::signal(
+                        SIGUSR1,
+                        noop_handler as *const () as usize,
+                    )
+                };
                 assert!(
                     previous >= 0,
                     "installing temporary handler failed: {previous}"

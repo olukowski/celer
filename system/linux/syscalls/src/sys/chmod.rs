@@ -4,11 +4,6 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Change the mode bits of a file named by `pathname`.
 ///
-/// # Safety
-/// - `pathname` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-/// - `mode` must be a valid file mode value for the kernel.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -28,8 +23,10 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n105)
-pub unsafe fn chmod(pathname: *const Char, mode: UModeT) -> Int {
-    // SAFETY: guaranteed by caller.
+pub fn chmod(pathname: *const Char, mode: UModeT) -> Int {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe {
         syscall2(Sysno::Chmod, pathname.addr() as isize, mode as isize) as Int
     }
@@ -69,10 +66,7 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
-        // of the syscall.
-        let result =
-            unsafe { chmod(path_bytes.as_ptr().cast::<Char>(), 0o600) };
+        let result = chmod(path_bytes.as_ptr().cast::<Char>(), 0o600);
         assert_eq!(result, 0, "chmod failed: {result}");
 
         let mode = fs::metadata(&path).unwrap().permissions().mode() & 0o777;

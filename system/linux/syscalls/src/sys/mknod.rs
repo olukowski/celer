@@ -4,12 +4,6 @@ use crate::arch::current::{Sysno, syscall3};
 
 /// Create the node named by `pathname`.
 ///
-/// # Safety
-/// - `pathname` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-/// - `mode` and `dev` must be valid arguments for the target filesystem and
-///   requested node type.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -37,12 +31,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/namei.c?h=0.10#n408)
-pub unsafe fn mknod(
-    pathname: *const Char,
-    mode: UModeT,
-    dev: UnsignedInt,
-) -> Long {
-    // SAFETY: guaranteed by caller.
+pub fn mknod(pathname: *const Char, mode: UModeT, dev: UnsignedInt) -> Long {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall3(
             Sysno::Mknod,
@@ -84,15 +76,11 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
-        // of the syscall.
-        let rc = unsafe {
-            mknod(
-                path_bytes.as_ptr().cast::<Char>(),
-                (0o100000 | 0o600) as UModeT,
-                0 as UnsignedInt,
-            )
-        };
+        let rc = mknod(
+            path_bytes.as_ptr().cast::<Char>(),
+            (0o100000 | 0o600) as UModeT,
+            0 as UnsignedInt,
+        );
 
         assert_eq!(rc, 0, "mknod failed: {rc}");
         assert!(path.exists(), "mknod did not create the file");

@@ -4,10 +4,6 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Check whether the calling process can access a file by pathname.
 ///
-/// # Safety
-/// - `pathname` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -37,8 +33,10 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n47)
-pub unsafe fn access(pathname: *const Char, mode: Int) -> Long {
-    // SAFETY: guaranteed by caller.
+pub fn access(pathname: *const Char, mode: Int) -> Long {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall2(Sysno::Access, pathname.addr() as isize, mode as isize)
     }) as Long
@@ -73,13 +71,10 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the
-        // duration of the syscall.
-        let ret = unsafe { access(path_bytes.as_ptr().cast::<Char>(), 0) };
+        let ret = access(path_bytes.as_ptr().cast::<Char>(), 0);
         assert_eq!(ret, 0, "access failed: {ret}");
 
-        let invalid =
-            unsafe { access(path_bytes.as_ptr().cast::<Char>(), 0x8000) };
+        let invalid = access(path_bytes.as_ptr().cast::<Char>(), 0x8000);
         assert_eq!(
             invalid, -22,
             "expected EINVAL from invalid mode, got {invalid}"

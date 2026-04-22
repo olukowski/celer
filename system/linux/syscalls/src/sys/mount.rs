@@ -9,15 +9,6 @@ use crate::arch::current::{Sysno, syscall5};
 /// - Behavior changes: none known
 /// - Availability: always present on supported Linux kernels
 ///
-/// # Safety
-/// - `source`, `target`, and `filesystemtype` must each be either null or point
-///   to a readable NUL-terminated string for the duration of the syscall.
-/// - `data` must be either null or point to readable mount data for the
-///   duration of the syscall.
-/// - If `mountflags` causes the kernel to interpret `data`, the pointed-to
-///   memory must remain readable for as long as the kernel consumes it.
-/// - Any irreversible side effects of mounting or remounting are intended.
-///
 /// # Errors
 /// - `EFAULT`: one of the user pointers cannot be read while copying the mount
 ///   string or mount options.
@@ -33,14 +24,16 @@ use crate::arch::current::{Sysno, syscall5};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/super.c?h=0.10#n199)
-pub unsafe fn mount(
+pub fn mount(
     source: *const Char,
     target: *const Char,
     filesystemtype: *const Char,
     mountflags: UnsignedLong,
     data: *const Void,
 ) -> Long {
-    // SAFETY: guaranteed by caller.
+    // SAFETY: this wrapper forwards the raw user pointers without
+    // dereferencing them in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall5(
             Sysno::Mount,
@@ -61,17 +54,13 @@ mod tests {
 
     #[test]
     fn test_mount_invalid_parameters() {
-        // SAFETY: the pointers are intentionally invalid to exercise the
-        // error path and cover the wrapper; no successful mount is expected.
-        let ret = unsafe {
-            mount(
-                core::ptr::null(),
-                core::ptr::null(),
-                core::ptr::null(),
-                0 as UnsignedLong,
-                core::ptr::null(),
-            )
-        };
+        let ret = mount(
+            core::ptr::null(),
+            core::ptr::null(),
+            core::ptr::null(),
+            0 as UnsignedLong,
+            core::ptr::null(),
+        );
 
         assert!(ret < 0, "mount unexpectedly succeeded: {}", ret);
     }

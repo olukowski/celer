@@ -17,12 +17,6 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `filename` names the program to execute.
 /// - `argv` and `envp` point to null-terminated arrays of null-terminated strings.
 ///
-/// # Safety
-/// - `filename` must point to a readable NUL-terminated string.
-/// - `argv` and `envp` must each point to a readable null-terminated array of
-///   readable null-terminated strings.
-/// - Any irreversible side effects of replacing the current process image are intended.
-///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/execve.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/exec.c?h=v6.19#n2004)
@@ -32,12 +26,14 @@ use crate::arch::current::{Sysno, syscall3};
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n154)
 #[cfg_attr(coverage_nightly, coverage(off))]
-pub unsafe fn execve(
+pub fn execve(
     filename: *const Char,
     argv: *const *const Char,
     envp: *const *const Char,
 ) -> Long {
-    // SAFETY: guaranteed by caller.
+    // SAFETY: this wrapper forwards the raw user pointers without
+    // dereferencing them in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     (unsafe {
         syscall3(
             Sysno::Execve,
@@ -67,13 +63,11 @@ mod tests {
                     [filename.as_ptr().cast(), core::ptr::null()];
                 let envp: [*const Char; 1] = [core::ptr::null()];
 
-                let ret = unsafe {
-                    execve(
-                        filename.as_ptr().cast(),
-                        argv.as_ptr(),
-                        envp.as_ptr(),
-                    )
-                };
+                let ret = execve(
+                    filename.as_ptr().cast(),
+                    argv.as_ptr(),
+                    envp.as_ptr(),
+                );
 
                 if ret < 0 {
                     exit(1);

@@ -25,10 +25,6 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `EFAULT`: `tptr` does not point to readable memory.
 /// - `EPERM`: the caller is not permitted to set the system time.
 ///
-/// # Safety
-/// - `tptr` must be valid to read a single `TimeT` value for the duration of
-///   the syscall.
-///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/stime.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/time.c?h=v6.19#n81)
@@ -36,8 +32,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n148)
-pub unsafe fn stime(tptr: *const TimeT) -> Int {
-    // SAFETY: `tptr` is passed through exactly as provided by the caller.
+pub fn stime(tptr: *const TimeT) -> Int {
+    // SAFETY: this wrapper forwards the raw user pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe { syscall1(Sysno::Stime, tptr.addr() as isize) as Int }
 }
 
@@ -49,7 +47,7 @@ mod tests {
     fn test_stime_null_pointer_faults() {
         // SAFETY: passing a null pointer is permitted by the kernel ABI and
         // should fail before any attempt to set the clock.
-        let ret = unsafe { stime(core::ptr::null()) };
+        let ret = stime(core::ptr::null());
 
         assert_eq!(ret, -14);
     }

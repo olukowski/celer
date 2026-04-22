@@ -17,12 +17,6 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Checks execute permission on the resolved directory.
 /// - On success, updates the caller's current working directory.
 ///
-/// # Safety
-/// - `filename` must point to a NUL-terminated string that is readable for the
-///   duration of the syscall.
-/// - Any irreversible side effects of changing the current working directory
-///   are intended.
-///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/chdir.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v6.19#n552)
@@ -31,8 +25,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n75)
-pub unsafe fn chdir(filename: *const Char) -> Int {
-    // SAFETY: guaranteed by caller.
+pub fn chdir(filename: *const Char) -> Int {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe { syscall1(Sysno::Chdir, filename.addr() as isize) as Int }
 }
 
@@ -73,9 +69,7 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
-        // of the syscall.
-        let result = unsafe { chdir(path_bytes.as_ptr().cast::<Char>()) };
+        let result = chdir(path_bytes.as_ptr().cast::<Char>());
         assert_eq!(result, 0, "chdir failed: {result}");
 
         assert_eq!(env::current_dir().unwrap(), path);
@@ -84,9 +78,7 @@ mod tests {
             original_dir.as_os_str().as_encoded_bytes().to_vec();
         original_bytes.push(0);
 
-        // SAFETY: `original_bytes` is NUL-terminated and readable for the
-        // duration of the syscall.
-        let restore = unsafe { chdir(original_bytes.as_ptr().cast::<Char>()) };
+        let restore = chdir(original_bytes.as_ptr().cast::<Char>());
         assert_eq!(restore, 0, "restoring cwd failed: {restore}");
 
         fs::remove_dir(&path).unwrap();

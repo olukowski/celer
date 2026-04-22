@@ -4,10 +4,6 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Enable or disable process accounting for the current PID namespace.
 ///
-/// # Safety
-/// - `name` must be either null or point to a NUL-terminated string that is
-///   readable for the duration of the syscall.
-///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: none known
@@ -34,8 +30,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n294)
-pub unsafe fn acct(name: *const Char) -> Int {
-    // SAFETY: guaranteed by caller.
+pub fn acct(name: *const Char) -> Int {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe { syscall1(Sysno::Acct, name.addr() as isize) as Int }
 }
 
@@ -68,9 +66,7 @@ mod tests {
     fn test_acct_invalid_path() {
         let path = create_temp_path();
 
-        // SAFETY: `path` is NUL-terminated and readable for the duration of
-        // the syscall.
-        let result = unsafe { acct(path.as_ptr().cast::<Char>()) };
+        let result = acct(path.as_ptr().cast::<Char>());
 
         assert!(result < 0, "acct should have failed: {result}");
     }

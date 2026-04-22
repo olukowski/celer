@@ -88,7 +88,7 @@ mod tests {
 
     impl Drop for RestoreSignal {
         fn drop(&mut self) {
-            let _ = signal(self.sig, self.old_handler as usize);
+            let _ = unsafe { signal(self.sig, self.old_handler as usize) };
         }
     }
 
@@ -144,8 +144,9 @@ mod tests {
         #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
         fn use_pid(pid: PidT) {
             if pid == 0 {
-                let old_handler =
-                    signal(SIGUSR1, handle_sigusr1 as *const () as usize);
+                let old_handler = unsafe {
+                    signal(SIGUSR1, handle_sigusr1 as *const () as usize)
+                };
                 assert!(
                     old_handler >= 0,
                     "installing SIGUSR1 handler failed: {old_handler}"
@@ -198,15 +199,16 @@ mod tests {
             if pid == 0 {
                 SIGUSR2_HANDLED.store(false, Ordering::SeqCst);
 
-                let old_usr1 = signal(SIGUSR1, SIG_IGN);
+                let old_usr1 = unsafe { signal(SIGUSR1, SIG_IGN) };
                 assert!(old_usr1 >= 0, "installing SIG_IGN failed: {old_usr1}");
                 let _restore_usr1 = RestoreSignal {
                     sig: SIGUSR1,
                     old_handler: old_usr1,
                 };
 
-                let old_usr2 =
-                    signal(SIGUSR2, handle_sigusr2 as *const () as usize);
+                let old_usr2 = unsafe {
+                    signal(SIGUSR2, handle_sigusr2 as *const () as usize)
+                };
                 assert!(
                     old_usr2 >= 0,
                     "installing SIGUSR2 handler failed: {old_usr2}"

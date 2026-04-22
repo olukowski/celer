@@ -22,10 +22,6 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `EINVAL`: The target is not a mounted path.
 /// - `EPERM`: The caller is not permitted to perform the unmount operation.
 ///
-/// # Safety
-/// - `name` must point to a readable NUL-terminated string.
-/// - Any irreversible side effects of unmounting are intended.
-///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/umount.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/namespace.c?h=v6.19#n2046)
@@ -34,8 +30,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/super.c?h=0.10#n166)
-pub unsafe fn umount(name: *const Char) -> Int {
-    // SAFETY: guaranteed by caller.
+pub fn umount(name: *const Char) -> Int {
+    // SAFETY: this wrapper forwards the raw pathname pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe { syscall1(Sysno::Umount, name.addr() as isize) as Int }
 }
 
@@ -45,9 +43,7 @@ mod tests {
 
     #[test]
     fn test_umount_invalid_name() {
-        // SAFETY: the kernel rejects this invalid pointer; the test only checks
-        // that the wrapper reaches the syscall path.
-        let result = unsafe { umount(core::ptr::null()) };
+        let result = umount(core::ptr::null());
         assert!(result < 0, "umount unexpectedly succeeded: {result}");
     }
 }
