@@ -187,6 +187,8 @@ pub enum Sysno {
     Getrusage = 77,
     /// <https://man7.org/linux/man-pages/man2/settimeofday.2.html>
     Settimeofday = 79,
+    /// <https://man7.org/linux/man-pages/man2/symlink.2.html>
+    Symlink = 83,
 }
 
 /// Invoke a syscall with `0` arguments.

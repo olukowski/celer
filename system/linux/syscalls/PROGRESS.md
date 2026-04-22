@@ -99,7 +99,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [ ] ` 80 sys_getgroups`
 - [ ] ` 81 sys_setgroups`
 - [ ] ` 82 sys_select`
-- [ ] ` 83 sys_symlink`
+- [x] ` 83 sys_symlink`
 - [ ] ` 84 sys_lstat`
 - [ ] ` 85 sys_readlink`
 - [ ] ` 86 sys_uselib`
