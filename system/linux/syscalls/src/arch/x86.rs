@@ -117,6 +117,8 @@ pub enum Sysno {
     Getppid = 64,
     /// <https://man7.org/linux/man-pages/man2/getpgrp.2.html>
     Getpgrp = 65,
+    /// <https://man7.org/linux/man-pages/man2/setsid.2.html>
+    Setsid = 66,
 }
 
 /// Invoke a syscall with `0` arguments.
