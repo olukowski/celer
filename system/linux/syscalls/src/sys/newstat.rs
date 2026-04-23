@@ -253,7 +253,8 @@ mod tests {
 
         // SAFETY: an invalid user pointer is passed deliberately to exercise
         // the kernel `EFAULT` path for `filename`.
-        let ret = unsafe { stat(1usize as *const Char, &raw mut statbuf) };
+        let ret =
+            unsafe { stat(core::ptr::dangling::<Char>(), &raw mut statbuf) };
 
         assert_eq!(ret, -(14 as Long), "expected EFAULT from stat");
     }
