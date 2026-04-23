@@ -108,8 +108,8 @@ pub struct Stat {
     pub st_ctime: UnsignedLong,
 }
 
-/// Linux 1.0 `struct new_stat` used by the historical `newstat`,
-/// `newlstat`, and `newfstat` syscall ABIs on x86.
+/// Linux `struct stat` / `struct new_stat` used by the i386 `newstat`,
+/// `newlstat`, and `newfstat` syscall ABIs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct NewStat {

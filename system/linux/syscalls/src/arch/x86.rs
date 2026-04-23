@@ -238,6 +238,8 @@ pub enum Sysno {
     Setitimer = 104,
     /// <https://man7.org/linux/man-pages/man2/getitimer.2.html>
     Getitimer = 105,
+    /// Historical i386 `struct stat` / `new_stat` `lstat` ABI.
+    Newlstat = 107,
     /// Historical Linux 1.0 `newfstat` ABI using `struct new_stat`.
     Newfstat = 108,
 }
