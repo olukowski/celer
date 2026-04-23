@@ -142,7 +142,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `117 sys_ipc`
 - [ ] `118 sys_fsync`
 - [ ] `119 sys_sigreturn`
-- [ ] `120 sys_setdomainname`
+- [x] `120 sys_setdomainname`
 - [ ] `121 sys_olduname` - historical legacy uname entry; wrapped today as `oldolduname` via nr 59, not as a separate newer uname variant
 - [ ] `122 sys_old_syscall` - stubbed in Linux 1.0: `sys_old_syscall()` always returns `-ENOSYS`
 - [ ] `123 sys_modify_ldt`
