@@ -89,6 +89,7 @@ mod sigaction;
 mod signal;
 mod sigpending;
 mod sigsuspend;
+mod socketcall;
 mod ssetmask;
 mod stat;
 mod statfs;
@@ -182,6 +183,11 @@ pub use sigaction::sigaction;
 pub use signal::signal;
 pub use sigpending::sigpending;
 pub use sigsuspend::sigsuspend;
+pub use socketcall::{
+    SYS_ACCEPT, SYS_BIND, SYS_CONNECT, SYS_GETPEERNAME, SYS_GETSOCKNAME,
+    SYS_GETSOCKOPT, SYS_LISTEN, SYS_RECV, SYS_RECVFROM, SYS_SEND, SYS_SENDTO,
+    SYS_SETSOCKOPT, SYS_SHUTDOWN, SYS_SOCKET, SYS_SOCKETPAIR, socketcall,
+};
 pub use ssetmask::ssetmask;
 pub use stat::oldstat;
 pub use statfs::statfs;
