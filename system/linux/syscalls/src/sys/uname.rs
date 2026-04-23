@@ -43,6 +43,12 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
 /// Copy the system identity strings through the i386 `olduname` ABI into the
 /// caller-provided buffer.
 ///
+/// # Safety
+/// - If `name` is non-null, it must point to writable memory for one
+///   `OldUtsname` record for the duration of the syscall.
+/// - `name`, when non-null, must not alias live Rust references or other Rust
+///   allocations that the kernel may mutate through this output buffer.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 copied the fixed `struct old_utsname`
@@ -71,15 +77,21 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n604)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n16)
-pub fn olduname(name: *mut OldUtsname) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn olduname(name: *mut OldUtsname) -> Int {
+    // SAFETY: the caller guarantees that `name` is a valid writable output
+    // buffer with no conflicting Rust aliases for the duration of the
+    // syscall.
     (unsafe { syscall1(Sysno::Olduname, name.addr() as isize) }) as Int
 }
 
 /// Copy the system identity strings through the i386 `newuname` ABI into the
 /// caller-provided buffer.
+///
+/// # Safety
+/// - If `name` is non-null, it must point to writable memory for one
+///   `NewUtsname` record for the duration of the syscall.
+/// - `name`, when non-null, must not alias live Rust references or other Rust
+///   allocations that the kernel may mutate through this output buffer.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
@@ -110,10 +122,10 @@ pub fn olduname(name: *mut OldUtsname) -> Int {
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n592)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n24)
-pub fn newuname(name: *mut NewUtsname) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn newuname(name: *mut NewUtsname) -> Int {
+    // SAFETY: the caller guarantees that `name` is a valid writable output
+    // buffer with no conflicting Rust aliases for the duration of the
+    // syscall.
     (unsafe { syscall1(Sysno::Newuname, name.addr() as isize) }) as Int
 }
 
@@ -181,7 +193,7 @@ mod tests {
             machine: [0; 65],
         };
 
-        let ret = olduname(&raw mut name);
+        let ret = unsafe { olduname(&raw mut name) };
 
         assert_eq!(ret, 0, "olduname failed: {ret}");
         assert_ne!(name.sysname[0], 0);
@@ -206,7 +218,7 @@ mod tests {
 
     #[test]
     fn test_olduname_null_pointer() {
-        let ret = olduname(core::ptr::null_mut());
+        let ret = unsafe { olduname(core::ptr::null_mut()) };
 
         assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }
@@ -224,7 +236,7 @@ mod tests {
             domainname: [0; 65],
         };
 
-        let ret = newuname(&raw mut name);
+        let ret = unsafe { newuname(&raw mut name) };
 
         assert_eq!(ret, 0, "newuname failed: {ret}");
         assert_ne!(name.sysname[0], 0);
@@ -251,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_newuname_null_pointer() {
-        let ret = newuname(core::ptr::null_mut());
+        let ret = unsafe { newuname(core::ptr::null_mut()) };
 
         assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }

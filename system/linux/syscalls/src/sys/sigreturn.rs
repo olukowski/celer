@@ -29,6 +29,13 @@ use crate::arch::current::{Sysno, syscall0};
 /// - The saved `eax` value becomes the resumed return register value.
 /// - Linux 1.0 stores but does not restore any x87 state from the frame.
 ///
+/// # Safety
+/// - The current user stack must contain a valid kernel-built signal frame for
+///   this ABI at the point where the kernel will read it.
+/// - In particular, the caller must not invoke this wrapper unless execution
+///   is returning from a compatible signal-delivery path whose saved register
+///   state may safely be restored by the kernel.
+///
 /// # Errors
 /// - No errno is reachable from the Linux 1.0 `sys_sigreturn` entry path.
 /// - Linux 1.0 malformed or unreadable frames exit the task with `SIGSEGV`
@@ -49,7 +56,9 @@ use crate::arch::current::{Sysno, syscall0};
 /// - Linux 1.0 syscall table:
 ///   [kernel/sched.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n142)
 #[cfg_attr(coverage_nightly, coverage(off))]
-pub fn sigreturn() -> Long {
+pub unsafe fn sigreturn() -> Long {
+    // SAFETY: the caller guarantees that the current stack contains a valid
+    // signal frame whose saved register state may be restored by the kernel.
     syscall0(Sysno::Sigreturn) as Long
 }
 
@@ -77,7 +86,7 @@ mod tests {
 
         fn exercise_sigreturn_in_child(pid: PidT) {
             if pid == 0 {
-                let _ = sigreturn();
+                let _ = unsafe { sigreturn() };
                 exit(1);
             }
         }
