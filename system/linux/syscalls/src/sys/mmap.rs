@@ -248,6 +248,34 @@ mod tests {
         // SAFETY: `args` is a readable six-word `old_mmap` block.
         let raw = unsafe { raw_old_mmap(&raw const args) };
 
-        assert_eq!(wrapped as Long, raw as Long);
+        assert_eq!(is_errno_result(wrapped), is_errno_result(raw));
+
+        if is_errno_result(wrapped) {
+            assert_eq!(wrapped as Long, raw as Long);
+            return;
+        }
+
+        assert_eq!(
+            wrapped & 0xfff,
+            0,
+            "wrapped mapping should be page-aligned"
+        );
+        assert_eq!(raw & 0xfff, 0, "raw mapping should be page-aligned");
+
+        // SAFETY: both successful mappings refer to one page that this test no
+        // longer uses after unmapping.
+        unsafe {
+            assert_eq!(
+                munmap(
+                    ptr::without_provenance_mut::<Void>(wrapped as usize),
+                    4096
+                ),
+                0
+            );
+            assert_eq!(
+                munmap(ptr::without_provenance_mut::<Void>(raw as usize), 4096),
+                0
+            );
+        }
     }
 }
