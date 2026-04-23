@@ -228,6 +228,8 @@ pub enum Sysno {
     Statfs = 99,
     /// <https://man7.org/linux/man-pages/man2/statfs.2.html>
     Fstatfs = 100,
+    /// <https://man7.org/linux/man-pages/man3/klogctl.3.html>
+    Syslog = 103,
 }
 
 /// Invoke a syscall with `0` arguments.
