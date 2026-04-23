@@ -173,10 +173,10 @@ mod tests {
 
     use crate::arch::{
         current::{Sysno, syscall3},
-        linux_1_0::Sysno as Linux10Sysno,
+        linux_1_0::{Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4},
     };
 
-    use super::init_module;
+    use super::{init_module, init_module_1_0};
 
     #[test]
     fn test_init_module_sysno() {
@@ -222,6 +222,43 @@ mod tests {
         assert!(
             wrapped == -1 || wrapped == -8 || wrapped == -38,
             "expected EPERM, ENOEXEC, or ENOSYS from init_module(empty image), got {wrapped}",
+        );
+    }
+
+    #[test]
+    fn test_linux_1_0_init_module_matches_raw_syscall() {
+        let module_name = c"";
+        let code: [u8; 0] = [];
+        let routines = ModRoutines {
+            init: 0,
+            cleanup: 0,
+        };
+
+        let wrapped = unsafe {
+            init_module_1_0(
+                module_name.as_ptr().cast::<Char>(),
+                code.as_ptr().cast::<Void>(),
+                code.len() as _,
+                &raw const routines,
+            )
+        };
+        let raw = unsafe {
+            linux_1_0_syscall4(
+                Linux10Sysno::InitModule,
+                module_name.as_ptr().cast::<Char>().addr() as isize,
+                code.as_ptr().cast::<Void>().addr() as isize,
+                code.len() as isize,
+                (&raw const routines).addr() as isize,
+            )
+        } as i32;
+
+        assert_eq!(
+            wrapped, raw,
+            "Linux 1.0 init_module wrapper should match raw syscall"
+        );
+        assert!(
+            wrapped == -1 || wrapped == -8 || wrapped == -14 || wrapped == -38,
+            "expected EPERM, ENOEXEC, EFAULT, or ENOSYS from Linux 1.0 init_module shape on a current kernel, got {wrapped}",
         );
     }
 }
