@@ -55,9 +55,10 @@ struct SelectArgs {
 /// - `EFAULT`: A non-null descriptor-set pointer or non-null `timeout`
 ///   pointer is not accessible to the kernel.
 /// - `EINVAL`: `nfds` is negative.
+/// - `EINVAL`: on current kernels, `timeout` contains invalid field values.
 /// - `ENOMEM`: Kernel allocation of the temporary select wait table failed.
-/// - `ERESTARTNOHAND`: No descriptor became ready before return and an
-///   unblocked signal was pending.
+/// - `EINTR`: no descriptor became ready before return and an unblocked
+///   signal interrupted the wait.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/select.2.html)
@@ -95,12 +96,34 @@ pub unsafe fn select(
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use std::sync::Mutex;
+
     use celer_system_linux_ctypes::{FdSet, Int, Timeval, UnsignedLong};
 
     use crate::arch::current::Sysno;
-    use crate::sys::{close, pipe, write};
+    use crate::sys::{alarm, close, pipe, signal, write};
 
     use super::{SelectArgs, select};
+
+    const EINTR: Int = -(4 as Int);
+    const EINVAL: Int = -(22 as Int);
+    const SIGALRM: Int = 14;
+
+    static SELECT_SIGNAL_LOCK: Mutex<()> = Mutex::new(());
+
+    extern "C" fn handle_sigalrm(_: Int) {}
+
+    struct RestoreHandler {
+        sig: Int,
+        old: usize,
+    }
+
+    impl Drop for RestoreHandler {
+        fn drop(&mut self) {
+            let _ = alarm(0);
+            let _ = unsafe { signal(self.sig, self.old) };
+        }
+    }
 
     fn empty_fd_set() -> FdSet {
         FdSet { fds_bits: [0; 8] }
@@ -224,7 +247,7 @@ mod tests {
             )
         };
 
-        assert_eq!(rc, -22, "expected EINVAL, got {rc}");
+        assert_eq!(rc, EINVAL, "expected EINVAL, got {rc}");
     }
 
     #[test]
@@ -274,5 +297,56 @@ mod tests {
         };
 
         assert_eq!(rc, -14, "expected EFAULT, got {rc}");
+    }
+
+    #[test]
+    fn test_select_invalid_timeout_returns_einval() {
+        let mut timeout = Timeval {
+            tv_sec: 0,
+            tv_usec: 1_000_001,
+        };
+
+        // SAFETY: null descriptor sets are allowed and `timeout` is writable.
+        let rc = unsafe {
+            select(
+                0,
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+                &raw mut timeout,
+            )
+        };
+
+        assert_eq!(rc, EINVAL, "expected EINVAL, got {rc}");
+    }
+
+    #[test]
+    fn test_select_interrupted_by_signal_returns_eintr() {
+        let _guard = SELECT_SIGNAL_LOCK.lock().unwrap();
+
+        let old =
+            unsafe { signal(SIGALRM, handle_sigalrm as *const () as usize) };
+        assert!(old >= 0, "installing SIGALRM handler failed: {old}");
+        let _restore = RestoreHandler {
+            sig: SIGALRM,
+            old: old as usize,
+        };
+
+        let previous_alarm = alarm(1);
+        assert!(previous_alarm <= 1);
+
+        // SAFETY: null fd sets and null timeout are valid; this call blocks
+        // until the alarm signal interrupts it.
+        let rc = unsafe {
+            select(
+                0,
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+            )
+        };
+
+        assert_eq!(rc, EINTR, "expected EINTR, got {rc}");
     }
 }

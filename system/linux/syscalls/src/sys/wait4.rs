@@ -52,8 +52,8 @@ use crate::arch::current::{Sysno, syscall4};
 ///   already been reported and either the `stat_addr` or `ru` copy-out fails.
 /// - `EINVAL`: On current kernels, `options` contains unsupported bits.
 /// - `ESRCH`: On current kernels, `pid == INT_MIN`.
-/// - `ERESTARTSYS`: The blocking wait was interrupted by a signal before a
-///   child became waitable.
+/// - `EINTR`: The blocking wait was interrupted by a signal before a child
+///   became waitable.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/wait4.2.html)
@@ -87,15 +87,35 @@ pub unsafe fn wait4(
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use std::sync::Mutex;
+
     use celer_system_linux_ctypes::{Int, Rusage, Timeval};
 
     use crate::arch::current::Sysno;
-    use crate::sys::{exit, fork, kill, pause};
+    use crate::sys::{alarm, exit, fork, kill, pause, signal};
 
     use super::wait4;
 
+    const EINTR: Int = -(4 as Int);
     const WNOHANG: Int = 1;
     const SIGKILL: Int = 9;
+    const SIGALRM: Int = 14;
+
+    static WAIT4_SIGNAL_LOCK: Mutex<()> = Mutex::new(());
+
+    extern "C" fn handle_sigalrm(_: Int) {}
+
+    struct RestoreHandler {
+        sig: Int,
+        old: usize,
+    }
+
+    impl Drop for RestoreHandler {
+        fn drop(&mut self) {
+            let _ = alarm(0);
+            let _ = unsafe { signal(self.sig, self.old) };
+        }
+    }
 
     fn sentinel_rusage() -> Rusage {
         Rusage {
@@ -235,6 +255,11 @@ mod tests {
         };
 
         assert_eq!(rc, -14, "expected EFAULT for bad rusage pointer, got {rc}");
+
+        // SAFETY: cleanup uses null output pointers, which are permitted.
+        let _ = unsafe {
+            wait4(pid, core::ptr::null_mut(), WNOHANG, core::ptr::null_mut())
+        };
     }
 
     #[test]
@@ -251,6 +276,11 @@ mod tests {
             unsafe { wait4(pid, usize::MAX as *mut Int, 0, &raw mut usage) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad status pointer, got {rc}");
+
+        // SAFETY: cleanup uses null output pointers, which are permitted.
+        let _ = unsafe {
+            wait4(pid, core::ptr::null_mut(), WNOHANG, core::ptr::null_mut())
+        };
     }
 
     #[test]
@@ -261,5 +291,41 @@ mod tests {
         };
 
         assert_eq!(rc, -3, "expected ESRCH for pid == INT_MIN, got {rc}");
+    }
+
+    #[test]
+    fn test_wait4_interrupted_by_signal_returns_eintr() {
+        let _guard = WAIT4_SIGNAL_LOCK.lock().unwrap();
+
+        let old =
+            unsafe { signal(SIGALRM, handle_sigalrm as *const () as usize) };
+        assert!(old >= 0, "installing SIGALRM handler failed: {old}");
+        let _restore = RestoreHandler {
+            sig: SIGALRM,
+            old: old as usize,
+        };
+
+        let pid = fork();
+        if pid == 0 {
+            let _ = pause();
+            exit(0);
+        }
+
+        let previous_alarm = alarm(1);
+        assert!(previous_alarm <= 1);
+
+        // SAFETY: null output pointers are permitted by the syscall ABI.
+        let rc = unsafe {
+            wait4(pid, core::ptr::null_mut(), 0, core::ptr::null_mut())
+        };
+
+        assert_eq!(rc, EINTR, "expected EINTR, got {rc}");
+
+        assert_eq!(kill(pid, SIGKILL), 0, "kill(SIGKILL) failed");
+        // SAFETY: null output pointers are permitted by the syscall ABI.
+        let reaped = unsafe {
+            wait4(pid, core::ptr::null_mut(), 0, core::ptr::null_mut())
+        };
+        assert_eq!(reaped, pid, "cleanup wait4 failed: {reaped}");
     }
 }

@@ -28,6 +28,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Errors
 /// - `EINVAL`: `uid` cannot be mapped to a valid kernel UID.
 /// - `EPERM`: the caller is not permitted to switch to `uid`.
+/// - `ENOMEM`: on current kernels, credential allocation fails before the uid
+///   transition completes.
+/// - Current kernels may also return additional policy-dependent errors from
+///   the credential and LSM hooks that run after the initial uid conversion.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/setuid.2.html)

@@ -27,11 +27,13 @@ use crate::arch::current::{Sysno, syscall2};
 ///   `tz_minuteswest` and `tz_dsttime`.
 /// - Either output pointer may be null independently, and the syscall still
 ///   succeeds.
-/// - In the original Linux 0.12 implementation that this wrapper targets, the
-///   syscall always returns `0`.
+/// - Successful calls return `0`.
 ///
 /// # Errors
-/// - Never fails in the original Linux 0.12 implementation.
+/// - `EFAULT`: on Linux 1.0, a non-null `tv` or `tz` pointer is not writable
+///   for one output structure.
+/// - `EFAULT`: on current kernels, a non-null `tv` or `tz` pointer cannot be
+///   written back to user memory.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/gettimeofday.2.html)
@@ -52,6 +54,8 @@ pub unsafe fn gettimeofday(tv: *mut Timeval, tz: *mut Timezone) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use core::ptr;
+
     use celer_system_linux_ctypes::{Timeval, Timezone};
 
     use crate::arch::current::Sysno;
@@ -132,5 +136,23 @@ mod tests {
         };
 
         assert_eq!(rc, 0, "gettimeofday failed: {rc}");
+    }
+
+    #[test]
+    fn test_gettimeofday_bad_tv_pointer_returns_efault() {
+        let rc = unsafe {
+            gettimeofday(ptr::without_provenance_mut(1), ptr::null_mut())
+        };
+
+        assert_eq!(rc, -14, "expected EFAULT for bad tv pointer, got {rc}");
+    }
+
+    #[test]
+    fn test_gettimeofday_bad_tz_pointer_returns_efault() {
+        let rc = unsafe {
+            gettimeofday(ptr::null_mut(), ptr::without_provenance_mut(1))
+        };
+
+        assert_eq!(rc, -14, "expected EFAULT for bad tz pointer, got {rc}");
     }
 }

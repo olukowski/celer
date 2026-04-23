@@ -4,11 +4,14 @@ use crate::arch::current::{Sysno, syscall3};
 
 /// Wait for a child process to change state.
 ///
-/// This is the compatibility `waitpid` entry point on x86 Linux.
+/// This is the compatibility `waitpid` entry point on x86 Linux. On both
+/// Linux 1.0 and current x86 kernels, it is implemented as `wait4(..., NULL)`.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes: Linux 1.0 accepted unknown option bits without
+///   rejecting them; current kernels reject unsupported option bits with
+///   `EINVAL` and reject `pid == INT_MIN` with `ESRCH`.
 /// - Availability: x86 Linux only for now
 ///
 /// # Required Privileges
@@ -17,12 +20,15 @@ use crate::arch::current::{Sysno, syscall3};
 /// # Behavior
 /// - Waits for the child identified by `pid` to change state.
 /// - Stores the child status word in `stat_addr` when that pointer is not null.
-/// - Returns the PID of the child that changed state, or a negative errno value on failure.
+/// - Returns the PID of the child that changed state, or a negative errno
+///   value on failure.
 ///
 /// # Errors
-/// - `ENOSYS`: The system call is not supported on this architecture.
 /// - `ECHILD`: There are no unwaited-for children matching the request.
 /// - `EINTR`: The wait was interrupted by a signal.
+/// - `EFAULT`: `stat_addr` is not writable for one wait-status word.
+/// - `EINVAL`: on current kernels, `options` contains unsupported bits.
+/// - `ESRCH`: on current kernels, `pid == INT_MIN`.
 ///
 /// # Safety
 /// - `stat_addr`, when non-null, must be valid to write a single `Int` value
@@ -58,6 +64,8 @@ mod tests {
     use super::waitpid;
     use crate::sys::{exit, fork};
 
+    const WNOHANG: Int = 1;
+
     #[test]
     fn test_waitpid() {
         let pid = fork();
@@ -74,5 +82,40 @@ mod tests {
 
         assert_eq!(waited, pid);
         assert_eq!(status & 0x7f, 0);
+    }
+
+    #[test]
+    fn test_waitpid_returns_echild_without_children() {
+        let rc = unsafe { waitpid(-1, core::ptr::null_mut(), 0) };
+
+        assert_eq!(rc, -10, "expected ECHILD, got {rc}");
+    }
+
+    #[test]
+    fn test_waitpid_rejects_invalid_options() {
+        let rc = unsafe { waitpid(-1, core::ptr::null_mut(), -1) };
+
+        assert_eq!(rc, -22, "expected EINVAL, got {rc}");
+    }
+
+    #[test]
+    fn test_waitpid_reports_efault_for_bad_status_pointer() {
+        let pid = fork();
+        if pid == 0 {
+            exit(0);
+        }
+
+        let rc = unsafe { waitpid(pid, usize::MAX as *mut Int, 0) };
+
+        assert_eq!(rc, -14, "expected EFAULT, got {rc}");
+
+        let _ = unsafe { waitpid(pid, core::ptr::null_mut(), WNOHANG) };
+    }
+
+    #[test]
+    fn test_waitpid_int_min_pid_returns_esrch() {
+        let rc = unsafe { waitpid(Int::MIN, core::ptr::null_mut(), 0) };
+
+        assert_eq!(rc, -3, "expected ESRCH for pid == INT_MIN, got {rc}");
     }
 }

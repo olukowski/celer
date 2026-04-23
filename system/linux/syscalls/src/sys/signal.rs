@@ -6,7 +6,9 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes: Linux 1.0 rejected handler addresses greater than or
+///   equal to `TASK_SIZE` with `EFAULT`; current kernels no longer perform
+///   that front-end address check in the `sys_signal` entry path.
 /// - Availability: x86 32-bit exposes the legacy `sys_signal` entry point
 ///   for backward compatibility
 ///
@@ -21,6 +23,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// # Errors
 /// - `EINVAL`: `sig` is not a valid signal number, or the target disposition
 ///   is immutable.
+/// - `EFAULT`: on Linux 1.0, `handler` is greater than or equal to the
+///   process `TASK_SIZE` limit.
 ///
 /// # Safety
 /// - `handler` must be a signal disposition value accepted by the kernel for
