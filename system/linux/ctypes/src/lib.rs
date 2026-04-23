@@ -186,6 +186,65 @@ pub struct Timezone {
     pub tz_dsttime: Int,
 }
 
+/// Linux `struct vm86_regs` used by the historical x86 `vm86` / `vm86old`
+/// syscall ABIs.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Vm86Regs {
+    pub ebx: Long,
+    pub ecx: Long,
+    pub edx: Long,
+    pub esi: Long,
+    pub edi: Long,
+    pub ebp: Long,
+    pub eax: Long,
+    pub __null_ds: Long,
+    pub __null_es: Long,
+    pub __null_fs: Long,
+    pub __null_gs: Long,
+    pub orig_eax: Long,
+    pub eip: Long,
+    pub cs: UnsignedShort,
+    pub __csh: UnsignedShort,
+    pub eflags: Long,
+    pub esp: Long,
+    pub ss: UnsignedShort,
+    pub __ssh: UnsignedShort,
+    pub es: UnsignedShort,
+    pub __esh: UnsignedShort,
+    pub ds: UnsignedShort,
+    pub __dsh: UnsignedShort,
+    pub fs: UnsignedShort,
+    pub __fsh: UnsignedShort,
+    pub gs: UnsignedShort,
+    pub __gsh: UnsignedShort,
+}
+
+/// Linux `struct revectored_struct` used by the x86 `vm86` / `vm86old`
+/// syscall ABIs.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct RevectoredStruct {
+    pub __map: [UnsignedLong; 8],
+}
+
+/// Linux `struct vm86_struct` used by the current x86 `vm86old` ABI and still
+/// accepted by the original Linux 1.0 `sys_vm86` entry, which consumes only
+/// the prefix through `screen_bitmap`.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Vm86Struct {
+    pub regs: Vm86Regs,
+    pub flags: UnsignedLong,
+    pub screen_bitmap: UnsignedLong,
+    pub cpu_type: UnsignedLong,
+    pub int_revectored: RevectoredStruct,
+    pub int21_revectored: RevectoredStruct,
+}
+
+/// Linux `VM86_SCREEN_BITMAP`.
+pub const VM86_SCREEN_BITMAP: UnsignedLong = 0x0001;
+
 /// Linux `struct oldold_utsname` used by the historical `oldolduname` syscall
 /// ABI.
 #[repr(C)]

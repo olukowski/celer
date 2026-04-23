@@ -252,6 +252,8 @@ pub enum Sysno {
     Vhangup = 111,
     /// Historical i386 `idle` syscall.
     Idle = 112,
+    /// Historical x86 `vm86old` / Linux 1.0 `vm86` ABI.
+    Vm86 = 113,
     /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
     Swapoff = 115,
 }
