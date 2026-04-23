@@ -30,7 +30,9 @@ use crate::arch::linux_1_0::{Sysno, syscall1};
 ///   kernel panics instead.
 ///
 /// # Errors
-/// - `EPERM`: the Linux 1.0 one-shot guard rejected a repeated call.
+/// - Linux 1.0 returns literal `-1` when its one-shot guard rejects a
+///   repeated call. This is errno-shaped like `EPERM`, but the source does not
+///   spell it as `-EPERM`.
 ///
 /// # References
 /// - Linux 1.0 syscall number table:

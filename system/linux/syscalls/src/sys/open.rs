@@ -21,8 +21,6 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Errors
 /// - `EINVAL`: Invalid flag combinations are rejected by `build_open_flags()`.
-/// - `EAGAIN`: `RESOLVE_CACHED` cannot be used with create, truncate, or
-///   tmpfile opens.
 ///
 /// Lower-level VFS and path-resolution helpers may return additional errno
 /// values; see the referenced kernel source for the full chain.
