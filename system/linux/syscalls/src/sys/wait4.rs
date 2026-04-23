@@ -88,18 +88,20 @@ pub unsafe fn wait4(
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::sync::Mutex;
+    use std::thread;
+    use std::time::Duration;
 
     use celer_system_linux_ctypes::{Int, Rusage, Timeval};
 
     use crate::arch::current::Sysno;
-    use crate::sys::{alarm, exit, fork, kill, pause, signal};
+    use crate::sys::{exit, fork, getpid, kill, pause, signal, waitpid};
 
     use super::wait4;
 
     const EINTR: Int = -(4 as Int);
     const WNOHANG: Int = 1;
     const SIGKILL: Int = 9;
-    const SIGALRM: Int = 14;
+    const SIGUSR1: Int = 10;
 
     static WAIT4_SIGNAL_LOCK: Mutex<()> = Mutex::new(());
 
@@ -112,9 +114,36 @@ mod tests {
 
     impl Drop for RestoreHandler {
         fn drop(&mut self) {
-            let _ = alarm(0);
             let _ = unsafe { signal(self.sig, self.old) };
         }
+    }
+
+    fn spawn_signal_sender(target: Int, sig: Int) -> Int {
+        let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
+        if pid == 0 {
+            thread::sleep(Duration::from_millis(100));
+            let rc = kill(target, sig);
+            if rc != 0 {
+                exit(1);
+            }
+            exit(0);
+        }
+
+        pid
+    }
+
+    fn assert_clean_exit(status: Int) {
+        assert_eq!(
+            status & 0x7f,
+            0,
+            "expected normal exit status, got {status}"
+        );
+        assert_eq!(
+            (status >> 8) & 0xff,
+            0,
+            "expected zero exit code, got {status}"
+        );
     }
 
     fn sentinel_rusage() -> Rusage {
@@ -297,35 +326,54 @@ mod tests {
     fn test_wait4_interrupted_by_signal_returns_eintr() {
         let _guard = WAIT4_SIGNAL_LOCK.lock().unwrap();
 
-        let old =
-            unsafe { signal(SIGALRM, handle_sigalrm as *const () as usize) };
-        assert!(old >= 0, "installing SIGALRM handler failed: {old}");
-        let _restore = RestoreHandler {
-            sig: SIGALRM,
-            old: old as usize,
-        };
-
         let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
         if pid == 0 {
-            let _ = pause();
+            let old = unsafe {
+                signal(SIGUSR1, handle_sigalrm as *const () as usize)
+            };
+            assert!(old >= 0, "installing SIGUSR1 handler failed: {old}");
+            let _restore = RestoreHandler {
+                sig: SIGUSR1,
+                old: old as usize,
+            };
+
+            let child = fork();
+            assert!(child >= 0, "fork failed: {child}");
+            if child == 0 {
+                let _ = pause();
+                exit(0);
+            }
+
+            let sender = spawn_signal_sender(getpid(), SIGUSR1);
+
+            // SAFETY: null output pointers are permitted by the syscall ABI.
+            let rc = unsafe {
+                wait4(child, core::ptr::null_mut(), 0, core::ptr::null_mut())
+            };
+
+            let mut sender_status = 0;
+            let waited_sender =
+                unsafe { waitpid(sender, &raw mut sender_status, 0) };
+            assert_eq!(
+                waited_sender, sender,
+                "waitpid failed: {waited_sender}"
+            );
+            assert_clean_exit(sender_status);
+            assert_eq!(rc, EINTR, "expected EINTR, got {rc}");
+
+            assert_eq!(kill(child, SIGKILL), 0, "kill(SIGKILL) failed");
+            // SAFETY: null output pointers are permitted by the syscall ABI.
+            let reaped = unsafe {
+                wait4(child, core::ptr::null_mut(), 0, core::ptr::null_mut())
+            };
+            assert_eq!(reaped, child, "cleanup wait4 failed: {reaped}");
             exit(0);
         }
 
-        let previous_alarm = alarm(1);
-        assert!(previous_alarm <= 1);
-
-        // SAFETY: null output pointers are permitted by the syscall ABI.
-        let rc = unsafe {
-            wait4(pid, core::ptr::null_mut(), 0, core::ptr::null_mut())
-        };
-
-        assert_eq!(rc, EINTR, "expected EINTR, got {rc}");
-
-        assert_eq!(kill(pid, SIGKILL), 0, "kill(SIGKILL) failed");
-        // SAFETY: null output pointers are permitted by the syscall ABI.
-        let reaped = unsafe {
-            wait4(pid, core::ptr::null_mut(), 0, core::ptr::null_mut())
-        };
-        assert_eq!(reaped, pid, "cleanup wait4 failed: {reaped}");
+        let mut status = 0;
+        let waited = unsafe { waitpid(pid, &raw mut status, 0) };
+        assert_eq!(waited, pid, "waitpid failed: {waited}");
+        assert_clean_exit(status);
     }
 }

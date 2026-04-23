@@ -47,6 +47,10 @@ struct SelectArgs {
 ///   covered by `nfds` keep only the ready bits requested for that set.
 /// - On Linux 1.0, `nfds < 0` fails with `EINVAL`.
 /// - On Linux 1.0, `nfds > 256` is clipped to `256` instead of being rejected.
+/// - On current kernels, positive `timeout.tv_usec` overflow is normalized
+///   into whole seconds before validation in the `old_select` entry path, so
+///   values such as `1_000_001` are accepted instead of failing with
+///   `EINVAL`.
 /// - If `timeout` is non-null, the kernel writes the remaining timeout back
 ///   before returning, including `0` on expiry.
 ///
@@ -97,17 +101,21 @@ pub unsafe fn select(
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::sync::Mutex;
+    use std::thread;
+    use std::time::Duration;
 
     use celer_system_linux_ctypes::{FdSet, Int, Timeval, UnsignedLong};
 
     use crate::arch::current::Sysno;
-    use crate::sys::{alarm, close, pipe, signal, write};
+    use crate::sys::{
+        close, exit, fork, getpid, kill, pipe, signal, waitpid, write,
+    };
 
     use super::{SelectArgs, select};
 
     const EINTR: Int = -(4 as Int);
     const EINVAL: Int = -(22 as Int);
-    const SIGALRM: Int = 14;
+    const SIGUSR1: Int = 10;
 
     static SELECT_SIGNAL_LOCK: Mutex<()> = Mutex::new(());
 
@@ -120,9 +128,36 @@ mod tests {
 
     impl Drop for RestoreHandler {
         fn drop(&mut self) {
-            let _ = alarm(0);
             let _ = unsafe { signal(self.sig, self.old) };
         }
+    }
+
+    fn spawn_signal_sender(target: Int, sig: Int) -> Int {
+        let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
+        if pid == 0 {
+            thread::sleep(Duration::from_millis(100));
+            let rc = kill(target, sig);
+            if rc != 0 {
+                exit(1);
+            }
+            exit(0);
+        }
+
+        pid
+    }
+
+    fn assert_clean_exit(status: Int) {
+        assert_eq!(
+            status & 0x7f,
+            0,
+            "expected normal exit status, got {status}"
+        );
+        assert_eq!(
+            (status >> 8) & 0xff,
+            0,
+            "expected zero exit code, got {status}"
+        );
     }
 
     fn empty_fd_set() -> FdSet {
@@ -300,10 +335,10 @@ mod tests {
     }
 
     #[test]
-    fn test_select_invalid_timeout_returns_einval() {
+    fn test_select_negative_timeout_usec_returns_einval() {
         let mut timeout = Timeval {
             tv_sec: 0,
-            tv_usec: 1_000_001,
+            tv_usec: -1,
         };
 
         // SAFETY: null descriptor sets are allowed and `timeout` is writable.
@@ -324,29 +359,43 @@ mod tests {
     fn test_select_interrupted_by_signal_returns_eintr() {
         let _guard = SELECT_SIGNAL_LOCK.lock().unwrap();
 
-        let old =
-            unsafe { signal(SIGALRM, handle_sigalrm as *const () as usize) };
-        assert!(old >= 0, "installing SIGALRM handler failed: {old}");
-        let _restore = RestoreHandler {
-            sig: SIGALRM,
-            old: old as usize,
-        };
+        let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
+        if pid == 0 {
+            let old = unsafe {
+                signal(SIGUSR1, handle_sigalrm as *const () as usize)
+            };
+            assert!(old >= 0, "installing SIGUSR1 handler failed: {old}");
+            let _restore = RestoreHandler {
+                sig: SIGUSR1,
+                old: old as usize,
+            };
 
-        let previous_alarm = alarm(1);
-        assert!(previous_alarm <= 1);
+            let sender = spawn_signal_sender(getpid(), SIGUSR1);
 
-        // SAFETY: null fd sets and null timeout are valid; this call blocks
-        // until the alarm signal interrupts it.
-        let rc = unsafe {
-            select(
-                0,
-                core::ptr::null_mut(),
-                core::ptr::null_mut(),
-                core::ptr::null_mut(),
-                core::ptr::null_mut(),
-            )
-        };
+            // SAFETY: null fd sets and null timeout are valid; this call
+            // blocks until the signal sender interrupts it.
+            let rc = unsafe {
+                select(
+                    0,
+                    core::ptr::null_mut(),
+                    core::ptr::null_mut(),
+                    core::ptr::null_mut(),
+                    core::ptr::null_mut(),
+                )
+            };
 
-        assert_eq!(rc, EINTR, "expected EINTR, got {rc}");
+            let mut sender_status = 0;
+            let waited = unsafe { waitpid(sender, &raw mut sender_status, 0) };
+            assert_eq!(waited, sender, "waitpid failed: {waited}");
+            assert_clean_exit(sender_status);
+            assert_eq!(rc, EINTR, "expected EINTR, got {rc}");
+            exit(0);
+        }
+
+        let mut status = 0;
+        let waited = unsafe { waitpid(pid, &raw mut status, 0) };
+        assert_eq!(waited, pid, "waitpid failed: {waited}");
+        assert_clean_exit(status);
     }
 }
