@@ -268,6 +268,8 @@ pub enum Sysno {
     Sigreturn = 119,
     /// <https://man7.org/linux/man-pages/man2/setdomainname.2.html>
     Setdomainname = 121,
+    /// Historical Linux 1.0 `create_module` ABI.
+    CreateModule = 127,
 }
 
 /// Invoke a syscall with `0` arguments.
