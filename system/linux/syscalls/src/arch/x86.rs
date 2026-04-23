@@ -272,6 +272,8 @@ pub enum Sysno {
     Setdomainname = 121,
     /// Historical Linux 1.0 `create_module` ABI.
     CreateModule = 127,
+    /// Historical x86 `delete_module` ABI.
+    DeleteModule = 129,
     /// <https://man7.org/linux/man-pages/man2/getpgid.2.html>
     Getpgid = 132,
 }
