@@ -66,17 +66,15 @@ mod tests {
         os::fd::AsRawFd as _,
         os::unix::fs::PermissionsExt as _,
         path::PathBuf,
-        sync::Mutex,
         time::{SystemTime, UNIX_EPOCH},
     };
 
     use celer_system_linux_ctypes::UnsignedInt;
 
+    use crate::sys::test_support::process_global_state_guard;
     use crate::{arch::current::Sysno, sys::geteuid16};
 
     use super::fchdir;
-
-    static CWD_LOCK: Mutex<()> = Mutex::new(());
 
     fn create_temp_dir(label: &str) -> PathBuf {
         let mut path = env::temp_dir();
@@ -98,7 +96,7 @@ mod tests {
 
     #[test]
     fn test_fchdir_changes_cwd() {
-        let _guard = CWD_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
         let original_dir = env::current_dir().unwrap();
         let path = create_temp_dir("success");
         let dir = OpenOptions::new().read(true).open(&path).unwrap();
@@ -156,7 +154,7 @@ mod tests {
             return;
         }
 
-        let _guard = CWD_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
         let path = create_temp_dir("eacces");
         let dir = OpenOptions::new().read(true).open(&path).unwrap();
         let original_mode = fs::metadata(&path).unwrap().permissions().mode();

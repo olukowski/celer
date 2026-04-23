@@ -55,9 +55,9 @@ pub fn ssetmask(newmask: OldSigsetT) -> OldSigsetT {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use std::sync::Mutex;
-
     use celer_system_linux_ctypes::OldSigsetT;
+
+    use crate::sys::test_support::process_global_state_guard;
 
     use super::ssetmask;
 
@@ -66,8 +66,6 @@ mod tests {
     const SIGUSR1: OldSigsetT = 10;
     const SIGUSR2: OldSigsetT = 12;
     const SIGSTOP: OldSigsetT = 19;
-
-    static SSETMASK_LOCK: Mutex<()> = Mutex::new(());
 
     struct RestoreMask(OldSigsetT);
 
@@ -87,7 +85,7 @@ mod tests {
 
     #[test]
     fn test_ssetmask_strips_sigkill_and_sigstop() {
-        let _guard = SSETMASK_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let Some(original) = ssetmask_original_mask() else {
             return;

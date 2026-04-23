@@ -78,6 +78,8 @@ mod tests {
         ITIMER_PROF, ITIMER_REAL, ITIMER_VIRTUAL, Itimerval, Timeval,
     };
 
+    use crate::sys::test_support::process_global_state_guard;
+
     use super::setitimer;
     use crate::arch::current::Sysno;
 
@@ -109,6 +111,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_zero_value_succeeds() {
+        let _guard = process_global_state_guard();
         let zero = zero_itimerval();
 
         // SAFETY: `zero` is readable for one `Itimerval`; null `old_value`
@@ -122,6 +125,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_none_value_clears_timer() {
+        let _guard = process_global_state_guard();
         let mut old = Itimerval {
             it_interval: Timeval {
                 tv_sec: -1,
@@ -146,6 +150,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_second_clear_reports_zero_old_value() {
+        let _guard = process_global_state_guard();
         let zero = zero_itimerval();
         let mut old = zero_itimerval();
 
@@ -167,6 +172,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_invalid_selector_returns_einval() {
+        let _guard = process_global_state_guard();
         let zero = zero_itimerval();
 
         // SAFETY: `zero` is readable for one `Itimerval`; null `old_value`
@@ -179,6 +185,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_current_kernel_invalid_tv_usec_returns_einval() {
+        let _guard = process_global_state_guard();
         let invalid = Itimerval {
             it_interval: Timeval {
                 tv_sec: 0,
@@ -204,6 +211,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_current_kernel_negative_tv_sec_returns_einval() {
+        let _guard = process_global_state_guard();
         let invalid = Itimerval {
             it_interval: Timeval {
                 tv_sec: 0,
@@ -229,6 +237,7 @@ mod tests {
 
     #[test]
     fn test_setitimer_supported_selectors_accept_zero_value() {
+        let _guard = process_global_state_guard();
         let zero = zero_itimerval();
 
         for which in [ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF] {

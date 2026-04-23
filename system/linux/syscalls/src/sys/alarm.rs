@@ -42,10 +42,14 @@ pub fn alarm(seconds: UnsignedInt) -> UnsignedInt {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use crate::sys::test_support::process_global_state_guard;
+
     use super::alarm;
 
     #[test]
     fn test_alarm_roundtrip() {
+        let _guard = process_global_state_guard();
+
         let old = alarm(2);
         let cleared = alarm(0);
 

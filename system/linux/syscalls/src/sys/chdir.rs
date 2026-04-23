@@ -38,15 +38,14 @@ mod tests {
     use std::{
         env, fs,
         path::PathBuf,
-        sync::Mutex,
         time::{SystemTime, UNIX_EPOCH},
     };
 
     use celer_system_linux_ctypes::Char;
 
-    use super::chdir;
+    use crate::sys::test_support::process_global_state_guard;
 
-    static CWD_LOCK: Mutex<()> = Mutex::new(());
+    use super::chdir;
 
     fn create_temp_dir() -> PathBuf {
         let mut path = env::temp_dir();
@@ -63,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_chdir() {
-        let _guard = CWD_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
         let original_dir = env::current_dir().unwrap();
         let path = create_temp_dir();
 

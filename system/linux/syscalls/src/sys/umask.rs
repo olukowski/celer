@@ -36,13 +36,11 @@ pub fn umask(mask: UModeT) -> UModeT {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use std::sync::Mutex;
-
     use celer_system_linux_ctypes::UModeT;
 
-    use super::umask;
+    use crate::sys::test_support::process_global_state_guard;
 
-    static UMASK_LOCK: Mutex<()> = Mutex::new(());
+    use super::umask;
 
     struct RestoreUmask(UModeT);
 
@@ -54,7 +52,7 @@ mod tests {
 
     #[test]
     fn test_umask() {
-        let _guard = UMASK_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let original = umask(0);
         let _restore = RestoreUmask(original);

@@ -60,17 +60,16 @@ pub fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::fs;
-    use std::sync::Mutex;
 
     use celer_system_linux_ctypes::{Int, Rlimit, UnsignedInt};
+
+    use crate::sys::test_support::process_global_state_guard;
 
     use super::setrlimit;
 
     const RLIMIT_CPU: UnsignedInt = 0;
     const RLIMIT_NOFILE: UnsignedInt = 7;
     const CURRENT_RLIM_NLIMITS: UnsignedInt = 16;
-
-    static SETRLIMIT_LOCK: Mutex<()> = Mutex::new(());
 
     unsafe extern "C" {
         fn getrlimit(resource: UnsignedInt, rlim: *mut Rlimit) -> Int;
@@ -112,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_setrlimit_accepts_existing_limit_pair() {
-        let _guard = SETRLIMIT_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
         let mut limits = Rlimit {
             rlim_cur: 0,
             rlim_max: 0,
@@ -129,6 +128,7 @@ mod tests {
 
     #[test]
     fn test_setrlimit_rejects_rlimit_nofile_above_nr_open() {
+        let _guard = process_global_state_guard();
         let nr_open = fs::read_to_string("/proc/sys/fs/nr_open")
             .expect("failed to read /proc/sys/fs/nr_open")
             .trim()

@@ -82,11 +82,10 @@ pub unsafe fn sigprocmask(
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use std::sync::Mutex;
-
     use celer_system_linux_ctypes::{Int, OldSigsetT};
 
     use crate::arch::current::{Sysno, syscall3};
+    use crate::sys::test_support::process_global_state_guard;
     use crate::sys::{sgetmask, ssetmask};
 
     use super::{SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK, sigprocmask};
@@ -97,8 +96,6 @@ mod tests {
     const SIGUSR1: OldSigsetT = 10;
     const SIGUSR2: OldSigsetT = 12;
     const SIGSTOP: OldSigsetT = 19;
-
-    static SIGPROCMASK_LOCK: Mutex<()> = Mutex::new(());
 
     struct RestoreMask(OldSigsetT);
 
@@ -140,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_sigprocmask_updates_and_reports_previous_mask() {
-        let _guard = SIGPROCMASK_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let original = ssetmask(0);
         let _restore = RestoreMask(original);
@@ -204,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_sigprocmask_faults_on_invalid_set_pointer_before_updating() {
-        let _guard = SIGPROCMASK_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let original = ssetmask(signal_bit(SIGUSR1));
         let _restore = RestoreMask(original);
@@ -231,7 +228,7 @@ mod tests {
 
     #[test]
     fn test_sigprocmask_updates_before_invalid_oset_fault() {
-        let _guard = SIGPROCMASK_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let original = ssetmask(0);
         let _restore = RestoreMask(original);

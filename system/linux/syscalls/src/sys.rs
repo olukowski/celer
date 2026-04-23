@@ -17,6 +17,9 @@
 //! values.
 //! Note: there are some system calls that cannot fail.
 
+#[cfg(test)]
+pub(crate) mod test_support;
+
 mod access;
 mod acct;
 mod adjtimex;

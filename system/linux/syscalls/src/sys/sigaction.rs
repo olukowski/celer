@@ -71,12 +71,11 @@ pub unsafe fn sigaction(
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::mem::offset_of;
-    use std::{
-        mem::{align_of, size_of},
-        sync::Mutex,
-    };
+    use std::mem::{align_of, size_of};
 
     use celer_system_linux_ctypes::{Int, OldSigaction};
+
+    use crate::sys::test_support::process_global_state_guard;
 
     use super::sigaction;
 
@@ -84,8 +83,6 @@ mod tests {
     const SIGUSR1: Int = 10;
     const SIG_DFL: usize = 0;
     const SIG_IGN: usize = 1;
-
-    static SIGACTION_LOCK: Mutex<()> = Mutex::new(());
 
     struct RestoreSigaction {
         sig: Int,
@@ -114,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_sigaction_query_and_restore() {
-        let _guard = SIGACTION_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let mut original = OldSigaction {
             sa_handler: 0,
@@ -204,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_sigaction_installs_before_oldaction_efault() {
-        let _guard = SIGACTION_LOCK.lock().unwrap();
+        let _guard = process_global_state_guard();
 
         let mut original = OldSigaction {
             sa_handler: 0,
