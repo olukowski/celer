@@ -19,17 +19,25 @@ struct SelectArgs {
 /// `select(nfds, readfds, writefds, exceptfds, timeout)` interface.
 ///
 /// The packed argument block is still the current i386 ABI at syscall slot 82,
-/// but the pointed-to `fd_set` layout is not frozen to the Linux 1.0 shape.
-/// Linux 1.0 used a 256-bit `fd_set`; current x86 kernels use the current
-/// kernel `fd_set` definition, which is 1024 bits.
+/// but the pointed-to descriptor-set layout is not frozen to the Linux 1.0
+/// shape. Linux 1.0 used a 256-bit `fd_set`; current x86 kernels use the
+/// current kernel `fd_set` definition, whose first 1024 bits match [`FdSet`].
+/// The kernel sizes descriptor-set copies from the clipped `nfds` value, so
+/// callers may need to provide trailing bitmap storage beyond one [`FdSet`]
+/// when monitoring descriptors above `1023`.
 ///
 /// # Safety
-/// - `readfds`, when non-null, must be valid for the kernel to read and then
-///   write one [`FdSet`] value for the duration of the syscall.
-/// - `writefds`, when non-null, must be valid for the kernel to read and then
-///   write one [`FdSet`] value for the duration of the syscall.
-/// - `exceptfds`, when non-null, must be valid for the kernel to read and then
-///   write one [`FdSet`] value for the duration of the syscall.
+/// - Each non-null descriptor-set pointer must point to the start of a
+///   contiguous `unsigned long` bitmap laid out like [`FdSet`].
+/// - Each non-null descriptor-set bitmap must be valid for the kernel to read
+///   and then write every word covered by the effective `nfds` value for the
+///   running kernel. On Linux 1.0 that means up to `256` bits after clipping
+///   to `NR_OPEN`; on current x86 kernels that means up to the current task's
+///   clipped `max_fds` snapshot. One [`FdSet`] value is therefore sufficient
+///   only when the effective `nfds` does not exceed `1024`.
+/// - `readfds`, `writefds`, and `exceptfds`, when non-null, must each satisfy
+///   those bitmap size and layout requirements for the duration of the
+///   syscall.
 /// - `timeout`, when non-null, must be valid for the kernel to read and then
 ///   write one [`Timeval`] value for the duration of the syscall.
 ///
@@ -58,6 +66,9 @@ struct SelectArgs {
 /// - On current kernels, positive `nfds` values larger than the current
 ///   `max_fds` snapshot are clipped to that snapshot instead of being
 ///   rejected.
+/// - On current kernels, each non-null descriptor-set pointer is copied for
+///   the full clipped bitmap size, even when that requires more than one
+///   [`FdSet`] worth of storage.
 /// - On current kernels, positive `timeout.tv_usec` overflow is normalized
 ///   into whole seconds before validation in the `old_select` entry path, so
 ///   values such as `1_000_001` are accepted instead of failing with

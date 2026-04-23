@@ -170,10 +170,14 @@ pub struct Itimerval {
     pub it_value: Timeval,
 }
 
-/// Linux `fd_set` accepted by current x86 `select` / `old_select`.
+/// Linux `fd_set` prefix layout accepted by x86 `select` / `old_select`.
 ///
 /// Linux 1.0 used an 8-word / 256-bit layout, but current x86 kernels define
 /// `__FD_SETSIZE` as `1024`, which is 32 `unsigned long` words on 32-bit x86.
+/// This struct models that 1024-bit prefix. Current kernels size descriptor
+/// set copies from the clipped `nfds` argument, so callers that pass
+/// descriptor sets covering more than 1024 fds must provide larger contiguous
+/// bitmap storage starting at the same address as this prefix.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct FdSet {
