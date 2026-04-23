@@ -101,7 +101,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 82 sys_select`
 - [x] ` 83 sys_symlink`
 - [x] ` 84 sys_lstat` - wrapped as `oldlstat`
-- [ ] ` 85 sys_readlink`
+- [x] ` 85 sys_readlink`
 - [ ] ` 86 sys_uselib`
 - [ ] ` 87 sys_swapon`
 - [ ] ` 88 sys_reboot`
