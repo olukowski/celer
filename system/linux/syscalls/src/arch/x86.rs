@@ -240,6 +240,8 @@ pub enum Sysno {
     Setitimer = 104,
     /// <https://man7.org/linux/man-pages/man2/getitimer.2.html>
     Getitimer = 105,
+    /// Historical i386 `sigprocmask` ABI using one legacy signal-mask word.
+    Sigprocmask = 126,
     /// Linux 1.0 `stat` ABI using `struct new_stat`.
     Newstat = 106,
     /// Historical i386 `struct stat` / `new_stat` `lstat` ABI.
@@ -270,7 +272,6 @@ pub enum Sysno {
     Sigreturn = 119,
     /// <https://man7.org/linux/man-pages/man2/setdomainname.2.html>
     Setdomainname = 121,
-<<<<<<< HEAD
     /// Historical x86 `modify_ldt` ABI.
     ModifyLdt = 123,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>

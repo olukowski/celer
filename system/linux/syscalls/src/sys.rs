@@ -107,6 +107,7 @@ mod sgetmask;
 mod sigaction;
 mod signal;
 mod sigpending;
+mod sigprocmask;
 mod sigreturn;
 mod sigsuspend;
 mod socketcall;
@@ -229,6 +230,7 @@ pub use sgetmask::sgetmask;
 pub use sigaction::sigaction;
 pub use signal::signal;
 pub use sigpending::sigpending;
+pub use sigprocmask::{SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK, sigprocmask};
 pub use sigreturn::sigreturn;
 pub use sigsuspend::sigsuspend;
 pub use socketcall::{
