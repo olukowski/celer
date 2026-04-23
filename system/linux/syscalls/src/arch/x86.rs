@@ -10,6 +10,8 @@ pub mod linux_1_0 {
     pub enum Sysno {
         /// Historical Linux bootstrap syscall used only by init.
         Setup = 0,
+        /// Historical Linux 1.0 module initialization ABI.
+        InitModule = 128,
     }
 
     /// Invoke a Linux 1.0 x86 syscall with `1` argument.
@@ -35,6 +37,50 @@ pub mod linux_1_0 {
                 inlateout("eax") sysno as usize => ret,
                 in("ebx") arg1,
                 options(nostack),
+            );
+        }
+
+        ret
+    }
+
+    /// Invoke a Linux 1.0 x86 syscall with `4` arguments.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `sysno` identifies a Linux 1.0 syscall that takes four arguments.
+    /// - Any irreversible side effects of the syscall are intended.
+    /// - `arg1` through `arg4` are valid arguments for `sysno`. If any encode
+    ///   a pointer, the pointed-to memory must be valid for the duration of
+    ///   the syscall; see [`core::ptr::read`] and [`core::ptr::write`] for
+    ///   what validity requires for read-only and write-only pointers
+    ///   respectively.
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    pub unsafe fn syscall4(
+        sysno: Sysno,
+        arg1: isize,
+        arg2: isize,
+        arg3: isize,
+        arg4: isize,
+    ) -> isize {
+        let mut ret: isize;
+
+        // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+        // The `esi` register is preserved across the syscall by
+        // saving/restoring it because Rust's inline asm does not allow a
+        // direct operand constraint for this legacy ABI in the way we need
+        // here. All other safety requirements are enforced by the caller.
+        unsafe {
+            asm!(
+                "push esi",
+                "mov esi, {arg4_reg}",
+                "int 0x80",
+                "pop esi",
+                inlateout("eax") sysno as usize => ret,
+                in("ebx") arg1,
+                in("ecx") arg2,
+                in("edx") arg3,
+                arg4_reg = in(reg) arg4,
             );
         }
 

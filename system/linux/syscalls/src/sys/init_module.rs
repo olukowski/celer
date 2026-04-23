@@ -1,6 +1,11 @@
-use celer_system_linux_ctypes::{Char, Int, UnsignedLong, Void};
+use celer_system_linux_ctypes::{
+    Char, Int, ModRoutines, UnsignedInt, UnsignedLong, Void,
+};
 
-use crate::arch::current::{Sysno, syscall3};
+use crate::arch::{
+    current::{Sysno, syscall3},
+    linux_1_0::{Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4},
+};
 
 /// Load a kernel module image from user memory.
 ///
@@ -86,18 +91,109 @@ pub fn init_module(
     }
 }
 
+/// Initialize a Linux 1.0 loadable-kernel-module allocation.
+///
+/// This is the historical Linux 1.0 ABI at syscall slot `128`:
+/// `sys_init_module(char *module_name, char *code, unsigned codesize,
+/// struct mod_routines *routines)`.
+///
+/// # Safety
+/// - `module_name` must point to a readable NUL-terminated user string for
+///   the duration of the syscall.
+/// - `code` must point to `codesize` readable bytes containing the module
+///   image payload to copy into the allocation created by Linux 1.0
+///   `create_module`.
+/// - `routines` must point to one readable [`ModRoutines`] value for the
+///   duration of the syscall.
+/// - The routine addresses in `routines` must be valid Linux 1.0
+///   kernel-callable module entry points. The kernel calls `init` during the
+///   syscall and stores `cleanup` for later module unload.
+///
+/// # Kernel Support
+/// - Introduced: Linux 1.0
+/// - Availability: correct only for Linux 1.0 x86 kernels; current x86 Linux
+///   uses the same syscall number for the incompatible three-argument
+///   `init_module(2)` ABI exposed by [`init_module`].
+///
+/// # Required Privileges
+/// - Linux 1.0 requires a superuser caller.
+///
+/// # Behavior
+/// - Reclaims modules previously marked for deletion.
+/// - Copies `module_name` into a fixed-size kernel buffer and looks up an
+///   existing uninitialized module allocation by that name.
+/// - Copies one [`ModRoutines`] record from user memory.
+/// - Rejects a code image whose size would exceed the allocated module page
+///   count.
+/// - Copies `codesize` bytes from `code` into the module allocation after the
+///   leading use-count word, zero-fills the remaining allocation, stores the
+///   cleanup routine, calls the init routine, and marks the module running
+///   when init returns `0`.
+///
+/// # Errors
+/// - `EPERM`: the caller is not superuser.
+/// - `E2BIG`: `module_name` reaches Linux 1.0's fixed `MOD_MAX_NAME` buffer
+///   before its trailing NUL byte.
+/// - `ENOENT`: no non-deleted module allocation matches `module_name`.
+/// - `EINVAL`: `codesize` is larger than the target module allocation.
+/// - `EBUSY`: the module init routine returned nonzero.
+///
+/// The Linux 1.0 entry path does not contain explicit `EFAULT` conversions for
+/// invalid `module_name`, `code`, or `routines` pointers.
+///
+/// # References
+/// - Linux 1.0 implementation:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n70)
+/// - Linux 1.0 `struct mod_routines`:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/module.h?h=1.0#n25)
+/// - Linux 1.0 syscall table:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n137)
+pub unsafe fn init_module_1_0(
+    module_name: *const Char,
+    code: *const Void,
+    codesize: UnsignedInt,
+    routines: *const ModRoutines,
+) -> Int {
+    // SAFETY: guaranteed by caller.
+    unsafe {
+        linux_1_0_syscall4(
+            Linux10Sysno::InitModule,
+            module_name.addr() as isize,
+            code.addr() as isize,
+            codesize as isize,
+            routines.addr() as isize,
+        ) as Int
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{Char, UnsignedLong, Void};
+    use celer_system_linux_ctypes::{Char, ModRoutines, UnsignedLong, Void};
 
-    use crate::arch::current::{Sysno, syscall3};
+    use crate::arch::{
+        current::{Sysno, syscall3},
+        linux_1_0::Sysno as Linux10Sysno,
+    };
 
     use super::init_module;
 
     #[test]
     fn test_init_module_sysno() {
         assert_eq!(Sysno::InitModule as isize, 128);
+    }
+
+    #[test]
+    fn test_linux_1_0_init_module_sysno() {
+        assert_eq!(Linux10Sysno::InitModule as isize, 128);
+    }
+
+    #[test]
+    fn test_mod_routines_layout() {
+        assert_eq!(core::mem::size_of::<ModRoutines>(), 8);
+        assert_eq!(core::mem::align_of::<ModRoutines>(), 4);
+        assert_eq!(core::mem::offset_of!(ModRoutines, init), 0);
+        assert_eq!(core::mem::offset_of!(ModRoutines, cleanup), 4);
     }
 
     #[test]

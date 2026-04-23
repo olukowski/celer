@@ -369,6 +369,17 @@ pub struct KernelSym {
     pub name: [Char; 60],
 }
 
+/// Linux 1.0 `struct mod_routines` used by the historical `init_module`
+/// syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct ModRoutines {
+    /// Kernel-callable module initialization routine address.
+    pub init: usize,
+    /// Kernel-callable module cleanup routine address.
+    pub cleanup: usize,
+}
+
 /// Linux `struct new_utsname` used by the i386 `newuname` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
