@@ -14,6 +14,8 @@ use crate::arch::{
 /// struct statfs __user *buf)`.
 ///
 /// # Safety
+/// - `path` must point to a readable NUL-terminated string for the duration
+///   of the syscall.
 /// - `buf` must be writable for one `Statfs` value for the duration of the
 ///   syscall, and the kernel write through `buf` must not violate Rust
 ///   aliasing or lifetime rules.

@@ -6,6 +6,8 @@ use crate::arch::current::{Sysno, syscall3};
 /// `buf`.
 ///
 /// # Safety
+/// - `path` must point to a readable NUL-terminated string for the duration
+///   of the syscall.
 /// - If `bufsiz` is greater than `0`, `buf` must point to writable memory for
 ///   `bufsiz` bytes, and no live Rust references may allow the kernel's
 ///   writes to violate aliasing guarantees for that region during the syscall.
