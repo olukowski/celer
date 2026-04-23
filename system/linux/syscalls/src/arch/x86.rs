@@ -198,6 +198,8 @@ pub enum Sysno {
     /// Historical i386 `lstat` ABI; Linux 1.0 later added a newer `lstat`
     /// entry at syscall number `107`.
     Oldlstat = 84,
+    /// <https://man7.org/linux/man-pages/man2/readdir.2.html>
+    Readdir = 89,
 }
 
 /// Invoke a syscall with `0` arguments.

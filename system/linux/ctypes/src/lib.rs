@@ -207,3 +207,13 @@ pub struct Ustat {
     pub f_fname: [Char; 6],
     pub f_fpack: [Char; 6],
 }
+
+/// Linux `struct dirent` used by the historical `readdir` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Dirent {
+    pub d_ino: Long,
+    pub d_off: OffT,
+    pub d_reclen: UnsignedShort,
+    pub d_name: [Char; 256],
+}
