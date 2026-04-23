@@ -246,6 +246,8 @@ pub enum Sysno {
     Newfstat = 108,
     /// <https://man7.org/linux/man-pages/man2/uname.2.html>
     Newuname = 109,
+    /// <https://man7.org/linux/man-pages/man2/iopl.2.html>
+    Iopl = 110,
 }
 
 /// Invoke a syscall with `0` arguments.

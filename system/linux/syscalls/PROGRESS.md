@@ -130,9 +130,9 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `105 sys_getitimer`
 - [x] `106 sys_newstat`
 - [x] `107 sys_newlstat`
-- [ ] `108 sys_newfstat`
+- [x] `108 sys_newfstat` - wrapped as `newfstat`
 - [x] `109 sys_newuname` - wrapped as `newuname`; Linux 1.0 `sys.h` names this entry `sys_newuname`, while the x86 syscall number for the new uname ABI is `__NR_uname` 122
-- [ ] `110 sys_iopl`
+- [x] `110 sys_iopl`
 - [ ] `111 sys_vhangup`
 - [ ] `112 sys_idle`
 - [ ] `113 sys_vm86`
