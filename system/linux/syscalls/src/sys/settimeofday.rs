@@ -1,8 +1,6 @@
-use core::arch::asm;
-
 use celer_system_linux_ctypes::{Int, Timeval, Timezone};
 
-use crate::arch::current::Sysno;
+use crate::arch::current::{Sysno, syscall2};
 
 /// Set the system wall clock and/or legacy timezone state.
 ///
@@ -46,22 +44,13 @@ use crate::arch::current::Sysno;
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/time.c?h=v6.18.18#n199)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/time.c?h=1.0#n240)
 pub fn settimeofday(tv: *const Timeval, tz: *const Timezone) -> Int {
-    let ret: isize;
-
-    // SAFETY: `int 0x80` is the x86 Linux syscall instruction, and this
-    // wrapper forwards the raw ABI arguments without dereferencing them in
-    // Rust.
+    // SAFETY: this wrapper forwards the raw user pointers without
+    // dereferencing them in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
     unsafe {
-        asm!(
-            "int 0x80",
-            inlateout("eax") Sysno::Settimeofday as usize => ret,
-            in("ebx") tv.addr() as isize,
-            in("ecx") tz.addr() as isize,
-            options(nostack, preserves_flags),
-        );
+        syscall2(Sysno::Settimeofday, tv.addr() as isize, tz.addr() as isize)
+            as Int
     }
-
-    ret as Int
 }
 
 #[cfg(test)]
