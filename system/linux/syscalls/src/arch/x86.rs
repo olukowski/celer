@@ -270,6 +270,7 @@ pub enum Sysno {
     Sigreturn = 119,
     /// <https://man7.org/linux/man-pages/man2/setdomainname.2.html>
     Setdomainname = 121,
+<<<<<<< HEAD
     /// Historical x86 `modify_ldt` ABI.
     ModifyLdt = 123,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
@@ -280,6 +281,8 @@ pub enum Sysno {
     InitModule = 128,
     /// Historical x86 `delete_module` ABI.
     DeleteModule = 129,
+    /// Historical Linux 1.0 kernel symbol table export ABI.
+    GetKernelSyms = 130,
     /// <https://man7.org/linux/man-pages/man2/getpgid.2.html>
     Getpgid = 132,
 }

@@ -342,6 +342,15 @@ pub struct OldOldUtsname {
     pub machine: [Char; 9],
 }
 
+/// Linux `struct kernel_sym` used by the historical `get_kernel_syms`
+/// syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct KernelSym {
+    pub value: UnsignedLong,
+    pub name: [Char; 60],
+}
+
 /// Linux `struct new_utsname` used by the i386 `newuname` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
