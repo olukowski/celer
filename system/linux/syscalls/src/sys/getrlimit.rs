@@ -18,7 +18,7 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Behavior changes: newer x86 kernels keep syscall number 76 as the legacy
 ///   `old_getrlimit` entrypoint, accept the current `RLIM_NLIMITS` resource
 ///   range, and clamp returned values to `0x7fffffff` when the modern
-///   internal limit exceeds the historical ABI range.
+///   internal limit exceeds the historical signed 32-bit ABI range.
 /// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
@@ -30,7 +30,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - On current kernels, this legacy entrypoint accepts the current
 ///   `RLIM_NLIMITS` range instead of the six Linux 1.0 slots.
 /// - On success, the kernel writes the current soft limit to `rlim_cur` and
-///   the hard limit to `rlim_max`.
+///   the hard limit to `rlim_max`, using the historical signed 32-bit field
+///   layout in [`Rlimit`].
 /// - Linux 1.0 validates `resource` before touching `rlim`.
 /// - This wrapper targets the historical syscall entrypoint, not the later
 ///   `ugetrlimit` or `prlimit64` interfaces.
@@ -59,7 +60,7 @@ pub unsafe fn getrlimit(resource: UnsignedInt, rlim: *mut Rlimit) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{Rlimit, UnsignedInt};
+    use celer_system_linux_ctypes::{Int, Rlimit, UnsignedInt};
 
     use super::getrlimit;
 
@@ -77,8 +78,8 @@ mod tests {
     #[test]
     fn test_getrlimit_cpu_success() {
         let mut rlim = Rlimit {
-            rlim_cur: u32::MAX,
-            rlim_max: u32::MAX,
+            rlim_cur: Int::MAX,
+            rlim_max: Int::MAX,
         };
 
         // SAFETY: `rlim` is writable for a full `Rlimit`.

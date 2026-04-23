@@ -22,7 +22,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// # Behavior
 /// - `resource` selects one entry in the calling task's resource-limit table.
 /// - On success, the kernel replaces both the soft and hard limits for that
-///   resource with the values from `rlim`.
+///   resource with the values from `rlim`, using the historical signed 32-bit
+///   field layout in [`Rlimit`].
 /// - Linux 1.0 accepted only resource IDs `0..=5`; current kernels accept
 ///   `0..=15`.
 /// - Linux 1.0 did not reject `rlim_cur > rlim_max` in the syscall body.
@@ -133,12 +134,14 @@ mod tests {
             .trim()
             .parse::<u64>()
             .expect("nr_open should parse as an integer");
-        let requested = nr_open
+        let requested: Int = nr_open
             .checked_add(1)
-            .expect("nr_open + 1 should fit in u64");
+            .expect("nr_open + 1 should fit in u64")
+            .try_into()
+            .expect("nr_open + 1 should fit in Int");
         let limits = Rlimit {
-            rlim_cur: requested as _,
-            rlim_max: requested as _,
+            rlim_cur: requested,
+            rlim_max: requested,
         };
 
         let ret = setrlimit(RLIMIT_NOFILE, &raw const limits);
