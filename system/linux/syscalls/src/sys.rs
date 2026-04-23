@@ -146,6 +146,7 @@ mod write;
 /// when the same numeric slot gained different semantics on newer kernels.
 pub mod linux_1_0 {
     pub use super::init_module::init_module_1_0 as init_module;
+    pub use super::setrlimit::setrlimit_1_0 as setrlimit;
     pub use super::setup::setup;
     pub use super::sysinfo::sysinfo;
 }

@@ -1,4 +1,4 @@
-use celer_system_linux_ctypes::{Int, Rlimit, UnsignedInt};
+use celer_system_linux_ctypes::{Int, UnsignedInt, linux_1_0::Rlimit};
 
 use crate::arch::current::{Sysno, syscall2};
 
@@ -6,8 +6,8 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// This wrapper exposes the original i386 syscall number 76 ABI from Linux
 /// 1.0, which on current x86 kernels is implemented by the legacy
-/// `old_getrlimit` entrypoint and uses the 32-bit `struct rlimit` layout in
-/// [`Rlimit`].
+/// `old_getrlimit` entrypoint and uses the historical signed 32-bit
+/// `struct rlimit` layout in [`Rlimit`].
 ///
 /// # Safety
 /// - `rlim` must point to writable memory for one [`Rlimit`] value for the
@@ -63,7 +63,7 @@ pub unsafe fn getrlimit(resource: UnsignedInt, rlim: *mut Rlimit) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{Int, Rlimit, UnsignedInt};
+    use celer_system_linux_ctypes::{Int, UnsignedInt, linux_1_0::Rlimit};
 
     use super::getrlimit;
 

@@ -415,13 +415,25 @@ pub struct Tms {
     pub tms_cstime: Long,
 }
 
-/// Linux `struct rlimit` used by the Linux 1.0 `getrlimit` and `setrlimit`
-/// syscall ABIs on x86.
+pub mod linux_1_0 {
+    use super::Int;
+
+    /// Linux 1.0 `struct rlimit` used by the historical `getrlimit` and
+    /// `setrlimit` syscall ABIs on x86.
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct Rlimit {
+        pub rlim_cur: Int,
+        pub rlim_max: Int,
+    }
+}
+
+/// Current Linux i386 `struct rlimit` used by the `setrlimit` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Rlimit {
-    pub rlim_cur: Int,
-    pub rlim_max: Int,
+    pub rlim_cur: UnsignedLong,
+    pub rlim_max: UnsignedLong,
 }
 
 /// Linux `struct rusage`.

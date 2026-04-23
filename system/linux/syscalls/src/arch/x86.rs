@@ -10,6 +10,8 @@ pub mod linux_1_0 {
     pub enum Sysno {
         /// Historical Linux bootstrap syscall used only by init.
         Setup = 0,
+        /// Historical Linux 1.0 signed-rlimit ABI.
+        Setrlimit = 75,
         /// Historical Linux 1.0 module initialization ABI.
         InitModule = 128,
     }
@@ -35,6 +37,36 @@ pub mod linux_1_0 {
                 "int 0x80",
                 inlateout("eax") sysno as usize => ret,
                 in("ebx") arg1,
+                options(nostack),
+            );
+        }
+
+        ret
+    }
+
+    /// Invoke a Linux 1.0 x86 syscall with `2` arguments.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `sysno` identifies a Linux 1.0 syscall that takes two arguments.
+    /// - `arg1` and `arg2` are valid arguments for `sysno`. If either encodes
+    ///   a pointer, the pointed-to memory must be valid for the duration of
+    ///   the syscall; see [`core::ptr::read`] and [`core::ptr::write`] for
+    ///   what validity requires for read-only and write-only pointers
+    ///   respectively.
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
+        let mut ret: isize;
+
+        // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+        // All other safety requirements are enforced by the caller.
+        unsafe {
+            asm!(
+                "int 0x80",
+                inlateout("eax") sysno as usize => ret,
+                in("ebx") arg1,
+                in("ecx") arg2,
                 options(nostack),
             );
         }
