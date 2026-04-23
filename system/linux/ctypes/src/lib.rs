@@ -82,6 +82,15 @@ pub const RUSAGE_SELF: Int = 0;
 /// Linux `RUSAGE_CHILDREN`.
 pub const RUSAGE_CHILDREN: Int = -1;
 
+/// Linux `PRIO_PROCESS`.
+pub const PRIO_PROCESS: Int = 0;
+
+/// Linux `PRIO_PGRP`.
+pub const PRIO_PGRP: Int = 1;
+
+/// Linux `PRIO_USER`.
+pub const PRIO_USER: Int = 2;
+
 /// Linux `struct __old_kernel_stat` used by the 32-bit `stat` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
