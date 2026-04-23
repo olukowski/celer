@@ -143,6 +143,7 @@ mod write;
 /// when the same numeric slot gained different semantics on newer kernels.
 pub mod linux_1_0 {
     pub use super::setup::setup;
+    pub use super::sysinfo::sysinfo;
 }
 
 pub use access::access;
@@ -255,7 +256,6 @@ pub use swapoff::swapoff;
 pub use swapon::swapon;
 pub use symlink::symlink;
 pub use sync::sync;
-pub use sysinfo::sysinfo;
 pub use syslog::syslog;
 pub use time::time;
 pub use times::times;
