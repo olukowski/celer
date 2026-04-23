@@ -34,7 +34,7 @@ pub mod linux_1_0 {
                 "int 0x80",
                 inlateout("eax") sysno as usize => ret,
                 in("ebx") arg1,
-                options(nostack, preserves_flags),
+                options(nostack),
             );
         }
 
@@ -311,7 +311,7 @@ pub unsafe fn syscall0(sysno: Sysno) -> isize {
         asm!(
             "int 0x80",
             inlateout("eax") sysno as usize => ret,
-            options(nostack, preserves_flags),
+            options(nostack),
         );
     }
 
@@ -340,7 +340,7 @@ pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
             "int 0x80",
             inlateout("eax") sysno as usize => ret,
             in("ebx") arg1,
-            options(nostack, preserves_flags),
+            options(nostack),
         );
     }
 
@@ -370,7 +370,7 @@ pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
             inlateout("eax") sysno as usize => ret,
             in("ebx") arg1,
             in("ecx") arg2,
-            options(nostack, preserves_flags),
+            options(nostack),
         );
     }
 
@@ -406,7 +406,7 @@ pub unsafe fn syscall3(
             in("ebx") arg1,
             in("ecx") arg2,
             in("edx") arg3,
-            options(nostack, preserves_flags),
+            options(nostack),
         );
     }
 
@@ -450,7 +450,6 @@ pub unsafe fn syscall4(
             in("ecx") arg2,
             in("edx") arg3,
             arg4_reg = in(reg) arg4,
-            options(preserves_flags),
         );
     }
 
@@ -496,7 +495,6 @@ pub unsafe fn syscall5(
             in("edx") arg3,
             arg4_reg = in(reg) arg4,
             in("edi") arg5,
-            options(preserves_flags),
         );
     }
 
