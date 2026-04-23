@@ -36,6 +36,7 @@ pub fn sync() -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::sync;
 

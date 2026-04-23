@@ -65,6 +65,7 @@ pub fn settimeofday(tv: *const Timeval, tz: *const Timezone) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Timeval, Timezone};
 

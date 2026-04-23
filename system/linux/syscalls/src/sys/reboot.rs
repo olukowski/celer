@@ -74,6 +74,7 @@ pub fn reboot(magic: Int, magic_too: Int, cmd: Int, arg: *const Void) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::Int;
     use core::ptr;

@@ -42,6 +42,7 @@ pub unsafe fn time(tloc: *mut TimeT) -> TimeT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::TimeT;
 

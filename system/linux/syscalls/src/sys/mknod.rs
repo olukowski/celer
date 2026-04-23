@@ -46,6 +46,7 @@ pub fn mknod(pathname: *const Char, mode: UModeT, dev: UnsignedInt) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env, fs,

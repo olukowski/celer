@@ -59,6 +59,7 @@ pub unsafe fn getrusage(who: Int, ru: *mut Rusage) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{
         RUSAGE_CHILDREN, RUSAGE_SELF, Rusage, Timeval,

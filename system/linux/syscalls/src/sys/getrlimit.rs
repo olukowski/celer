@@ -57,6 +57,7 @@ pub unsafe fn getrlimit(resource: UnsignedInt, rlim: *mut Rlimit) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Rlimit, UnsignedInt};
 

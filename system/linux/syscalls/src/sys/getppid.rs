@@ -31,6 +31,7 @@ pub fn getppid() -> PidT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::PidT;
 

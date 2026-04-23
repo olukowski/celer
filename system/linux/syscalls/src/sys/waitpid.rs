@@ -51,6 +51,7 @@ pub unsafe fn waitpid(pid: PidT, stat_addr: *mut Int, options: Int) -> PidT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Int, PidT};
 
@@ -60,8 +61,6 @@ mod tests {
     #[test]
     fn test_waitpid() {
         let pid = fork();
-
-        #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 exit(0);

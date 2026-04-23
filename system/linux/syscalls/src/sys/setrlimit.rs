@@ -56,6 +56,7 @@ pub fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::fs;
     use std::sync::Mutex;

@@ -62,13 +62,12 @@ pub fn setregid16(rgid: OldGidT, egid: OldGidT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Int, OldGidT, PidT};
 
     use super::setregid16;
     use crate::sys::{exit, fork, getegid16, getgid16, waitpid};
-
-    #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
     fn assert_child_setregid16(
         rgid: OldGidT,
         egid: OldGidT,

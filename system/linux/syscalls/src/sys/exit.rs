@@ -38,6 +38,7 @@ pub fn exit(error_code: Int) -> ! {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::sync::atomic::{AtomicBool, Ordering};
     use std::{

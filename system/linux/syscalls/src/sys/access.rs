@@ -43,6 +43,7 @@ pub fn access(pathname: *const Char, mode: Int) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         fs::{self, File},

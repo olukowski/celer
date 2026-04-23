@@ -41,6 +41,7 @@ pub fn fork() -> PidT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
@@ -51,8 +52,6 @@ mod tests {
     fn test_fork() {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");
-
-        #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
         fn handle_pid(pid: PidT) {
             if pid == 0 {
                 exit(0);

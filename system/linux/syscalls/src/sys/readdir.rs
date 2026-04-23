@@ -97,6 +97,7 @@ pub unsafe fn readdir(
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,
@@ -160,8 +161,6 @@ mod tests {
     fn touch(path: &Path) {
         File::create(path).unwrap();
     }
-
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn directory_contains_entry(fd: UnsignedInt, target_name: &[u8]) -> bool {
         for _ in 0..16 {
             let mut buffer = zeroed_readdir_buffer();

@@ -104,8 +104,6 @@ mod tests {
         assert_eq!(status & 0x7f, 0, "child should not die from a signal");
         assert_eq!((status >> 8) & 0xff, 0, "child should exit with status 0");
     }
-
-    #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
     fn spawn_signal_sender(
         target: PidT,
         first: Int,
@@ -136,12 +134,9 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_sigsuspend_returns_eintr_and_restores_mask() {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");
-
-        #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 let old_handler = unsafe {
@@ -189,12 +184,9 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_sigsuspend_ignores_ignored_signal_until_handler_runs() {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");
-
-        #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 SIGUSR2_HANDLED.store(false, Ordering::SeqCst);

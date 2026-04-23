@@ -68,6 +68,7 @@ pub unsafe fn read(fd: UnsignedInt, buf: *mut Char, count: SizeT) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

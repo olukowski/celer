@@ -37,6 +37,7 @@ pub fn kill(pid: PidT, sig: Int) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::Int;
 

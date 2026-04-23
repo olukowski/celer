@@ -50,6 +50,7 @@ pub fn open(filename: *const Char, flags: Int, mode: UModeT) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

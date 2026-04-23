@@ -29,6 +29,7 @@ pub fn getpid() -> PidT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::getpid;
 

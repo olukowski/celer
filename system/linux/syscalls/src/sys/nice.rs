@@ -38,6 +38,7 @@ pub fn nice(increment: Int) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::Int;
 

@@ -46,6 +46,7 @@ pub fn setsid() -> PidT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
@@ -68,8 +69,6 @@ mod tests {
     fn test_setsid_already_session_leader() {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");
-
-        #[cfg_attr(coverage_nightly, coverage(off))]
         fn handle_pid(pid: PidT) {
             if pid == 0 {
                 let first = setsid();

@@ -55,6 +55,7 @@ pub fn setup(bios: *mut Void) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use crate::arch::linux_1_0::Sysno;
 

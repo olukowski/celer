@@ -47,6 +47,7 @@ pub fn lchown16(filename: *const Char, user: OldUidT, group: OldGidT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env, fs,

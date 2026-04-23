@@ -55,6 +55,7 @@ pub unsafe fn fcntl(fd: UnsignedInt, cmd: Int, arg: Long) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         fs::{self, OpenOptions},

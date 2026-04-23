@@ -60,13 +60,12 @@ pub fn setreuid16(ruid: OldUidT, euid: OldUidT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{OldUidT, PidT};
 
     use super::setreuid16;
     use crate::sys::{exit, fork, geteuid16, getuid16, waitpid};
-
-    #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
     fn assert_child_setreuid16(ruid: OldUidT, euid: OldUidT) {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");

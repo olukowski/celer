@@ -56,6 +56,7 @@ pub fn symlink(oldname: *const Char, newname: *const Char) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env, fs,

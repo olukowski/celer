@@ -38,6 +38,7 @@ pub fn rmdir(pathname: *const Char) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env, fs,

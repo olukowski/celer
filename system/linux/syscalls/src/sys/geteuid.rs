@@ -29,6 +29,7 @@ pub fn geteuid16() -> OldUidT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use crate::arch::current::{Sysno, syscall0};
 

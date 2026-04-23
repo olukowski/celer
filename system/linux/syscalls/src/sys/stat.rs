@@ -47,6 +47,7 @@ pub unsafe fn oldstat(filename: *const Char, statbuf: *mut Stat) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

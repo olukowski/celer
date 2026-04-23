@@ -47,6 +47,7 @@ pub fn setpgid(pid: PidT, pgid: PidT) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::PidT;
 

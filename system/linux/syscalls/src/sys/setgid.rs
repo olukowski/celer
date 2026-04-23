@@ -45,6 +45,7 @@ pub fn setgid16(gid: OldGidT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::OldGidT;
 

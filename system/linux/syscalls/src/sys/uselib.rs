@@ -74,6 +74,7 @@ pub fn uselib(library: *const Char) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::ffi::CString;
 

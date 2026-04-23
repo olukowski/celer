@@ -38,6 +38,7 @@ pub fn acct(name: *const Char) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

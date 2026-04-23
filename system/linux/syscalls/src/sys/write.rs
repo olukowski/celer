@@ -72,6 +72,7 @@ pub fn write(fd: UnsignedInt, buf: *const Char, count: SizeT) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

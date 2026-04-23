@@ -77,14 +77,13 @@ pub unsafe fn getgroups16(gidsetsize: Int, grouplist: *mut OldGidT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Int, OldGidT};
 
     use crate::arch::current::{Sysno, syscall2};
 
     use super::getgroups16;
-
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn buffer_for_count(count: Int) -> (Vec<OldGidT>, *mut OldGidT) {
         let mut groups = vec![OldGidT::MAX; count as usize];
         let ptr = if groups.is_empty() {
@@ -159,7 +158,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_getgroups_undersized_buffer_returns_einval_when_nonempty() {
         // SAFETY: `grouplist` may be null when `gidsetsize == 0`.
         let count = unsafe { getgroups16(0, core::ptr::null_mut()) };
@@ -186,7 +184,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_getgroups_invalid_pointer_returns_efault() {
         // SAFETY: `grouplist` may be null when `gidsetsize == 0`.
         let count = unsafe { getgroups16(0, core::ptr::null_mut()) };

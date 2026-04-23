@@ -36,6 +36,7 @@ pub fn creat(pathname: *const Char, mode: UModeT) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

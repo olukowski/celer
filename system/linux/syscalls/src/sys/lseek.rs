@@ -43,6 +43,7 @@ pub fn lseek(fd: UnsignedInt, offset: OffT, whence: UnsignedInt) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         fs::{self, OpenOptions},

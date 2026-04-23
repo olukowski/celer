@@ -69,6 +69,7 @@ pub fn setgroups16(gidsetsize: Int, grouplist: *const OldGidT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::ptr;
 
@@ -79,8 +80,6 @@ mod tests {
         arch::current::{Sysno, syscall2},
         sys::{exit, fork, getgid16, waitpid},
     };
-
-    #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
     fn assert_child_matches_raw(groups: &[OldGidT]) {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");

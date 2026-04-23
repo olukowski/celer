@@ -71,6 +71,7 @@ pub unsafe fn readlink(path: *const Char, buf: *mut Char, bufsiz: Int) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env, fs,

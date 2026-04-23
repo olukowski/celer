@@ -51,6 +51,7 @@ pub unsafe fn ustat(dev: Int, ubuf: *mut Ustat) -> Long {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{fs, os::unix::fs::MetadataExt as _};
 

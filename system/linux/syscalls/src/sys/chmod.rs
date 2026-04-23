@@ -33,6 +33,7 @@ pub fn chmod(pathname: *const Char, mode: UModeT) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

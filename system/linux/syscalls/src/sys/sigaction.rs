@@ -68,6 +68,7 @@ pub unsafe fn sigaction(
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::mem::offset_of;
     use std::{

@@ -78,6 +78,7 @@ pub fn swapon(specialfile: *const Char, swap_flags: Int) -> Int {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::{
         env,

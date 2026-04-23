@@ -45,6 +45,7 @@ pub fn execve(
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use celer_system_linux_ctypes::{Char, Int, PidT};
 
@@ -54,8 +55,6 @@ mod tests {
     #[test]
     fn test_execve() {
         let pid = fork();
-
-        #[cfg_attr(coverage_nightly, coverage(off))] // llvm-cov can't track across the `fork` boundary
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 let filename = b"/bin/true\0";

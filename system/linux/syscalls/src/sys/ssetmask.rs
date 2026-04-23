@@ -53,6 +53,7 @@ pub fn ssetmask(newmask: OldSigsetT) -> OldSigsetT {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::sync::Mutex;
 
@@ -75,8 +76,6 @@ mod tests {
             let _ = ssetmask(self.0);
         }
     }
-
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn ssetmask_original_mask() -> Option<OldSigsetT> {
         let original = ssetmask(0);
         if original == ENOSYS_BITS {
@@ -87,7 +86,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(coverage_nightly, coverage(off))]
     fn test_ssetmask_strips_sigkill_and_sigstop() {
         let _guard = SSETMASK_LOCK.lock().unwrap();
 
