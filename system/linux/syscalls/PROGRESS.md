@@ -122,7 +122,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 
 ## 100-124
 
-- [ ] `100 sys_fstatfs`
+- [x] `100 sys_fstatfs`
 - [ ] `101 sys_ioperm`
 - [ ] `102 sys_socketcall`
 - [ ] `103 sys_syslog`

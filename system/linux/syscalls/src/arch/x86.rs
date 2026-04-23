@@ -224,6 +224,8 @@ pub enum Sysno {
     Setpriority = 97,
     /// Historical `statfs` ABI.
     Statfs = 99,
+    /// <https://man7.org/linux/man-pages/man2/statfs.2.html>
+    Fstatfs = 100,
 }
 
 /// Invoke a syscall with `0` arguments.

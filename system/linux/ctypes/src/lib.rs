@@ -224,7 +224,8 @@ pub struct FsidT {
     pub val: [Long; 2],
 }
 
-/// Linux `struct statfs` used by the historical `statfs` syscall ABI.
+/// Linux `struct statfs` used by the historical `statfs` and `fstatfs`
+/// syscall ABIs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Statfs {
