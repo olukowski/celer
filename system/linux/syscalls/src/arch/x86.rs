@@ -244,6 +244,8 @@ pub enum Sysno {
     Newlstat = 107,
     /// Historical Linux 1.0 `newfstat` ABI using `struct new_stat`.
     Newfstat = 108,
+    /// <https://man7.org/linux/man-pages/man2/uname.2.html>
+    Newuname = 109,
 }
 
 /// Invoke a syscall with `0` arguments.

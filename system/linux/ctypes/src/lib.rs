@@ -198,6 +198,18 @@ pub struct OldOldUtsname {
     pub machine: [Char; 9],
 }
 
+/// Linux `struct new_utsname` used by the i386 `newuname` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct NewUtsname {
+    pub sysname: [Char; 65],
+    pub nodename: [Char; 65],
+    pub release: [Char; 65],
+    pub version: [Char; 65],
+    pub machine: [Char; 65],
+    pub domainname: [Char; 65],
+}
+
 /// Linux `struct old_sigaction` used by the i386 `sigaction` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
