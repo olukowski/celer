@@ -40,6 +40,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - `ENOTDIR`: a non-directory component was used where pathname traversal
 ///   required a directory.
 /// - `EACCES`: pathname traversal lacked search permission on a directory.
+/// - `EOVERFLOW`: on current i386 kernels, the resolved metadata cannot be
+///   represented in the legacy `oldlstat` output fields.
 ///
 /// The historical Linux 1.0 `sys_lstat` entry also propagates filesystem
 /// lookup errors returned by the directory inode's `lookup` operation.
