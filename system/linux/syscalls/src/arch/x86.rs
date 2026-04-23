@@ -208,12 +208,15 @@ pub enum Sysno {
     Reboot = 88,
     /// <https://man7.org/linux/man-pages/man2/readdir.2.html>
     Readdir = 89,
+<<<<<<< HEAD
     /// Historical i386 `mmap` ABI that takes a pointer to six packed words.
     Mmap = 90,
     /// <https://man7.org/linux/man-pages/man2/munmap.2.html>
     Munmap = 91,
     /// <https://man7.org/linux/man-pages/man2/truncate.2.html>
     Truncate = 92,
+    /// <https://man7.org/linux/man-pages/man2/truncate.2.html>
+    Ftruncate = 93,
     /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
     Fchmod = 94,
 }
