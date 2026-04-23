@@ -260,6 +260,8 @@ pub enum Sysno {
     Swapoff = 115,
     /// Historical i386 SYSVIPC multiplexor ABI.
     Ipc = 117,
+    /// Historical i386 signal-frame return ABI.
+    Sigreturn = 119,
     /// <https://man7.org/linux/man-pages/man2/setdomainname.2.html>
     Setdomainname = 121,
 }

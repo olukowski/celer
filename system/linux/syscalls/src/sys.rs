@@ -98,6 +98,7 @@ mod sgetmask;
 mod sigaction;
 mod signal;
 mod sigpending;
+mod sigreturn;
 mod sigsuspend;
 mod socketcall;
 mod ssetmask;
@@ -209,6 +210,7 @@ pub use sgetmask::sgetmask;
 pub use sigaction::sigaction;
 pub use signal::signal;
 pub use sigpending::sigpending;
+pub use sigreturn::sigreturn;
 pub use sigsuspend::sigsuspend;
 pub use socketcall::{
     SYS_ACCEPT, SYS_BIND, SYS_CONNECT, SYS_GETPEERNAME, SYS_GETSOCKNAME,
