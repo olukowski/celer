@@ -6,21 +6,42 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
-/// - Availability: always present on supported Linux kernels
+/// - Behavior changes: Linux 1.0 accepts either a mounted block-device path
+///   or a mounted path and special-cases the root filesystem by remounting it
+///   read-only; current kernels that still expose `oldumount` route it to the
+///   flagless `ksys_umount(name, 0)` path
+/// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
-/// - The kernel rejects some requests unless the caller is allowed to mount
-///   and unmount filesystems.
+/// - Linux 1.0 requires a superuser caller.
+/// - Current kernels require unmount permission, typically `CAP_SYS_ADMIN`.
 ///
 /// # Behavior
-/// - Resolves `name` to a mount point or mounted block device.
-/// - Unmounts the resolved target when the kernel accepts the request.
-/// - Returns a negative errno value on failure.
+/// - Linux 1.0 first resolves `name` through `namei()`, then retries with
+///   `lnamei()` if the first lookup fails.
+/// - If Linux 1.0 resolves `name` to a block-device inode, it unmounts the
+///   corresponding mounted device.
+/// - Otherwise Linux 1.0 requires the resolved inode to be exactly the
+///   mounted root inode of its superblock.
+/// - On Linux 1.0, unmounting the root filesystem remounts it read-only
+///   instead of tearing it down fully.
+/// - Returns `0` on success, or a negative errno value on failure.
 ///
 /// # Errors
-/// - `EINVAL`: The target is not a mounted path.
-/// - `EPERM`: The caller is not permitted to perform the unmount operation.
+/// - `EPERM`: the caller lacks permission to perform the unmount operation.
+/// - `EINVAL`: Linux 1.0 resolves `name`, but it is neither a mounted block
+///   device nor the mounted root inode of a superblock.
+/// - `EACCES`: Linux 1.0 resolves `name` to a block-device inode whose device
+///   is marked `nodev`.
+/// - `ENXIO`: Linux 1.0 resolves `name` to a block-device inode whose major
+///   number is outside the registered block-device table.
+/// - `ENOENT`: Linux 1.0 cannot find `name` through either lookup path, or
+///   the selected device has no mounted superblock to unmount.
+/// - `EBUSY`: Linux 1.0 refuses to unmount because the target superblock is
+///   still busy.
+/// - Linux 1.0 also forwards additional pathname-resolution errors from
+///   `namei()` and `lnamei()`, including common lookup failures such as
+///   `ENOTDIR` and `EACCES`.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/umount.2.html)
