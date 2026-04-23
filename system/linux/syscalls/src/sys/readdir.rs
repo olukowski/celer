@@ -161,6 +161,32 @@ mod tests {
         File::create(path).unwrap();
     }
 
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    fn directory_contains_entry(fd: UnsignedInt, target_name: &[u8]) -> bool {
+        for _ in 0..16 {
+            let mut buffer = zeroed_readdir_buffer();
+            let dirent = buffer_dirent(&mut buffer);
+            let ret = unsafe { readdir(fd, dirent, 1) };
+
+            assert!(ret >= 0, "readdir failed: {ret}");
+            if ret == 0 {
+                return false;
+            }
+
+            let entry = unsafe { &*dirent };
+            let name = dirent_name(entry);
+            assert!(entry.d_reclen > 0);
+            assert_ne!(entry.d_ino, 0);
+            assert_eq!(entry.d_name[entry.d_reclen as usize], 0 as Char);
+
+            if name == target_name {
+                return true;
+            }
+        }
+
+        false
+    }
+
     #[test]
     fn test_readdir_sysno() {
         assert_eq!(Sysno::Readdir as isize, 89);
@@ -184,29 +210,7 @@ mod tests {
 
         let dir_file = File::open(&dir).unwrap();
         let fd = dir_file.as_raw_fd() as UnsignedInt;
-        let mut found = false;
-
-        for _ in 0..16 {
-            let mut buffer = zeroed_readdir_buffer();
-            let dirent = buffer_dirent(&mut buffer);
-            let ret = unsafe { readdir(fd, dirent, 1) };
-
-            assert!(ret >= 0, "readdir failed: {ret}");
-            if ret == 0 {
-                break;
-            }
-
-            let entry = unsafe { &*dirent };
-            let name = dirent_name(entry);
-            assert!(entry.d_reclen > 0);
-            assert_ne!(entry.d_ino, 0);
-            assert_eq!(entry.d_name[entry.d_reclen as usize], 0 as Char);
-
-            if name == target_name {
-                found = true;
-                break;
-            }
-        }
+        let found = directory_contains_entry(fd, target_name);
 
         assert!(found, "readdir did not return the created directory entry");
         fs::remove_dir_all(&dir).unwrap();
