@@ -170,11 +170,14 @@ pub struct Itimerval {
     pub it_value: Timeval,
 }
 
-/// Linux `fd_set` used by the historical `select` syscall ABI on x86.
+/// Linux `fd_set` accepted by current x86 `select` / `old_select`.
+///
+/// Linux 1.0 used an 8-word / 256-bit layout, but current x86 kernels define
+/// `__FD_SETSIZE` as `1024`, which is 32 `unsigned long` words on 32-bit x86.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct FdSet {
-    pub fds_bits: [UnsignedLong; 8],
+    pub fds_bits: [UnsignedLong; 32],
 }
 
 /// Linux `struct timezone` used by the historical `gettimeofday` and

@@ -8,8 +8,7 @@ use crate::arch::current::{Sysno, syscall2};
 /// is a stub that always returns `-ENOSYS`.
 ///
 /// The behavior and guaranteed errno list below describe the verified Linux
-/// 1.0 entrypoint. Later kernels implement `ustat` differently and do write to
-/// `ubuf`.
+/// 1.0 entrypoint. Current kernels implement `ustat` and do write to `ubuf`.
 ///
 /// # Safety
 /// - If `ubuf` is non-null, it must point to writable memory for one `Ustat`
@@ -17,9 +16,12 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Behavior changes: Linux 1.0 returned `-ENOSYS` unconditionally from the
-///   syscall entrypoint; current kernels implement `ustat` and copy results to
-///   `ubuf`.
+/// - Behavior changes:
+///   - Linux 1.0 returned `-ENOSYS` unconditionally from the syscall
+///     entrypoint.
+///   - Current kernels decode `dev`, call `vfs_ustat()`, zero the legacy
+///     output struct, fill `f_tfree` and `f_tinode`, and copy the result to
+///     userspace.
 /// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
@@ -30,17 +32,24 @@ use crate::arch::current::{Sysno, syscall2};
 /// - On Linux 1.0, the syscall entrypoint does not inspect `dev`.
 /// - On Linux 1.0, the kernel does not read from or write to `ubuf`.
 /// - On Linux 1.0, every call returns `-ENOSYS`.
+/// - On current kernels, `f_fname` and `f_fpack` are zero-filled before the
+///   result is copied out.
 ///
 /// # Errors
 /// - `ENOSYS`: always returned by the Linux 1.0 syscall entrypoint.
-/// - Later kernels may return additional errors and may write to `ubuf`; those
-///   outcomes are not exhaustively documented here.
+/// - `EINVAL`: on current kernels, `dev` does not resolve to a mounted super
+///   block.
+/// - `EFAULT`: on current kernels, `ubuf` is not writable for one `Ustat`.
+/// - Current kernels can also propagate filesystem-specific `statfs`
+///   failures from `statfs_by_dentry()`.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man2/ustat.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v6.19#n247)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/statfs.c?h=v6.18.18#n247)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n24)
+/// - Stable:
+///   [v7.0 ustat](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n247)
+/// - LTS:
+///   [v6.18.18 ustat](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/statfs.c?h=v6.18.18#n246)
+/// - First stable:
+///   [Linux 1.0 sys_ustat](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n24)
 ///
 /// # Historical References
 /// - Linux 1.0 `struct ustat`: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/types.h?h=1.0#n119)

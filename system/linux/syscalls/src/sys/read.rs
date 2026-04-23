@@ -10,51 +10,50 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
-/// - Availability: always present
+/// - Behavior changes:
+///   - Linux 1.0 required `file->f_op->read`; current kernels also accept
+///     `file->f_op->read_iter`.
+///   - Linux 1.0 returned `0` immediately when `count == 0`; current kernels
+///     still validate the descriptor, access mode, and user buffer, and then
+///     clamp `count` to `MAX_RW_COUNT` before dispatch.
+/// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - On files that support seeking, the read starts at the current file offset
-///   and the offset is incremented by the number of bytes read.
-///   If the the file offset is at or beyond the end of the file,
-///   [`read`] returns 0 to indicate end of file.
-/// - If `count` is 0, [`read`] returns 0 without reading any data,
-///   but may still detect errors.
-/// - On success, returns the number of bytes read, or `0` to indicate
-///   end of file. The number of bytes read lies in the range `1..=count`.
-///   A partial read is *not* considered an error, it can occur naturally
-///   (i.e., the end of the file is reached before `count` bytes are read).
+/// - On current kernels, `count > MAX_RW_COUNT` is reduced to `MAX_RW_COUNT`
+///   before the file's read implementation runs.
+/// - On current kernels, seekable files use a temporary copy of the current
+///   file position and write the updated offset back on success.
+/// - On success, returns the number of bytes read.
+/// - Additional object-specific behavior comes from the target file's
+///   `->read` or `->read_iter` implementation.
 ///
 /// # Errors
-/// - `EAGAIN`: The file descriptor does not refer to a socket,
-///   is marked nonblocking, and the read would block.
-/// - `EAGAIN` or `EWOULDBLOCK`: The file descriptor refers to a socket that
-///   is marked nonblocking, and the read would block.
-/// - `EBADF`: The file descriptor is invalid, or not open for reading.
-/// - `EFAULT`: The `buf` pointer is outside the process's accessible address
-///   space.
-/// - `EINTR`: The read was interrupted by a signal (before any data was read).
-/// - `EINVAL`: The file descriptor is unsuitable for reading or the file was
-///   opened with the `O_DIRECT` flag and `buf`, `count` or the file offset are
-///   not suitably aligned.
-/// - `EINVAL`: `fd` was created via a call to `timerfd_create` and the wrong
-///   size buffer was passed to [`read`].
-/// - `EIO`: An I/O error occurred while reading from the file.
-/// - `EISDIR`: The file descriptor refers to a directory, not a regular file.
-///
-/// Other errors may also occur, depending on the type of object being read.
+/// - `EBADF`: `fd` is not open, or is not open for reading.
+/// - `EFAULT`: `buf` is not accessible for `count` bytes.
+/// - `EINVAL`: Linux 1.0 rejects files without `->read`; current kernels also
+///   reject files that have neither `->read` nor `->read_iter`, and
+///   `rw_verify_area()` can reject invalid read requests with `EINVAL`.
+/// - Other reachable errors are returned by `rw_verify_area()` or by the
+///   target file's read implementation.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man2/read.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v6.19#n722)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n722)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=1.0#n70)
+/// - Stable entry:
+///   [v7.0 read](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v7.0#n724)
+/// - Stable helper:
+///   [v7.0 vfs_read](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v7.0#n554)
+/// - LTS entry:
+///   [v6.18.18 read](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n722)
+/// - LTS helper:
+///   [v6.18.18 vfs_read](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n552)
+/// - First stable:
+///   [Linux 1.0 sys_read](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=1.0#n70)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.10#n55)
+/// - First appearance:
+///   [Linux 0.10 sys_read](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.10#n55)
 pub unsafe fn read(fd: UnsignedInt, buf: *mut Char, count: SizeT) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {

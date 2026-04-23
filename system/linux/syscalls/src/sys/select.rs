@@ -18,6 +18,11 @@ struct SelectArgs {
 /// block; this wrapper builds that block internally and exposes the logical
 /// `select(nfds, readfds, writefds, exceptfds, timeout)` interface.
 ///
+/// The packed argument block is still the current i386 ABI at syscall slot 82,
+/// but the pointed-to `fd_set` layout is not frozen to the Linux 1.0 shape.
+/// Linux 1.0 used a 256-bit `fd_set`; current x86 kernels use the current
+/// kernel `fd_set` definition, which is 1024 bits.
+///
 /// # Safety
 /// - `readfds`, when non-null, must be valid for the kernel to read and then
 ///   write one [`FdSet`] value for the duration of the syscall.
@@ -30,9 +35,12 @@ struct SelectArgs {
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.12
-/// - Behavior changes: current i386 kernels still expose syscall slot 82
-///   through the packed `old_select` ABI rather than the direct five-argument
-///   `select` entry used on newer syscall numbers and other ABIs
+/// - Behavior changes:
+///   - Linux 1.0 clipped `nfds` to `NR_OPEN` (`256`) and used a 256-bit
+///     `fd_set`.
+///   - Current i386 kernels still expose syscall slot 82 through the packed
+///     `old_select` ABI, but they clip `nfds` to the calling task's current
+///     `max_fds` and use the current 1024-bit kernel `fd_set`.
 /// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
@@ -47,6 +55,9 @@ struct SelectArgs {
 ///   covered by `nfds` keep only the ready bits requested for that set.
 /// - On Linux 1.0, `nfds < 0` fails with `EINVAL`.
 /// - On Linux 1.0, `nfds > 256` is clipped to `256` instead of being rejected.
+/// - On current kernels, positive `nfds` values larger than the current
+///   `max_fds` snapshot are clipped to that snapshot instead of being
+///   rejected.
 /// - On current kernels, positive `timeout.tv_usec` overflow is normalized
 ///   into whole seconds before validation in the `old_select` entry path, so
 ///   values such as `1_000_001` are accepted instead of failing with
@@ -61,21 +72,30 @@ struct SelectArgs {
 /// - `EINVAL`: `nfds` is negative.
 /// - `EINVAL`: on current kernels, `timeout` contains invalid field values.
 /// - `ENOMEM`: Kernel allocation of the temporary select wait table failed.
-/// - `EINTR`: no descriptor became ready before return and an unblocked
-///   signal interrupted the wait.
+/// - `EINTR`: on current kernels, no descriptor became ready before return
+///   and an unblocked signal interrupted the wait.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man2/select.2.html)
-/// - Stable:
-///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/select.c?h=v7.0#n824)
-/// - LTS:
-///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/select.c?h=v6.18.18#n824)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/select.c?h=1.0#n195)
+/// - Stable entry:
+///   [v7.0 old_select](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/select.c?h=v7.0#n824)
+/// - Stable helper:
+///   [v7.0 core_sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/select.c?h=v7.0#n621)
+/// - LTS entry:
+///   [v6.18.18 old_select](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/select.c?h=v6.18.18#n828)
+/// - LTS helper:
+///   [v6.18.18 core_sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/select.c?h=v6.18.18#n621)
+/// - First stable:
+///   [Linux 1.0 sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/select.c?h=1.0#n195)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.12](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/select.c?h=0.12#n216)
+/// - First appearance:
+///   [Linux 0.12 sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/select.c?h=0.12#n216)
 /// - Linux 1.0 syscall table:
 ///   [include/linux/unistd.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n91)
+/// - Linux 1.0 `fd_set` layout:
+///   [include/linux/types.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/types.h?h=1.0#n84)
+/// - Current x86 `fd_set` layout:
+///   [include/uapi/linux/posix_types.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/posix_types.h?h=v7.0#n22)
 /// - Current i386 syscall table:
 ///   [arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n97)
 pub unsafe fn select(
@@ -161,7 +181,7 @@ mod tests {
     }
 
     fn empty_fd_set() -> FdSet {
-        FdSet { fds_bits: [0; 8] }
+        FdSet { fds_bits: [0; 32] }
     }
 
     fn set_fd(set: &mut FdSet, fd: Int) {
@@ -189,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_select_fd_set_layout() {
-        assert_eq!(core::mem::size_of::<FdSet>(), 32);
+        assert_eq!(core::mem::size_of::<FdSet>(), 128);
         assert_eq!(core::mem::align_of::<FdSet>(), 4);
         assert_eq!(core::mem::offset_of!(FdSet, fds_bits), 0);
     }

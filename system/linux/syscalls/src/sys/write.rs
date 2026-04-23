@@ -7,56 +7,50 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
-/// - Availability: always present
+/// - Behavior changes:
+///   - Linux 1.0 required `file->f_op->write`; current kernels also accept
+///     `file->f_op->write_iter`.
+///   - Linux 1.0 returned `0` immediately when `count == 0`; current kernels
+///     still validate the descriptor, access mode, and user buffer, and then
+///     clamp `count` to `MAX_RW_COUNT` before dispatch.
+/// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - On files that support seeking, the write starts at the current file
-///   offset and the offset is incremented by the number of bytes written.
-/// - If `count` is 0 and `fd` is a regular file, [`write`] returns 0 without
-///   reading any data, but may still detect errors.
-/// - On success, returns the number of bytes written, which lies in the range
-///   `0..=count`. A partial write is *not* considered an error, it can occur
-///   naturally (i.e., the write was interrupted by a signal).
+/// - On current kernels, `count > MAX_RW_COUNT` is reduced to `MAX_RW_COUNT`
+///   before the file's write implementation runs.
+/// - On current kernels, seekable files use a temporary copy of the current
+///   file position and write the updated offset back on success.
+/// - On success, returns the number of bytes written.
+/// - Additional object-specific behavior comes from the target file's
+///   `->write` or `->write_iter` implementation.
 ///
 /// # Errors
-/// - `EAGAIN`: The file descriptor does not refer to a socket,
-///   is marked nonblocking, and the write would block.
-/// - `EAGAIN` or `EWOULDBLOCK`: The file descriptor refers to a socket that
-///   is marked nonblocking, and the write would block.
-/// - `EBADF`: The file descriptor is invalid, or not open for writing.
-/// - `EDESTADDRREQ`: The file descriptor refers to a socket and the socket is
-///   not connected.
-/// - `EDQUOT`: The file descriptor refers to a file and the user's quota of
-///   disk blocks or inodes has been exhausted.
-/// - `EFAULT`: The `buf` pointer is outside the process's accessible address
-///   space.
-/// - `EFBIG`: The write would exceed the maximum file size or the process's
-///   file size limit, or write at a position past the allowed offset.
-/// - `EINTR`: The write was interrupted by a signal (before any data was
-///   written).
-/// - `EINVAL`: The file descriptor is unsuitable for writing or the file was
-///   opened with the `O_DIRECT` flag and `buf`, `count` or the file offset are
-///   not suitably aligned.
-/// - `EIO`: An I/O error occurred during the write.
-/// - `ENOSPC`: The device containing the file does not have enough free space.
-/// - `EPERM`: The operation was prevented by a file seal.
-/// - `EPIPE`: The file descriptor refers to a pipe or socket whose read end is
-///   closed. A `SIGPIPE` signal is also generated.
-///
-/// Other errors may also occur, depending on the type of object being written.
+/// - `EBADF`: `fd` is not open, or is not open for writing.
+/// - `EFAULT`: `buf` is not accessible for `count` bytes.
+/// - `EINVAL`: Linux 1.0 rejects files without `->write`; current kernels
+///   also reject files that have neither `->write` nor `->write_iter`, and
+///   `rw_verify_area()` can reject invalid write requests with `EINVAL`.
+/// - Other reachable errors are returned by `rw_verify_area()` or by the
+///   target file's write implementation.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man2/write.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v6.19#n746)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n746)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=1.0#n90)
+/// - Stable entry:
+///   [v7.0 write](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v7.0#n748)
+/// - Stable helper:
+///   [v7.0 vfs_write](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/read_write.c?h=v7.0#n668)
+/// - LTS entry:
+///   [v6.18.18 write](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n746)
+/// - LTS helper:
+///   [v6.18.18 vfs_write](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/read_write.c?h=v6.18.18#n666)
+/// - First stable:
+///   [Linux 1.0 sys_write](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=1.0#n90)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.10#n83)
+/// - First appearance:
+///   [Linux 0.10 sys_write](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.10#n83)
 pub fn write(fd: UnsignedInt, buf: *const Char, count: SizeT) -> Long {
     // SAFETY: this wrapper forwards the raw user pointer without
     // dereferencing it in Rust, so invalid pointers are reported by the

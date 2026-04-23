@@ -6,7 +6,13 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes:
+///   - Linux 1.0 copied the filename with `getname()`, then opened and
+///     validated the target directly in `do_execve()`.
+///   - Current kernels route `execve` through `do_execveat_common()`, which
+///     counts `argv` / `envp`, enforces stack limits up front, inserts an
+///     empty `argv[0]` when the caller supplies no arguments, and then runs
+///     the binary-format search path.
 /// - Availability: always present on supported Linux kernels
 ///
 /// # Required Privileges
@@ -16,15 +22,40 @@ use crate::arch::current::{Sysno, syscall3};
 /// - If successful, this call does not return to the current program image.
 /// - `filename` names the program to execute.
 /// - `argv` and `envp` point to null-terminated arrays of null-terminated strings.
+/// - On current kernels, `argv == NULL` or an empty argument vector is turned
+///   into a single empty `argv[0]` entry before the binary runs.
+/// # Errors
+/// - `EAGAIN`: on current kernels, `PF_NPROC_EXCEEDED` is set and the caller
+///   is still over `RLIMIT_NPROC`.
+/// - `EFAULT`: the filename pointer, one of the `argv` / `envp` vector
+///   pointers, or one of the pointed-to strings is not accessible.
+/// - `E2BIG`: the argument or environment vectors exceed the counted-string or
+///   stack-space limits enforced before `bprm_execve()`.
+/// - `ENOEXEC`: no registered binary handler accepts the target image.
+/// - `ELOOP`: current kernels exceed the interpreter / binfmt rewrite limit.
+/// - Other reachable lookup, permission, allocation, and binary-handler
+///   errors are returned by `getname()`, `alloc_bprm()` / `open_namei()`, and
+///   the binary-format loaders.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man2/execve.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/exec.c?h=v6.19#n2004)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/exec.c?h=v6.18.18#n2005)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/exec.c?h=1.0#n709)
+/// - Stable entry:
+///   [v7.0 execve](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/exec.c?h=v7.0#n1924)
+/// - Stable helper:
+///   [v7.0 do_execveat_common](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/exec.c?h=v7.0#n1778)
+/// - Stable binary search:
+///   [v7.0 search_binary_handler](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/exec.c?h=v7.0#n1645)
+/// - LTS entry:
+///   [v6.18.18 execve](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/exec.c?h=v6.18.18#n2005)
+/// - LTS helper:
+///   [v6.18.18 do_execveat_common](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/exec.c?h=v6.18.18#n1784)
+/// - LTS binary search:
+///   [v6.18.18 search_binary_handler](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/exec.c?h=v6.18.18#n1651)
+/// - First stable:
+///   [Linux 1.0 sys_execve](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/exec.c?h=1.0#n711)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n154)
+/// - First appearance:
+///   [Linux 0.10 syscall table entry](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n154)
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn execve(
     filename: *const Char,

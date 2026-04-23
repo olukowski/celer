@@ -6,32 +6,39 @@ use crate::arch::current::{Sysno, syscall0};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
-/// - Availability: always present
+/// - Behavior changes:
+///   - Linux 1.0 implemented `fork` directly in `sys_fork`.
+///   - Current kernels route `fork` through `kernel_clone()` with
+///     `exit_signal = SIGCHLD`.
+/// - Availability: present on supported MMU x86 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - Once this system call returns, both the parent and child processes continue execution
-///   right after the `fork` call.
+/// - Once this system call returns, both the parent and child continue
+///   execution immediately after the `fork` call.
 /// - In the child process, `fork` returns 0.
 /// - In the parent process, `fork` returns the PID of the child process.
 ///
 /// # Errors
-/// - `ENOSYS`: The system call is not supported on this architecture.
-/// - `EINVAL`: The system call is not usable (e.g. kernel configued without `CONFIG_MMU`).
-/// - `EAGAIN`: The system is out of process resources.
-/// - `EAGAIN`: The caller is using the `SCHED_DEADLINE` policy and does not have the `reset-on-fork` flag set.
-/// - `ENOMEM`: The system is low on memory and failed to allocate the necessary resources for the child process.
-/// - `ENOMEM`: The "init" process of this PID namespace has terminated.
-/// - `ERESTARTNOINTR`: The system call was interrupted by a signal and will be automatically restarted (only visible in a trace).
+/// - `EAGAIN`: Linux 1.0 returns this when it cannot allocate a task slot or
+///   kernel pages for the child; current kernels also use it when process or
+///   thread limits block `copy_process()`.
+/// - `ENOMEM`: current kernels failed to allocate child task resources.
+/// - `EINVAL`: current NOMMU kernels reject `fork`.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man2/fork.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/fork.c?h=v6.19#n2731)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/fork.c?h=v6.18.18#n2689)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/fork.c?h=1.0#n124)
+/// - Stable entry:
+///   [v7.0 fork](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/fork.c?h=v7.0#n2733)
+/// - Stable helper:
+///   [v7.0 copy_process](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/fork.c?h=v7.0#n1964)
+/// - LTS entry:
+///   [v6.18.18 fork](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/fork.c?h=v6.18.18#n2689)
+/// - LTS helper:
+///   [v6.18.18 copy_process](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/fork.c?h=v6.18.18#n1926)
+/// - First stable:
+///   [Linux 1.0 sys_fork](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/fork.c?h=1.0#n124)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n162)

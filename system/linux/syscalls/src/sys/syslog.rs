@@ -55,18 +55,26 @@ use crate::arch::current::{Sysno, syscall3};
 ///   type `8` uses an unsupported `len` value.
 /// - `EFAULT`: a read-like command uses a `buf` pointer that is not writable
 ///   for the requested byte count.
-/// - `ERESTARTSYS`: command type `2` was waiting for log data and a signal
-///   interrupted the sleep before data became available.
-/// - Current kernels may also return `ENOMEM` if temporary log-copy buffers
-///   cannot be allocated.
-/// - Current kernels may also return additional policy-dependent errors from
+/// - `ERESTARTSYS`: on Linux 1.0, command type `2` was waiting for log data
+///   and a signal interrupted the sleep before data became available.
+/// - `ENOMEM`: on current kernels, command types `2`, `3`, and `4` can fail
+///   while allocating temporary log-copy buffers.
+/// - Current kernels can also return additional policy-dependent errors from
 ///   `security_syslog()`.
 ///
 /// # References
-/// - `man` [page](https://man7.org/linux/man-pages/man3/klogctl.3.html)
-/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n1854)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/printk/printk.c?h=v6.18.18#n1851)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/printk.c?h=1.0#n55)
+/// - Stable entry:
+///   [v7.0 syslog](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n1853)
+/// - Stable helper:
+///   [v7.0 do_syslog](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n1740)
+/// - Stable permission check:
+///   [v7.0 check_syslog_permissions](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n617)
+/// - LTS entry:
+///   [v6.18.18 syslog](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/printk/printk.c?h=v6.18.18#n1851)
+/// - LTS helper:
+///   [v6.18.18 do_syslog](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/printk/printk.c?h=v6.18.18#n1738)
+/// - First stable:
+///   [Linux 1.0 sys_syslog](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/printk.c?h=1.0#n55)
 ///
 /// # Historical References
 /// - Linux 1.0 syscall table:
