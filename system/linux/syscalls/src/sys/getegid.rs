@@ -15,7 +15,11 @@ use crate::arch::current::{Sysno, syscall0};
 ///
 /// # Behavior
 /// - Returns the caller's effective group ID mapped into the caller's user
-///   namespace.
+///   namespace through
+///   `from_kgid_munged(current_user_ns(), current_egid())`.
+/// - Current kernels then convert that namespace ID with `high2lowgid`: values
+///   above 65535 are returned as `overflowgid`, so the legacy 16-bit result is
+///   lossy for high group IDs.
 ///
 /// # Errors
 /// - Never fails (no error conditions)
@@ -25,6 +29,8 @@ use crate::arch::current::{Sysno, syscall0};
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/uid16.c?h=v7.0#n218)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/uid16.c?h=v6.18.18#n218)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n753)
+/// - Current high-ID conversion:
+///   [include/linux/highuid.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/highuid.h?h=v7.0#n48)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n377)

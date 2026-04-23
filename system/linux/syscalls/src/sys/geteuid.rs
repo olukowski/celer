@@ -15,7 +15,11 @@ use crate::arch::current::{Sysno, syscall0};
 ///
 /// # Behavior
 /// - Returns the caller's effective user ID mapped into the caller's user
-///   namespace.
+///   namespace through
+///   `from_kuid_munged(current_user_ns(), current_euid())`.
+/// - Current kernels then convert that namespace ID with `high2lowuid`: values
+///   above 65535 are returned as `overflowuid`, so the legacy 16-bit result is
+///   lossy for high user IDs.
 ///
 /// # Errors
 /// - Never fails (no error conditions)
@@ -25,6 +29,8 @@ use crate::arch::current::{Sysno, syscall0};
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/uid16.c?h=v7.0#n208)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/uid16.c?h=v6.18.18#n208)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n743)
+/// - Current high-ID conversion:
+///   [include/linux/highuid.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/highuid.h?h=v7.0#n47)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n367)

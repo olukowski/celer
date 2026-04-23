@@ -5,31 +5,39 @@ use crate::arch::current::{Sysno, syscall2};
 /// Return resource-usage accounting for the calling process or its waited-for
 /// children.
 ///
-/// Linux 1.0 only accepts [`RUSAGE_SELF`] and [`RUSAGE_CHILDREN`] at the
+/// Linux 1.0 only accepts
+/// [`RUSAGE_SELF`](celer_system_linux_ctypes::RUSAGE_SELF) and
+/// [`RUSAGE_CHILDREN`](celer_system_linux_ctypes::RUSAGE_CHILDREN) at the
 /// syscall entry point, even though the internal helper also supports the
 /// `RUSAGE_BOTH` aggregate used by `wait4`.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.95
-/// - Behavior changes: Linux 1.0 accepted only [`RUSAGE_SELF`] and
-///   [`RUSAGE_CHILDREN`]; current kernels also accept `RUSAGE_THREAD` and
-///   populate additional accounting fields
+/// - Behavior changes: Linux 1.0 accepted only
+///   [`RUSAGE_SELF`](celer_system_linux_ctypes::RUSAGE_SELF) and
+///   [`RUSAGE_CHILDREN`](celer_system_linux_ctypes::RUSAGE_CHILDREN); current
+///   kernels also accept `RUSAGE_THREAD` and populate additional accounting
+///   fields
 /// - Availability: present on supported x86 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - When `who` is [`RUSAGE_SELF`], writes the caller's user time, system
-///   time, minor faults, and major faults to `ru`.
-/// - When `who` is [`RUSAGE_CHILDREN`], writes the same counters aggregated
-///   across waited-for children to `ru`.
+/// - When `who` is [`RUSAGE_SELF`](celer_system_linux_ctypes::RUSAGE_SELF),
+///   writes the caller's user time, system time, minor faults, and major faults
+///   to `ru`.
+/// - When `who` is
+///   [`RUSAGE_CHILDREN`](celer_system_linux_ctypes::RUSAGE_CHILDREN), writes
+///   the same counters aggregated across waited-for children to `ru`.
 /// - Linux 1.0 zero-initialized the whole result structure before populating
 ///   those fields, so the remaining fields were returned as zero.
 /// - On success, returns `0`.
 ///
 /// # Errors
-/// - `EINVAL`: `who` is not [`RUSAGE_SELF`] or [`RUSAGE_CHILDREN`] on the
+/// - `EINVAL`: `who` is not
+///   [`RUSAGE_SELF`](celer_system_linux_ctypes::RUSAGE_SELF) or
+///   [`RUSAGE_CHILDREN`](celer_system_linux_ctypes::RUSAGE_CHILDREN) on the
 ///   Linux 1.0 syscall entry path.
 /// - `EFAULT`: `ru` is not writable for one [`Rusage`] value.
 ///

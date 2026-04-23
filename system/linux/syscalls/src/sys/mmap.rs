@@ -52,8 +52,9 @@ struct MmapArgs {
 ///   range before attempting the new mapping and does not roll them back if
 ///   the mapper then fails.
 /// - The raw return value is address-valued. Callers that want to interpret
-///   errors should cast the return value to [`Long`] or `isize` before checking
-///   for negative errno results.
+///   errors should cast the return value to
+///   [`Long`](celer_system_linux_ctypes::Long) or `isize` before checking for
+///   negative errno results.
 ///
 /// # Errors
 /// - `EACCES`: a file-backed shared writable mapping lacks write permission,
