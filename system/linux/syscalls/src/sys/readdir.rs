@@ -213,6 +213,26 @@ mod tests {
     }
 
     #[test]
+    fn test_readdir_empty_directory_returns_zero() {
+        let dir = create_temp_dir();
+        let dir_file = File::open(&dir).unwrap();
+        let fd = dir_file.as_raw_fd() as UnsignedInt;
+        let mut buffer = zeroed_readdir_buffer();
+        let dirent = buffer_dirent(&mut buffer);
+
+        loop {
+            let ret = unsafe { readdir(fd, dirent, 1) };
+            assert!(ret >= 0, "readdir failed: {ret}");
+
+            if ret == 0 {
+                break;
+            }
+        }
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
     fn test_readdir_regular_file_returns_enotdir() {
         let dir = create_temp_dir();
         let file_path = dir.join("not_a_directory");

@@ -94,12 +94,13 @@ mod tests {
     #[test]
     fn test_reboot_bad_magic_is_rejected_or_permission_denied() {
         let ret = reboot(0, 0, 0, ptr::null());
+        let expected = [-1, -22];
 
         // Current kernels check privilege before validating the magic values,
         // so ordinary unprivileged runs stop at `EPERM`. Privileged test
         // environments can continue to the historical `EINVAL` check.
         assert!(
-            ret == -1 || ret == -22,
+            expected.contains(&ret),
             "expected EPERM or EINVAL from reboot with bad magic, got {ret}",
         );
     }
@@ -112,9 +113,10 @@ mod tests {
             LINUX_REBOOT_CMD_RESTART2,
             ptr::null(),
         );
+        let expected = [-1, -14];
 
         assert!(
-            ret == -1 || ret == -14,
+            expected.contains(&ret),
             "expected EPERM or EFAULT from reboot(RESTART2, null), got {ret}",
         );
     }

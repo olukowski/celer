@@ -75,10 +75,41 @@ pub fn uselib(library: *const Char) -> Int {
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::CString;
+
+    use celer_system_linux_ctypes::Int;
+
     use crate::arch::current::Sysno;
+
+    use super::uselib;
 
     #[test]
     fn test_uselib_syscall_number() {
         assert_eq!(Sysno::Uselib as isize, 86);
+    }
+
+    #[test]
+    fn test_uselib_null_pointer_is_rejected_or_unimplemented() {
+        let ret = uselib(core::ptr::null());
+        let expected = [-14, -38];
+
+        assert!(
+            expected.contains(&ret),
+            "expected EFAULT or ENOSYS from uselib(null), got {ret}",
+        );
+    }
+
+    #[test]
+    fn test_uselib_missing_library_reports_path_error_or_unimplemented() {
+        let path =
+            CString::new("/definitely/not/a/real/celer-uselib-library.so")
+                .unwrap();
+        let ret = uselib(path.as_ptr().cast());
+        let expected: [Int; 3] = [-2, -8, -38];
+
+        assert!(
+            expected.contains(&ret),
+            "expected ENOENT, ENOEXEC, or ENOSYS from uselib(missing path), got {ret}",
+        );
     }
 }
