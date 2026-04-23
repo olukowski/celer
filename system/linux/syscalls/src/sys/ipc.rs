@@ -90,7 +90,7 @@ pub const SHMCTL: UnsignedInt = 24;
 /// - Stable:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/ipc/syscall.c?h=v7.0#n11)
 /// - LTS:
-///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/ipc/syscall.c?h=v7.0#n11)
+///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/ipc/syscall.c?h=v6.18.18#n11)
 /// - First stable:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/ipc/util.c?h=1.0#n65)
 /// - Linux 1.0 syscall table:

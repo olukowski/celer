@@ -81,7 +81,7 @@ pub const SYS_GETSOCKOPT: Int = 15;
 /// - Stable:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/net/compat.c?h=v7.0#n423)
 /// - LTS:
-///   [v6.19.13](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/net/compat.c?h=v6.19.13#n423)
+///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/net/compat.c?h=v6.18.18#n423)
 /// - First stable:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/net/socket.c?h=1.0#n851)
 /// - Linux 1.0 syscall table:
