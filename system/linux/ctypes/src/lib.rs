@@ -125,6 +125,24 @@ pub struct Timeval {
     pub tv_usec: Long,
 }
 
+/// Linux `ITIMER_REAL`.
+pub const ITIMER_REAL: Int = 0;
+
+/// Linux `ITIMER_VIRTUAL`.
+pub const ITIMER_VIRTUAL: Int = 1;
+
+/// Linux `ITIMER_PROF`.
+pub const ITIMER_PROF: Int = 2;
+
+/// Linux `struct itimerval` used by the historical `getitimer` and
+/// `setitimer` syscall ABIs on x86.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Itimerval {
+    pub it_interval: Timeval,
+    pub it_value: Timeval,
+}
+
 /// Linux `fd_set` used by the historical `select` syscall ABI on x86.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

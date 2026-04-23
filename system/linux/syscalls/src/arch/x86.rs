@@ -232,6 +232,8 @@ pub enum Sysno {
     Socketcall = 102,
     /// <https://man7.org/linux/man-pages/man3/klogctl.3.html>
     Syslog = 103,
+    /// Historical `setitimer` ABI using `struct itimerval`.
+    Setitimer = 104,
 }
 
 /// Invoke a syscall with `0` arguments.
