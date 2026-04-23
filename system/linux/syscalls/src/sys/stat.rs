@@ -12,7 +12,10 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes: current i386 kernels still expose this legacy ABI, but
+///   they also reject metadata values that do not fit in the historical
+///   output layout and surface copy-to-user failures from the final
+///   `cp_old_stat` step
 /// - Availability: always present on supported Linux kernels
 ///
 /// # Required Privileges
@@ -22,9 +25,18 @@ use crate::arch::current::{Sysno, syscall2};
 /// - On success, fills `statbuf` with metadata for the file resolved from
 ///   `filename`.
 /// - This wrapper follows the kernel's legacy `oldstat` ABI.
+/// - Linux 1.0 copies the historical `struct old_stat` after successful path
+///   resolution and writable-buffer validation.
+/// - Current i386 kernels still return the historical layout, but they first
+///   translate from `struct kstat` and may reject values that cannot be
+///   represented in the legacy output fields.
 ///
 /// # Errors
-/// - The syscall returns the same errors as the underlying filesystem and
+/// - `EFAULT`: on Linux 1.0, `statbuf` is not writable for one `Stat`; on
+///   current kernels, the final copy to `statbuf` fails.
+/// - `EOVERFLOW`: on current i386 kernels, the resolved metadata cannot be
+///   represented in the legacy `oldstat` output fields.
+/// - The syscall also returns errors from the underlying filesystem and
 ///   path-resolution code.
 ///
 /// # References
