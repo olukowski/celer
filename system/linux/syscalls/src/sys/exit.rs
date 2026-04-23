@@ -1,7 +1,5 @@
 use celer_system_linux_ctypes::Int;
 
-use core::hint::unreachable_unchecked;
-
 use crate::arch::current::{Sysno, syscall1};
 
 /// Terminates the calling thread.
@@ -16,10 +14,17 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Behavior
 /// - Terminates only the calling **thread**, not the entire process.
-/// - This syscall never returns.
+/// - If the kernel dispatches to the `exit` implementation, this syscall does
+///   not return.
+/// - Current kernels may skip syscall dispatch before the `exit`
+///   implementation runs, for example through seccomp or ptrace syscall-entry
+///   handling. If dispatch is skipped, this wrapper returns the raw
+///   synthesized syscall result.
 ///
 /// # Errors
-/// - Never fails (never returns)
+/// - The `exit` implementation itself never returns an errno.
+/// - Syscall-entry filters may synthesize a negative errno-shaped return value
+///   before dispatch.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/exit.2.html)
@@ -29,49 +34,39 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/exit.c?h=0.10#n129)
-pub fn exit(error_code: Int) -> ! {
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub fn exit(error_code: Int) -> Int {
     // SAFETY: `exit` is a safe syscall.
-    unsafe { syscall1(Sysno::Exit, error_code as isize) };
-
-    // SAFETY: `exit` **never** returns.
-    unsafe { unreachable_unchecked() }
+    unsafe { syscall1(Sysno::Exit, error_code as isize) as Int }
 }
 
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use core::sync::atomic::{AtomicBool, Ordering};
-    use std::{
-        sync::{Arc, Barrier},
-        thread,
-    };
+    use celer_system_linux_ctypes::Int;
 
     use super::exit;
+    use crate::sys::{fork, waitpid};
 
-    // NOTE: This test cannot strictly prove that `exit` never returns,
-    // but verifies that:
-    // - the process remains alive
-    // - code after `exit` is not observed in practice
     #[test]
-    fn test_exit() {
-        let barrier = Arc::new(Barrier::new(2));
-        let b = barrier.clone();
+    fn test_exit_terminates_child_when_dispatched() {
+        let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
 
-        static AFTER: AtomicBool = AtomicBool::new(false);
+        if pid == 0 {
+            let _ = exit(0);
+            std::process::abort();
+        }
 
-        thread::spawn(move || {
-            b.wait(); // sync point
-            exit(0);
+        let mut status = 0 as Int;
+        let waited = unsafe { waitpid(pid, &raw mut status, 0) };
 
-            #[allow(unreachable_code)]
-            AFTER.store(true, Ordering::Relaxed);
-        });
-
-        barrier.wait(); // release child
-
-        // Give scheduler a chance
-        thread::yield_now();
-
-        assert!(!AFTER.load(Ordering::Relaxed));
+        assert_eq!(waited, pid, "waitpid failed: {waited}");
+        assert_eq!(status & 0x7f, 0, "child died from signal: {status}");
+        assert_eq!(
+            (status >> 8) & 0xff,
+            0,
+            "child exited with nonzero status: {status}"
+        );
     }
 }
