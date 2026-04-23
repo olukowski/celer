@@ -208,6 +208,8 @@ pub enum Sysno {
     Reboot = 88,
     /// <https://man7.org/linux/man-pages/man2/readdir.2.html>
     Readdir = 89,
+    /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
+    Fchmod = 94,
 }
 
 /// Invoke a syscall with `0` arguments.
