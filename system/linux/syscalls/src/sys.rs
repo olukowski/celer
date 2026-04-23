@@ -137,6 +137,14 @@ mod wait4;
 mod waitpid;
 mod write;
 
+/// Historical syscall wrappers that are only correct for Linux 1.0 ABIs.
+///
+/// These wrappers are intentionally kept out of the default `crate::sys` namespace
+/// when the same numeric slot gained different semantics on newer kernels.
+pub mod linux_1_0 {
+    pub use super::setup::setup;
+}
+
 pub use access::access;
 pub use acct::acct;
 pub use adjtimex::adjtimex;
@@ -225,7 +233,6 @@ pub use setrlimit::setrlimit;
 pub use setsid::setsid;
 pub use settimeofday::settimeofday;
 pub use setuid::setuid16;
-pub use setup::setup;
 pub use sgetmask::sgetmask;
 pub use sigaction::sigaction;
 pub use signal::{

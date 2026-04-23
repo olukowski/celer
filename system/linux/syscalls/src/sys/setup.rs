@@ -4,15 +4,19 @@ use crate::arch::linux_1_0::{Sysno, syscall1};
 
 /// Run the historical Linux 1.0 bootstrap-only `setup` syscall.
 ///
-/// Linux 1.0 still exposes syscall number `0` as `setup`, but the syscall is
-/// intended only for early init and is absent from current x86 syscall tables.
+/// This wrapper is exposed as [`crate::sys::linux_1_0::setup`], not as a
+/// default top-level syscall export, because syscall number `0` changed
+/// meaning after Linux 1.0.
+///
+/// Linux 1.0 still exposes syscall number `0` as `setup`, but current x86
+/// Linux uses syscall number `0` for `restart_syscall` instead.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: Linux 0.10 read BIOS drive data from `bios`; Linux 1.0
 ///   ignores the pointer and performs one-shot block-device setup instead.
 /// - Availability: correct only for Linux 1.0 x86 kernels; current x86 Linux
-///   syscall tables do not contain `setup`
+///   syscall tables use syscall number `0` for `restart_syscall`
 ///
 /// # Required Privileges
 /// - None beyond reaching the historical one-shot init-only syscall entry.
@@ -35,12 +39,12 @@ use crate::arch::linux_1_0::{Sysno, syscall1};
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/drivers/block/genhd.c?h=1.0#n197)
 /// - Current x86-32 syscall table:
 ///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n15)
-/// - Current x86-64 syscall table:
-///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.19#n12)
 /// - LTS x86-32 syscall table:
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n15)
-/// - LTS x86-64 syscall table:
-///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.18.18#n12)
+/// - Current `restart_syscall` implementation:
+///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/signal.c?h=v6.19#n3173)
+/// - LTS `restart_syscall` implementation:
+///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/signal.c?h=v6.18.18#n3175)
 ///
 /// # Historical References
 /// - First appearance:
