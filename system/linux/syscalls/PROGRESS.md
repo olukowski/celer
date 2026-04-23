@@ -109,12 +109,9 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 90 sys_mmap`
 - [x] ` 91 sys_munmap`
 - [x] ` 92 sys_truncate`
-- [x] ` 94 sys_fchmod`
 - [x] ` 93 sys_ftruncate`
 - [x] ` 94 sys_fchmod`
 - [x] ` 95 sys_fchown` - wrapped as `fchown16`
-- [ ] ` 96 sys_getpriority`
-- [x] ` 97 sys_setpriority`
 - [x] ` 96 sys_getpriority`
 - [x] ` 97 sys_setpriority`
 - [ ] ` 98 sys_profil` - stubbed in Linux 1.0: always returns `-ENOSYS`
@@ -131,7 +128,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `106 sys_newstat`
 - [x] `107 sys_newlstat`
 - [x] `108 sys_newfstat` - wrapped as `newfstat`
-- [x] `109 sys_newuname` - wrapped as `newuname`; Linux 1.0 `sys.h` names this entry `sys_newuname`, while the x86 syscall number for the new uname ABI is `__NR_uname` 122
+- [x] `109 sys_olduname` - wrapped as `olduname`; Linux 1.0 slot 109 uses the five-field `old_utsname` ABI
 - [x] `110 sys_iopl`
 - [x] `111 sys_vhangup`
 - [x] `112 sys_idle`
@@ -142,9 +139,9 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `117 sys_ipc`
 - [x] `118 sys_fsync`
 - [x] `119 sys_sigreturn`
-- [x] `120 sys_setdomainname`
-- [ ] `121 sys_olduname` - historical legacy uname entry; wrapped today as `oldolduname` via nr 59, not as a separate newer uname variant
-- [ ] `122 sys_old_syscall` - stubbed in Linux 1.0: `sys_old_syscall()` always returns `-ENOSYS`
+- [ ] `120 sys_clone` - `sys.h` aliases this to `sys_fork`; the crate does not wrap it separately today
+- [x] `121 sys_setdomainname`
+- [x] `122 sys_newuname` - wrapped as `newuname`; x86 `__NR_uname` points at the six-field `new_utsname` ABI
 - [x] `123 sys_modify_ldt`
 - [x] `124 sys_adjtimex`
 

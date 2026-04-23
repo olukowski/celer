@@ -4,27 +4,24 @@ use crate::arch::current::{Sysno, syscall3};
 
 /// Load a kernel module image from user memory.
 ///
-/// This wrapper targets the original Linux 1.0 syscall slot `128`, while
-/// exposing the current x86 `init_module(2)` ABI. Linux 1.0 used a different
-/// four-argument ABI:
+/// This wrapper exposes the current x86 `init_module(2)` ABI at syscall slot
+/// `128`. Linux 1.0 used a different four-argument ABI at the same slot:
 /// `sys_init_module(char *module_name, char *code, unsigned codesize,
-/// struct mod_routines *routines)`. Current x86 kernels keep the syscall name
-/// and i386 number `128` but instead accept a complete module image, its byte
-/// length, and a NUL-terminated module-parameter string.
+/// struct mod_routines *routines)`.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Historical slot introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 loaded a named module into an existing
 ///   kernel-resident module slot and called its `init` routine through the
-///   supplied routine table; current kernels copy a complete module image from
-///   user memory, validate it as a loadable module, and pass `uargs` to the
-///   module-parameter parser and init path.
-/// - Availability: present on supported x86 Linux kernels; current kernels
-///   built with `CONFIG_MODULES=n` keep the syscall number wired but route it
-///   to `sys_ni_syscall`, which returns `ENOSYS`
+///   supplied routine table; current x86 kernels instead copy a complete
+///   module image from user memory, validate it as a loadable module, and pass
+///   `uargs` to the module-parameter parser and init path.
+/// - Availability: this wrapper is ABI-correct for current supported x86 Linux
+///   kernels; it is not ABI-compatible with Linux 1.0. Current kernels built
+///   with `CONFIG_MODULES=n` keep the syscall number wired but route it to
+///   `sys_ni_syscall`, which returns `ENOSYS`
 ///
 /// # Required Privileges
-/// - Linux 1.0: the caller must be the superuser.
 /// - Current kernels: the caller must have `CAP_SYS_MODULE`, and module
 ///   loading must not be globally disabled.
 ///
@@ -33,8 +30,6 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `len` is the module image length in bytes.
 /// - `uargs` points to a NUL-terminated module-parameter string; use `c""`
 ///   for no parameters.
-/// - Linux 1.0 used a different ABI and therefore did not accept module bytes
-///   and parameter strings in this shape.
 /// - Current kernels validate the copied image before making the module live,
 ///   including ELF/module structure, duplicate-load state, and module
 ///   signatures when configured.
@@ -43,18 +38,15 @@ use crate::arch::current::{Sysno, syscall3};
 /// # Errors
 /// - `EPERM`: the caller lacks permission to load modules, module loading is
 ///   disabled, or a current-kernel blacklist policy rejects the module.
-/// - `E2BIG`: Linux 1.0 rejects module names longer than `MOD_MAX_NAME`.
-/// - `ENOENT`: Linux 1.0 cannot find the named module slot, or a current
-///   kernel cannot resolve a required non-weak symbol.
-/// - `EINVAL`: Linux 1.0 finds that the loaded code does not fit the module
-///   slot, or a current kernel rejects malformed namespace/import or argument
+/// - `ENOENT`: a current kernel cannot resolve a required non-weak symbol.
+/// - `EINVAL`: a current kernel rejects malformed namespace/import or argument
 ///   state after the syscall reaches those checks.
-/// - `EBUSY`: Linux 1.0 sees a nonzero module init return, or a current kernel
-///   detects an in-progress duplicate load or still-loading symbol owner.
+/// - `EBUSY`: a current kernel detects an in-progress duplicate load or
+///   still-loading symbol owner.
 /// - `EINTR`: a current kernel interrupts the duplicate-load wait with a
 ///   signal.
-/// - `EFAULT`: a current kernel cannot read `umod` or `uargs`
-///   from user memory.
+/// - `EFAULT`: a current kernel cannot read `umod` or `uargs` from user
+///   memory.
 /// - `ENOMEM`: a current kernel cannot allocate temporary loader memory.
 /// - `ENOEXEC`: a current kernel rejects the copied image as too short or as
 ///   invalid module/ELF input.
@@ -69,10 +61,13 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/init_module.2.html)
-/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v7.0#n3570)
+/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v6.19#n3569)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/module/main.c?h=v6.18.18#n3563)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n71)
-/// - Current x86-32 syscall table: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n143)
+/// - Current x86-32 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n143)
+///
+/// # Historical References
+/// - Linux 1.0 implementation with the incompatible 4-argument ABI:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n71)
 pub fn init_module(
     umod: *const Void,
     len: UnsignedLong,
