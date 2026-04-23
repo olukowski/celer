@@ -210,6 +210,8 @@ pub enum Sysno {
     Readdir = 89,
     /// Historical i386 `mmap` ABI that takes a pointer to six packed words.
     Mmap = 90,
+    /// <https://man7.org/linux/man-pages/man2/munmap.2.html>
+    Munmap = 91,
     /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
     Fchmod = 94,
 }
