@@ -106,7 +106,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 87 sys_swapon`
 - [x] ` 88 sys_reboot`
 - [x] ` 89 sys_readdir`
-- [ ] ` 90 sys_mmap`
+- [x] ` 90 sys_mmap`
 - [ ] ` 91 sys_munmap`
 - [ ] ` 92 sys_truncate`
 - [ ] ` 93 sys_ftruncate`
