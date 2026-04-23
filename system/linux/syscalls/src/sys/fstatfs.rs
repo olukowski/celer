@@ -72,7 +72,7 @@ mod tests {
     fn test_fstatfs_layout() {
         assert_eq!(core::mem::size_of::<FsidT>(), 8);
         assert_eq!(core::mem::align_of::<FsidT>(), 4);
-        assert_eq!(core::mem::size_of::<Statfs>(), 60);
+        assert_eq!(core::mem::size_of::<Statfs>(), 64);
         assert_eq!(core::mem::align_of::<Statfs>(), 4);
         assert_eq!(core::mem::offset_of!(Statfs, f_type), 0);
         assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 4);
