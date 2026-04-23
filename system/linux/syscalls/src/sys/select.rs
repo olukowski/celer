@@ -355,13 +355,15 @@ mod tests {
     fn test_select_bad_timeout_pointer_returns_efault() {
         // SAFETY: this intentionally passes an invalid timeout pointer to
         // verify the kernel's `EFAULT` path.
+        let bad_timeout =
+            core::ptr::without_provenance_mut::<Timeval>(usize::MAX);
         let rc = unsafe {
             select(
                 0,
                 core::ptr::null_mut(),
                 core::ptr::null_mut(),
                 core::ptr::null_mut(),
-                usize::MAX as *mut Timeval,
+                bad_timeout,
             )
         };
 

@@ -194,13 +194,10 @@ mod tests {
     fn test_sigaction_faults_on_invalid_oldaction_pointer() {
         // SAFETY: this intentionally passes an invalid kernel ABI pointer to
         // verify the syscall reports `EFAULT`.
-        let rc = unsafe {
-            sigaction(
-                SIGUSR1,
-                core::ptr::null(),
-                usize::MAX as *mut OldSigaction,
-            )
-        };
+        let bad_oldaction =
+            core::ptr::without_provenance_mut::<OldSigaction>(usize::MAX);
+        let rc =
+            unsafe { sigaction(SIGUSR1, core::ptr::null(), bad_oldaction) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad oldaction, got {rc}");
     }
@@ -250,13 +247,10 @@ mod tests {
         // SAFETY: `new_action` is readable for one `OldSigaction`, and the
         // invalid output pointer intentionally exercises the kernel's
         // install-then-copyout-fails path on current kernels.
-        let rc = unsafe {
-            sigaction(
-                SIGUSR1,
-                &raw const new_action,
-                usize::MAX as *mut OldSigaction,
-            )
-        };
+        let bad_oldaction =
+            core::ptr::without_provenance_mut::<OldSigaction>(usize::MAX);
+        let rc =
+            unsafe { sigaction(SIGUSR1, &raw const new_action, bad_oldaction) };
         assert_eq!(rc, -14, "expected EFAULT for bad oldaction, got {rc}");
 
         let mut current = OldSigaction {

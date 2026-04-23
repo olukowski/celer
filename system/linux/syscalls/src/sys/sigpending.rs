@@ -156,7 +156,9 @@ mod tests {
     fn test_sigpending_faults_on_invalid_pointer() {
         // SAFETY: this intentionally passes an invalid kernel ABI pointer to
         // verify the syscall reports `EFAULT`.
-        let rc = unsafe { sigpending(usize::MAX as *mut OldSigsetT) };
+        let bad_set =
+            core::ptr::without_provenance_mut::<OldSigsetT>(usize::MAX);
+        let rc = unsafe { sigpending(bad_set) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad set pointer, got {rc}");
     }

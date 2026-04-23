@@ -209,13 +209,9 @@ mod tests {
         let original = ssetmask(signal_bit(SIGUSR1));
         let _restore = RestoreMask(original);
 
-        let rc = unsafe {
-            sigprocmask(
-                SIG_SETMASK,
-                usize::MAX as *const OldSigsetT,
-                core::ptr::null_mut(),
-            )
-        };
+        let bad_set = core::ptr::without_provenance::<OldSigsetT>(usize::MAX);
+        let rc =
+            unsafe { sigprocmask(SIG_SETMASK, bad_set, core::ptr::null_mut()) };
         assert_eq!(
             rc, -EFAULT,
             "expected EFAULT for bad set pointer, got {rc}"
@@ -237,13 +233,10 @@ mod tests {
         let _restore = RestoreMask(original);
 
         let requested = signal_bit(SIGUSR2);
-        let rc = unsafe {
-            sigprocmask(
-                SIG_SETMASK,
-                &raw const requested,
-                usize::MAX as *mut OldSigsetT,
-            )
-        };
+        let bad_oset =
+            core::ptr::without_provenance_mut::<OldSigsetT>(usize::MAX);
+        let rc =
+            unsafe { sigprocmask(SIG_SETMASK, &raw const requested, bad_oset) };
         assert_eq!(
             rc, -EFAULT,
             "expected EFAULT for bad oset pointer, got {rc}"

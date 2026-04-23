@@ -282,9 +282,8 @@ mod tests {
         let mut status: Int = 0;
         // SAFETY: this intentionally passes an invalid `ru` pointer to verify
         // the kernel reports `EFAULT` instead of causing Rust-side UB.
-        let rc = unsafe {
-            wait4(pid, &raw mut status, 0, usize::MAX as *mut Rusage)
-        };
+        let bad_usage = core::ptr::without_provenance_mut::<Rusage>(usize::MAX);
+        let rc = unsafe { wait4(pid, &raw mut status, 0, bad_usage) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad rusage pointer, got {rc}");
 
@@ -304,8 +303,8 @@ mod tests {
         let mut usage = zeroed_rusage();
         // SAFETY: this intentionally passes an invalid `stat_addr` pointer to
         // verify the kernel reports `EFAULT`.
-        let rc =
-            unsafe { wait4(pid, usize::MAX as *mut Int, 0, &raw mut usage) };
+        let bad_status = core::ptr::without_provenance_mut::<Int>(usize::MAX);
+        let rc = unsafe { wait4(pid, bad_status, 0, &raw mut usage) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad status pointer, got {rc}");
 

@@ -268,12 +268,10 @@ mod tests {
         touch(&dir.join("entry.txt"));
 
         let dir_file = File::open(&dir).unwrap();
+        let bad_dirent =
+            core::ptr::without_provenance_mut::<Dirent>(usize::MAX);
         let ret = unsafe {
-            readdir(
-                dir_file.as_raw_fd() as UnsignedInt,
-                usize::MAX as *mut Dirent,
-                1,
-            )
+            readdir(dir_file.as_raw_fd() as UnsignedInt, bad_dirent, 1)
         };
 
         assert_eq!(ret, -14, "expected EFAULT, got {ret}");

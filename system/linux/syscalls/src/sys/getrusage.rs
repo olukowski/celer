@@ -143,7 +143,8 @@ mod tests {
     fn test_getrusage_faults_on_invalid_pointer() {
         // SAFETY: this intentionally passes an invalid pointer to verify the
         // syscall reports `EFAULT`.
-        let rc = unsafe { getrusage(RUSAGE_SELF, usize::MAX as *mut Rusage) };
+        let bad_usage = core::ptr::without_provenance_mut::<Rusage>(usize::MAX);
+        let rc = unsafe { getrusage(RUSAGE_SELF, bad_usage) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad rusage pointer, got {rc}");
     }

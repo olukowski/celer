@@ -108,7 +108,8 @@ mod tests {
             exit(0);
         }
 
-        let rc = unsafe { waitpid(pid, usize::MAX as *mut Int, 0) };
+        let bad_status = core::ptr::without_provenance_mut::<Int>(usize::MAX);
+        let rc = unsafe { waitpid(pid, bad_status, 0) };
 
         assert_eq!(rc, -14, "expected EFAULT, got {rc}");
 

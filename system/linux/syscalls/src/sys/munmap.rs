@@ -107,7 +107,7 @@ mod tests {
             mapping as Long
         );
 
-        let addr = mapping as *mut Void;
+        let addr = ptr::without_provenance_mut::<Void>(mapping as usize);
 
         // SAFETY: this test stops using the mapping after unmapping it.
         let rc = unsafe { munmap(addr.addr() as UnsignedLong, len as SizeT) };
@@ -140,7 +140,7 @@ mod tests {
             mapping as Long
         );
 
-        let addr = mapping as *mut Void;
+        let addr = ptr::without_provenance_mut::<Void>(mapping as usize);
 
         // SAFETY: this test stops using the mapping after unmapping it.
         let rc = unsafe { munmap(addr.addr() as UnsignedLong, 1 as SizeT) };

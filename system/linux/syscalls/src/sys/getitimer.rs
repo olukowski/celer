@@ -160,8 +160,9 @@ mod tests {
     fn test_getitimer_faults_on_invalid_pointer() {
         // SAFETY: this intentionally passes an invalid pointer to verify the
         // syscall reports `EFAULT`.
-        let rc =
-            unsafe { getitimer(ITIMER_REAL, usize::MAX as *mut Itimerval) };
+        let bad_value =
+            core::ptr::without_provenance_mut::<Itimerval>(usize::MAX);
+        let rc = unsafe { getitimer(ITIMER_REAL, bad_value) };
 
         assert_eq!(rc, -14, "expected EFAULT for bad timer pointer, got {rc}");
     }

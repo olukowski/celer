@@ -198,7 +198,9 @@ mod tests {
 
         // SAFETY: this intentionally passes an invalid writable pointer to
         // verify the kernel's `EFAULT` path.
-        let ret = unsafe { getgroups16(count, usize::MAX as *mut OldGidT) };
+        let bad_groups =
+            core::ptr::without_provenance_mut::<OldGidT>(usize::MAX);
+        let ret = unsafe { getgroups16(count, bad_groups) };
 
         assert_eq!(
             ret, -14,
