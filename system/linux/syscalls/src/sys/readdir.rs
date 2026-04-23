@@ -197,7 +197,7 @@ mod tests {
             }
 
             let entry = unsafe { &*dirent };
-            let name = dirent_name(&entry);
+            let name = dirent_name(entry);
             assert!(entry.d_reclen > 0);
             assert_ne!(entry.d_ino, 0);
             assert_eq!(entry.d_name[entry.d_reclen as usize], 0 as Char);
