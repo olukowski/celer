@@ -12,6 +12,16 @@ pub mod linux_1_0 {
         Setup = 0,
         /// Historical Linux 1.0 signed-rlimit ABI.
         Setrlimit = 75,
+        /// Linux 1.0 `statfs` ABI.
+        Statfs = 99,
+        /// Linux 1.0 `fstatfs` ABI.
+        Fstatfs = 100,
+        /// Linux 1.0 `newstat` ABI using `struct new_stat`.
+        Newstat = 106,
+        /// Linux 1.0 `newlstat` ABI using `struct new_stat`.
+        Newlstat = 107,
+        /// Linux 1.0 `newfstat` ABI using `struct new_stat`.
+        Newfstat = 108,
         /// Historical Linux 1.0 module initialization ABI.
         InitModule = 128,
     }
@@ -302,7 +312,7 @@ pub enum Sysno {
     Getpriority = 96,
     /// <https://man7.org/linux/man-pages/man2/setpriority.2.html>
     Setpriority = 97,
-    /// Historical `statfs` ABI.
+    /// Current i386 `statfs` ABI.
     Statfs = 99,
     /// <https://man7.org/linux/man-pages/man2/statfs.2.html>
     Fstatfs = 100,
@@ -318,11 +328,11 @@ pub enum Sysno {
     Getitimer = 105,
     /// Historical i386 `sigprocmask` ABI using one legacy signal-mask word.
     Sigprocmask = 126,
-    /// Linux 1.0 `stat` ABI using `struct new_stat`.
+    /// Current i386 `newstat` ABI using `struct stat`.
     Newstat = 106,
-    /// Historical i386 `struct stat` / `new_stat` `lstat` ABI.
+    /// Current i386 `newlstat` ABI using `struct stat`.
     Newlstat = 107,
-    /// Historical Linux 1.0 `newfstat` ABI using `struct new_stat`.
+    /// Current i386 `newfstat` ABI using `struct stat`.
     Newfstat = 108,
     /// <https://man7.org/linux/man-pages/man2/uname.2.html>
     Olduname = 109,

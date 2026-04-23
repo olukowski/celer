@@ -145,9 +145,14 @@ mod write;
 /// These wrappers are intentionally kept out of the default `crate::sys` namespace
 /// when the same numeric slot gained different semantics on newer kernels.
 pub mod linux_1_0 {
+    pub use super::fstatfs::fstatfs_1_0 as fstatfs;
     pub use super::init_module::init_module_1_0 as init_module;
+    pub use super::newfstat::newfstat_1_0 as newfstat;
+    pub use super::newlstat::newlstat_1_0 as newlstat;
+    pub use super::newstat::stat_1_0 as stat;
     pub use super::setrlimit::setrlimit_1_0 as setrlimit;
     pub use super::setup::setup;
+    pub use super::statfs::statfs_1_0 as statfs;
     pub use super::sysinfo::sysinfo;
 }
 

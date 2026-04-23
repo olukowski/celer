@@ -1,6 +1,11 @@
-use celer_system_linux_ctypes::{Char, Long, NewStat};
+use celer_system_linux_ctypes::{
+    Char, Long, NewStat, linux_1_0::NewStat as Linux10NewStat,
+};
 
-use crate::arch::current::{Sysno, syscall2};
+use crate::arch::{
+    current::{Sysno, syscall2},
+    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+};
 
 /// Get file status information for the path named by `filename` through the
 /// i386 `newlstat` ABI introduced alongside syscall slot `107`.
@@ -25,11 +30,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - The final pathname component is not followed if it is a symlink.
 /// - Intermediate pathname components may still traverse symlinks during
 ///   resolution.
-/// - This wrapper uses the historical i386 `struct new_stat` output layout,
-///   which widens `st_ino` and adds `st_blksize` and `st_blocks` compared
-///   with the older `oldlstat` ABI.
-/// - Linux 1.0 zero-initializes the temporary `struct new_stat` before
-///   populating fields for copy-out.
+/// - This wrapper uses the current i386 `struct stat` output layout copied by
+///   `cp_new_stat()`, including nanosecond timestamp fields.
 ///
 /// # Errors
 /// - `EFAULT`: `statbuf` is not writable for a full `NewStat` value, or
@@ -43,6 +45,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - `ENOTDIR`: a non-directory component was used where pathname traversal
 ///   required a directory.
 /// - `EACCES`: pathname traversal lacked search permission on a directory.
+/// - `EOVERFLOW`: file metadata cannot be represented in the i386
+///   `struct stat` layout.
 ///
 /// Linux 1.0 also propagates filesystem-specific errors returned by the
 /// directory inode's `lookup` or `follow_link` operations.
@@ -54,12 +58,45 @@ use crate::arch::current::{Sysno, syscall2};
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n137)
 ///
 /// # Historical References
-/// - Linux 1.0 `struct new_stat`: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+/// - Current i386 `struct stat`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
+/// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n518)
+/// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 pub unsafe fn newlstat(filename: *const Char, statbuf: *mut NewStat) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(
             Sysno::Newlstat,
+            filename.addr() as isize,
+            statbuf.addr() as isize,
+        )
+    }) as Long
+}
+
+/// Get file status information through the Linux 1.0 `sys_newlstat` ABI.
+///
+/// This wrapper uses syscall slot `107` with the Linux 1.0
+/// [`Linux10NewStat`] layout. Current kernels use the same slot with the
+/// current i386 [`NewStat`] layout, exposed by [`newlstat`].
+///
+/// # Safety
+/// - `filename` must point to a NUL-terminated string that is readable for the
+///   duration of the syscall.
+/// - `statbuf` must point to writable memory for one [`Linux10NewStat`] value
+///   for the duration of the syscall.
+///
+/// # References
+/// - Linux 1.0 implementation:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n137)
+/// - Linux 1.0 `struct new_stat`:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+pub unsafe fn newlstat_1_0(
+    filename: *const Char,
+    statbuf: *mut Linux10NewStat,
+) -> Long {
+    // SAFETY: guaranteed by caller.
+    (unsafe {
+        linux_1_0_syscall2(
+            Linux10Sysno::Newlstat,
             filename.addr() as isize,
             statbuf.addr() as isize,
         )
@@ -78,11 +115,13 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use celer_system_linux_ctypes::{Char, NewStat, Stat};
+    use celer_system_linux_ctypes::{
+        Char, NewStat, Stat, linux_1_0::NewStat as Linux10NewStat,
+    };
 
-    use crate::arch::current::Sysno;
+    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
 
-    use super::newlstat;
+    use super::{newlstat, newlstat_1_0};
 
     fn create_temp_path(prefix: &str) -> PathBuf {
         let mut path = env::temp_dir();
@@ -98,6 +137,29 @@ mod tests {
 
     fn zeroed_new_stat() -> NewStat {
         NewStat {
+            st_dev: 0,
+            st_ino: 0,
+            st_mode: 0,
+            st_nlink: 0,
+            st_uid: 0,
+            st_gid: 0,
+            st_rdev: 0,
+            st_size: 0,
+            st_blksize: 0,
+            st_blocks: 0,
+            st_atime: 0,
+            st_atime_nsec: 0,
+            st_mtime: 0,
+            st_mtime_nsec: 0,
+            st_ctime: 0,
+            st_ctime_nsec: 0,
+            __unused4: 0,
+            __unused5: 0,
+        }
+    }
+
+    fn zeroed_linux_1_0_new_stat() -> Linux10NewStat {
+        Linux10NewStat {
             st_dev: 0,
             __pad1: 0,
             st_ino: 0,
@@ -161,6 +223,27 @@ mod tests {
     }
 
     #[test]
+    fn test_linux_1_0_newlstat_wrapper_success() {
+        let path = create_temp_path("celer_sys_linux_1_0_newlstat");
+        File::create(&path).unwrap();
+
+        let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
+        path_bytes.push(0);
+
+        let mut statbuf = zeroed_linux_1_0_new_stat();
+
+        // SAFETY: `path_bytes` is NUL-terminated and readable for the duration
+        // of the syscall, and `statbuf` is writable for a Linux 1.0 `NewStat`.
+        let ret = unsafe {
+            newlstat_1_0(path_bytes.as_ptr().cast::<Char>(), &raw mut statbuf)
+        };
+
+        assert_eq!(ret, 0, "linux_1_0::newlstat failed: {ret}");
+
+        fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
     fn test_newlstat_empty_path() {
         let path_bytes = [0_u8];
         let mut statbuf = zeroed_new_stat();
@@ -196,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn test_newlstat_uses_new_stat_copy_size() {
+    fn test_newlstat_uses_current_stat_copy_size() {
         let path = create_temp_path("celer_sys_newlstat_copy_size");
         File::create(&path).unwrap();
 
@@ -225,6 +308,7 @@ mod tests {
     #[test]
     fn test_newlstat_abi_layout() {
         assert_eq!(Sysno::Newlstat as isize, 107);
+        assert_eq!(Linux10Sysno::Newlstat as isize, 107);
         assert_eq!(size_of::<NewStat>(), 64);
         assert_eq!(align_of::<NewStat>(), 4);
         assert_eq!(offset_of!(NewStat, st_ino), 4);
@@ -232,5 +316,6 @@ mod tests {
         assert_eq!(offset_of!(NewStat, st_blksize), 24);
         assert_eq!(offset_of!(NewStat, st_blocks), 28);
         assert_eq!(offset_of!(NewStat, st_ctime), 48);
+        assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
     }
 }

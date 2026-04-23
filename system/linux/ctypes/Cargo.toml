@@ -6,3 +6,6 @@ license = "MIT OR Apache-2.0"
 description = "Linux C types for Celer"
 repository = "https://github.com/olukowski/celer"
 readme = "README.md"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }

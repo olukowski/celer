@@ -1,6 +1,7 @@
 #![no_std]
 #![cfg(target_os = "linux")]
 #![cfg(target_arch = "x86")]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use core::ffi::{
     c_char, c_int, c_long, c_longlong, c_short, c_uchar, c_uint, c_ulong,
@@ -108,29 +109,27 @@ pub struct Stat {
     pub st_ctime: UnsignedLong,
 }
 
-/// Linux `struct stat` / `struct new_stat` used by the i386 `newstat`,
-/// `newlstat`, and `newfstat` syscall ABIs.
+/// Current i386 Linux `struct stat` used by the `newstat`, `newlstat`, and
+/// `newfstat` syscall ABIs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct NewStat {
-    pub st_dev: UnsignedShort,
-    pub __pad1: UnsignedShort,
+    pub st_dev: UnsignedLong,
     pub st_ino: UnsignedLong,
     pub st_mode: UnsignedShort,
     pub st_nlink: UnsignedShort,
     pub st_uid: UnsignedShort,
     pub st_gid: UnsignedShort,
-    pub st_rdev: UnsignedShort,
-    pub __pad2: UnsignedShort,
+    pub st_rdev: UnsignedLong,
     pub st_size: UnsignedLong,
     pub st_blksize: UnsignedLong,
     pub st_blocks: UnsignedLong,
     pub st_atime: UnsignedLong,
-    pub __unused1: UnsignedLong,
+    pub st_atime_nsec: UnsignedLong,
     pub st_mtime: UnsignedLong,
-    pub __unused2: UnsignedLong,
+    pub st_mtime_nsec: UnsignedLong,
     pub st_ctime: UnsignedLong,
-    pub __unused3: UnsignedLong,
+    pub st_ctime_nsec: UnsignedLong,
     pub __unused4: UnsignedLong,
     pub __unused5: UnsignedLong,
 }
@@ -416,7 +415,7 @@ pub struct Tms {
 }
 
 pub mod linux_1_0 {
-    use super::Int;
+    use super::{Int, Long, UnsignedLong, UnsignedShort};
 
     /// Linux 1.0 `struct rlimit` used by the historical `getrlimit` and
     /// `setrlimit` syscall ABIs on x86.
@@ -425,6 +424,55 @@ pub mod linux_1_0 {
     pub struct Rlimit {
         pub rlim_cur: Int,
         pub rlim_max: Int,
+    }
+
+    /// Linux 1.0 `struct new_stat`.
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct NewStat {
+        pub st_dev: UnsignedShort,
+        pub __pad1: UnsignedShort,
+        pub st_ino: UnsignedLong,
+        pub st_mode: UnsignedShort,
+        pub st_nlink: UnsignedShort,
+        pub st_uid: UnsignedShort,
+        pub st_gid: UnsignedShort,
+        pub st_rdev: UnsignedShort,
+        pub __pad2: UnsignedShort,
+        pub st_size: UnsignedLong,
+        pub st_blksize: UnsignedLong,
+        pub st_blocks: UnsignedLong,
+        pub st_atime: UnsignedLong,
+        pub __unused1: UnsignedLong,
+        pub st_mtime: UnsignedLong,
+        pub __unused2: UnsignedLong,
+        pub st_ctime: UnsignedLong,
+        pub __unused3: UnsignedLong,
+        pub __unused4: UnsignedLong,
+        pub __unused5: UnsignedLong,
+    }
+
+    /// Linux 1.0 `fsid_t`.
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct FsidT {
+        pub val: [Long; 2],
+    }
+
+    /// Linux 1.0 `struct statfs`.
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct Statfs {
+        pub f_type: Long,
+        pub f_bsize: Long,
+        pub f_blocks: Long,
+        pub f_bfree: Long,
+        pub f_bavail: Long,
+        pub f_files: Long,
+        pub f_ffree: Long,
+        pub f_fsid: FsidT,
+        pub f_namelen: Long,
+        pub f_spare: [Long; 6],
     }
 }
 
@@ -484,28 +532,30 @@ pub struct Sysinfo {
     pub _f: [Char; 22],
 }
 
-/// Linux `fsid_t` used by the historical `statfs` syscall ABI.
+/// Linux `__kernel_fsid_t` used by current i386 filesystem status ABIs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct FsidT {
-    pub val: [Long; 2],
+    pub val: [Int; 2],
 }
 
-/// Linux `struct statfs` used by the historical `statfs` and `fstatfs`
+/// Current i386 Linux `struct statfs` used by the `statfs` and `fstatfs`
 /// syscall ABIs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Statfs {
-    pub f_type: Long,
-    pub f_bsize: Long,
-    pub f_blocks: Long,
-    pub f_bfree: Long,
-    pub f_bavail: Long,
-    pub f_files: Long,
-    pub f_ffree: Long,
+    pub f_type: UnsignedInt,
+    pub f_bsize: UnsignedInt,
+    pub f_blocks: UnsignedInt,
+    pub f_bfree: UnsignedInt,
+    pub f_bavail: UnsignedInt,
+    pub f_files: UnsignedInt,
+    pub f_ffree: UnsignedInt,
     pub f_fsid: FsidT,
-    pub f_namelen: Long,
-    pub f_spare: [Long; 6],
+    pub f_namelen: UnsignedInt,
+    pub f_frsize: UnsignedInt,
+    pub f_flags: UnsignedInt,
+    pub f_spare: [UnsignedInt; 4],
 }
 
 /// Linux `struct dirent` used by the historical `readdir` syscall ABI.
@@ -516,4 +566,100 @@ pub struct Dirent {
     pub d_off: OffT,
     pub d_reclen: UnsignedShort,
     pub d_name: [Char; 256],
+}
+
+#[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
+mod tests {
+    use core::mem::{align_of, offset_of, size_of};
+
+    use super::{FsidT, NewStat, Statfs, linux_1_0};
+
+    #[test]
+    fn current_i386_newstat_layout_matches_linux_v7_0_struct_stat() {
+        assert_eq!(size_of::<NewStat>(), 64);
+        assert_eq!(align_of::<NewStat>(), 4);
+        assert_eq!(offset_of!(NewStat, st_dev), 0);
+        assert_eq!(offset_of!(NewStat, st_ino), 4);
+        assert_eq!(offset_of!(NewStat, st_mode), 8);
+        assert_eq!(offset_of!(NewStat, st_nlink), 10);
+        assert_eq!(offset_of!(NewStat, st_uid), 12);
+        assert_eq!(offset_of!(NewStat, st_gid), 14);
+        assert_eq!(offset_of!(NewStat, st_rdev), 16);
+        assert_eq!(offset_of!(NewStat, st_size), 20);
+        assert_eq!(offset_of!(NewStat, st_blksize), 24);
+        assert_eq!(offset_of!(NewStat, st_blocks), 28);
+        assert_eq!(offset_of!(NewStat, st_atime), 32);
+        assert_eq!(offset_of!(NewStat, st_atime_nsec), 36);
+        assert_eq!(offset_of!(NewStat, st_mtime), 40);
+        assert_eq!(offset_of!(NewStat, st_mtime_nsec), 44);
+        assert_eq!(offset_of!(NewStat, st_ctime), 48);
+        assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
+        assert_eq!(offset_of!(NewStat, __unused4), 56);
+        assert_eq!(offset_of!(NewStat, __unused5), 60);
+    }
+
+    #[test]
+    fn linux_1_0_newstat_layout_is_preserved() {
+        assert_eq!(size_of::<linux_1_0::NewStat>(), 64);
+        assert_eq!(align_of::<linux_1_0::NewStat>(), 4);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_dev), 0);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __pad1), 2);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_ino), 4);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_mode), 8);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_nlink), 10);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_uid), 12);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_gid), 14);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_rdev), 16);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __pad2), 18);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_size), 20);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_blksize), 24);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_blocks), 28);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_atime), 32);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __unused1), 36);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_mtime), 40);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __unused2), 44);
+        assert_eq!(offset_of!(linux_1_0::NewStat, st_ctime), 48);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __unused3), 52);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __unused4), 56);
+        assert_eq!(offset_of!(linux_1_0::NewStat, __unused5), 60);
+    }
+
+    #[test]
+    fn current_i386_statfs_layout_matches_linux_v7_0_struct_statfs() {
+        assert_eq!(size_of::<FsidT>(), 8);
+        assert_eq!(align_of::<FsidT>(), 4);
+        assert_eq!(size_of::<Statfs>(), 64);
+        assert_eq!(align_of::<Statfs>(), 4);
+        assert_eq!(offset_of!(Statfs, f_type), 0);
+        assert_eq!(offset_of!(Statfs, f_bsize), 4);
+        assert_eq!(offset_of!(Statfs, f_blocks), 8);
+        assert_eq!(offset_of!(Statfs, f_bfree), 12);
+        assert_eq!(offset_of!(Statfs, f_bavail), 16);
+        assert_eq!(offset_of!(Statfs, f_files), 20);
+        assert_eq!(offset_of!(Statfs, f_ffree), 24);
+        assert_eq!(offset_of!(Statfs, f_fsid), 28);
+        assert_eq!(offset_of!(Statfs, f_namelen), 36);
+        assert_eq!(offset_of!(Statfs, f_frsize), 40);
+        assert_eq!(offset_of!(Statfs, f_flags), 44);
+        assert_eq!(offset_of!(Statfs, f_spare), 48);
+    }
+
+    #[test]
+    fn linux_1_0_statfs_layout_is_preserved() {
+        assert_eq!(size_of::<linux_1_0::FsidT>(), 8);
+        assert_eq!(align_of::<linux_1_0::FsidT>(), 4);
+        assert_eq!(size_of::<linux_1_0::Statfs>(), 64);
+        assert_eq!(align_of::<linux_1_0::Statfs>(), 4);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_type), 0);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_bsize), 4);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_blocks), 8);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_bfree), 12);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_bavail), 16);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_files), 20);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_ffree), 24);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_fsid), 28);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_namelen), 36);
+        assert_eq!(offset_of!(linux_1_0::Statfs, f_spare), 40);
+    }
 }
