@@ -10,6 +10,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// on any unverified current-kernel implementation details beyond those
 /// sources.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.12
 /// - Behavior changes: Linux 1.0 opens `library` read-only and iterates the
@@ -66,10 +70,8 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Historical References
 /// - First appearance:
 ///   [Linux 0.12](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/exec.c?h=0.12#n42)
-pub fn uselib(library: *const Char) -> Int {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn uselib(library: *const Char) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Uselib, library.addr() as isize) as Int }
 }
 
@@ -90,22 +92,12 @@ mod tests {
     }
 
     #[test]
-    fn test_uselib_null_pointer_is_rejected_or_unimplemented() {
-        let ret = uselib(core::ptr::null());
-        let expected = [-14, -38];
-
-        assert!(
-            expected.contains(&ret),
-            "expected EFAULT or ENOSYS from uselib(null), got {ret}",
-        );
-    }
-
-    #[test]
     fn test_uselib_missing_library_reports_path_error_or_unimplemented() {
         let path =
             CString::new("/definitely/not/a/real/celer-uselib-library.so")
                 .unwrap();
-        let ret = uselib(path.as_ptr().cast());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe { uselib(path.as_ptr().cast()) };
         let expected: [Int; 3] = [-2, -8, -38];
 
         assert!(

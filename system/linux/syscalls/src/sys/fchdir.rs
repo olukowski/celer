@@ -109,7 +109,9 @@ mod tests {
             original_dir.as_os_str().as_encoded_bytes().to_vec();
         original_dir_bytes.push(0);
 
-        let restore = crate::sys::chdir(original_dir_bytes.as_ptr().cast());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let restore =
+            unsafe { crate::sys::chdir(original_dir_bytes.as_ptr().cast()) };
         assert_eq!(restore, 0, "restoring cwd failed: {restore}");
 
         fs::remove_dir(&path).unwrap();

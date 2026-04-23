@@ -9,6 +9,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// stub that always returned `-ENOSYS`. Current kernels implement process
 /// accounting on that same slot.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes:
@@ -45,10 +49,8 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/acct.c?h=v6.19#n293)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/acct.c?h=v6.18.18#n293)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n294)
-pub fn acct(name: *const Char) -> Int {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn acct(name: *const Char) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Acct, name.addr() as isize) as Int }
 }
 
@@ -82,7 +84,8 @@ mod tests {
     fn test_acct_invalid_path() {
         let path = create_temp_path();
 
-        let result = acct(path.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let result = unsafe { acct(path.as_ptr().cast::<Char>()) };
 
         assert!(result < 0, "acct should have failed: {result}");
     }

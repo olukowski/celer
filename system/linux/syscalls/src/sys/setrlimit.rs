@@ -14,6 +14,10 @@ use crate::arch::{
 /// `struct rlimit` layout, exposed separately as
 /// [`crate::sys::linux_1_0::setrlimit`].
 ///
+/// # Safety
+/// - `rlim` must be valid to read one [`Rlimit`] for the duration of the
+///   syscall.
+///
 /// # Kernel Support
 /// - Historical slot introduced: Linux 1.0
 /// - Behavior changes: current kernels use unsigned `rlim_t` fields, validate
@@ -53,10 +57,8 @@ use crate::arch::{
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1794)
 /// - Current i386 `struct rlimit`: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/resource.h?h=v6.19#n43)
 ///
-pub fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
-    // SAFETY: the wrapper forwards the raw user pointer exactly as the kernel
-    // ABI expects; invalid pointers are reported by the kernel as syscall
-    // errors rather than causing Rust UB.
+pub unsafe fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
+    // SAFETY: guaranteed by caller.
     unsafe {
         syscall2(Sysno::Setrlimit, resource as isize, rlim.addr() as isize)
             as Long
@@ -73,6 +75,10 @@ pub fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
 /// - Availability: correct only for Linux 1.0 x86 kernels; current x86 Linux
 ///   uses the same syscall number for the unsigned current `setrlimit(2)` ABI
 ///   exposed by [`setrlimit`].
+///
+/// # Safety
+/// - `rlim` must be valid to read one [`Linux10Rlimit`] for the duration of
+///   the syscall.
 ///
 /// # Required Privileges
 /// - Linux 1.0 requires superuser privilege when either requested limit
@@ -96,7 +102,7 @@ pub fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n701)
 /// - Linux 1.0 `struct rlimit`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/resource.h?h=1.0#n60)
-pub fn setrlimit_1_0(
+pub unsafe fn setrlimit_1_0(
     resource: UnsignedInt,
     rlim: *const Linux10Rlimit,
 ) -> Long {
@@ -158,7 +164,8 @@ mod tests {
             rlim_max: 0,
         };
 
-        let ret = setrlimit(CURRENT_RLIM_NLIMITS, &raw const limits);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe { setrlimit(CURRENT_RLIM_NLIMITS, &raw const limits) };
 
         assert_eq!(
             ret, -22,
@@ -173,16 +180,10 @@ mod tests {
             rlim_max: 0,
         };
 
-        let ret = setrlimit(RLIMIT_CPU, &raw const limits);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe { setrlimit(RLIMIT_CPU, &raw const limits) };
 
         assert_eq!(ret, -22, "setrlimit should reject rlim_cur > rlim_max");
-    }
-
-    #[test]
-    fn test_setrlimit_null_pointer_faults_on_current_kernels() {
-        let ret = setrlimit(RLIMIT_CPU, core::ptr::null());
-
-        assert_eq!(ret, -14, "setrlimit(null) should fail with EFAULT");
     }
 
     #[test]
@@ -197,7 +198,8 @@ mod tests {
         let get_ret = unsafe { getrlimit(RLIMIT_CPU, &raw mut limits) };
         assert_eq!(get_ret, 0, "getrlimit(RLIMIT_CPU) failed: {get_ret}");
 
-        let ret = setrlimit(RLIMIT_CPU, &raw const limits);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe { setrlimit(RLIMIT_CPU, &raw const limits) };
 
         assert_eq!(ret, 0, "setrlimit should accept the current limit pair");
     }
@@ -220,7 +222,8 @@ mod tests {
             rlim_max: requested,
         };
 
-        let ret = setrlimit(RLIMIT_NOFILE, &raw const limits);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe { setrlimit(RLIMIT_NOFILE, &raw const limits) };
 
         assert_eq!(
             ret, -1,
@@ -235,7 +238,9 @@ mod tests {
             rlim_max: 0,
         };
 
-        let ret = setrlimit_1_0(CURRENT_RLIM_NLIMITS, &raw const limits);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret =
+            unsafe { setrlimit_1_0(CURRENT_RLIM_NLIMITS, &raw const limits) };
 
         assert_eq!(
             ret, -22,

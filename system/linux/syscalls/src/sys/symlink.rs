@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Create a symbolic link at `newname` whose stored target text is `oldname`.
 ///
+/// # Safety
+/// - Both pathname pointers must be valid to read NUL-terminated strings for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.12
 /// - Behavior changes: Linux 1.0 calls `do_symlink()` directly after two
@@ -42,10 +46,8 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.12](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/namei.c?h=0.12#n767)
-pub fn symlink(oldname: *const Char, newname: *const Char) -> Long {
-    // SAFETY: this wrapper forwards the raw pathname pointers without
-    // dereferencing them in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn symlink(oldname: *const Char, newname: *const Char) -> Long {
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(
             Sysno::Symlink,
@@ -90,10 +92,13 @@ mod tests {
         let mut new_bytes = new_path.as_os_str().as_encoded_bytes().to_vec();
         new_bytes.push(0);
 
-        let rc = symlink(
-            old_c.as_ptr().cast::<Char>(),
-            new_bytes.as_ptr().cast::<Char>(),
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            symlink(
+                old_c.as_ptr().cast::<Char>(),
+                new_bytes.as_ptr().cast::<Char>(),
+            )
+        };
 
         assert_eq!(rc, 0, "symlink failed: {rc}");
 
@@ -112,10 +117,13 @@ mod tests {
         let mut new_bytes = new_path.as_os_str().as_encoded_bytes().to_vec();
         new_bytes.push(0);
 
-        let rc = symlink(
-            old_bytes.as_ptr().cast::<Char>(),
-            new_bytes.as_ptr().cast::<Char>(),
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            symlink(
+                old_bytes.as_ptr().cast::<Char>(),
+                new_bytes.as_ptr().cast::<Char>(),
+            )
+        };
 
         assert_eq!(rc, -17, "symlink should fail with EEXIST: {rc}");
 
@@ -129,10 +137,13 @@ mod tests {
         let mut new_bytes = new_path.as_os_str().as_encoded_bytes().to_vec();
         new_bytes.push(0);
 
-        let rc = symlink(
-            old_bytes.as_ptr().cast::<Char>(),
-            new_bytes.as_ptr().cast::<Char>(),
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            symlink(
+                old_bytes.as_ptr().cast::<Char>(),
+                new_bytes.as_ptr().cast::<Char>(),
+            )
+        };
 
         assert_eq!(rc, -2, "symlink should fail with ENOENT: {rc}");
     }
@@ -147,10 +158,13 @@ mod tests {
         new_bytes.push(b'/');
         new_bytes.push(0);
 
-        let rc = symlink(
-            old_bytes.as_ptr().cast::<Char>(),
-            new_bytes.as_ptr().cast::<Char>(),
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            symlink(
+                old_bytes.as_ptr().cast::<Char>(),
+                new_bytes.as_ptr().cast::<Char>(),
+            )
+        };
 
         assert!(rc < 0, "symlink with empty destination basename succeeded");
 

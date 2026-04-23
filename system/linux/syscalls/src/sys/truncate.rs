@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Set the size of the file named by `path` to `length` bytes.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: current kernels use a signed `long` truncate ABI, so
@@ -50,10 +54,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v7.0#n152)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/open.c?h=v6.18.18#n151)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n68)
-pub fn truncate(path: *const Char, length: UnsignedInt) -> Long {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn truncate(path: *const Char, length: UnsignedInt) -> Long {
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(Sysno::Truncate, path.addr() as isize, length as isize)
     }) as Long
@@ -103,7 +105,10 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let rc = truncate(path_bytes.as_ptr().cast::<Char>(), 4 as UnsignedInt);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            truncate(path_bytes.as_ptr().cast::<Char>(), 4 as UnsignedInt)
+        };
 
         assert_eq!(rc, 0, "truncate failed: {rc}");
         assert_eq!(fs::metadata(&path).unwrap().len(), 4);
@@ -124,7 +129,10 @@ mod tests {
         let mut link_bytes = link_path.as_os_str().as_encoded_bytes().to_vec();
         link_bytes.push(0);
 
-        let rc = truncate(link_bytes.as_ptr().cast::<Char>(), 2 as UnsignedInt);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            truncate(link_bytes.as_ptr().cast::<Char>(), 2 as UnsignedInt)
+        };
 
         assert_eq!(rc, 0, "truncate through symlink failed: {rc}");
         assert_eq!(fs::metadata(&target_path).unwrap().len(), 2);
@@ -142,14 +150,17 @@ mod tests {
 
     #[test]
     fn test_truncate_empty_path_returns_enoent() {
-        let rc = truncate(c"".as_ptr().cast::<Char>(), 1 as UnsignedInt);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc =
+            unsafe { truncate(c"".as_ptr().cast::<Char>(), 1 as UnsignedInt) };
 
         assert_eq!(rc, -2, "expected ENOENT from truncate: {rc}");
     }
 
     #[test]
     fn test_truncate_high_bit_length_returns_einval_on_current_kernels() {
-        let rc = truncate(c"".as_ptr().cast::<Char>(), 0x8000_0000);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe { truncate(c"".as_ptr().cast::<Char>(), 0x8000_0000) };
 
         assert_eq!(rc, -22, "expected EINVAL from truncate: {rc}");
     }

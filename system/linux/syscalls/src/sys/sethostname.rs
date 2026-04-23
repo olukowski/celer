@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Set the hostname for the current UTS namespace.
 ///
+/// # Safety
+/// - `name` must be valid to read `len` bytes for the duration of the
+///   syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 required the superuser and copied bytes until
@@ -44,10 +48,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1419)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1419)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n649)
-pub fn sethostname(name: *const Char, len: Int) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn sethostname(name: *const Char, len: Int) -> Int {
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(Sysno::Sethostname, name.addr() as isize, len as isize)
     }) as Int
@@ -63,7 +65,10 @@ mod tests {
     #[test]
     fn test_sethostname_name_too_long_or_permission_denied() {
         let name = [b'a'; 65];
-        let ret = sethostname(name.as_ptr().cast::<Char>(), name.len() as Int);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe {
+            sethostname(name.as_ptr().cast::<Char>(), name.len() as Int)
+        };
 
         // Unprivileged runs stop at `EPERM`; a namespace-isolated privileged
         // test would be needed to force the `EINVAL` length check.
@@ -75,7 +80,11 @@ mod tests {
 
     #[test]
     fn test_sethostname_negative_length_is_rejected_or_permission_denied() {
-        let ret = sethostname(core::ptr::null(), -1);
+        let name = c"";
+
+        // SAFETY: `name` is valid; current kernels reject `len < 0` before
+        // reading any bytes.
+        let ret = unsafe { sethostname(name.as_ptr().cast::<Char>(), -1) };
 
         // Current kernels reject negative lengths with `EINVAL`, but the
         // privilege check runs first for unprivileged callers.

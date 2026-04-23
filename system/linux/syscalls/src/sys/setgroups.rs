@@ -5,6 +5,10 @@ use crate::arch::current::{Sysno, syscall2};
 /// Replace the calling process's supplementary groups through the legacy i386
 /// `setgroups16` ABI.
 ///
+/// # Safety
+/// - If `gidsetsize` is greater than zero, `grouplist` must be valid to read
+///   `gidsetsize` [`OldGidT`] entries for the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: earliest verified available source is Linux 0.12
 /// - Behavior changes: current i386 keeps syscall `81` as the legacy
@@ -55,10 +59,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Earliest verified available source:
 ///   [Linux 0.12](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.12#n307)
 #[cfg_attr(coverage_nightly, coverage(off))]
-pub fn setgroups16(gidsetsize: Int, grouplist: *const OldGidT) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn setgroups16(gidsetsize: Int, grouplist: *const OldGidT) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe {
         syscall2(
             Sysno::Setgroups,
@@ -92,7 +94,8 @@ mod tests {
                 } else {
                     groups.as_ptr()
                 };
-                let wrapped = setgroups16(gidsetsize, grouplist);
+                // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+                let wrapped = unsafe { setgroups16(gidsetsize, grouplist) };
                 let raw = unsafe {
                     syscall2(
                         Sysno::Setgroups,

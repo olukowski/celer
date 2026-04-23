@@ -8,6 +8,10 @@ use crate::arch::current::{Sysno, syscall4};
 /// exposing the modern fourth argument. Linux 1.0 reads only the first three
 /// syscall arguments, so the extra `arg` register slot is ignored there.
 ///
+/// # Safety
+/// - If `cmd` causes the kernel to read `arg`, `arg` must be valid to read
+///   the command-specific user data for the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 accepted only hard reset and Ctrl-Alt-Del
@@ -57,9 +61,13 @@ use crate::arch::current::{Sysno, syscall4};
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/reboot.c?h=v6.19#n728)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/reboot.c?h=v6.18.18#n728)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n212)
-pub fn reboot(magic: Int, magic_too: Int, cmd: Int, arg: *const Void) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust. Linux 1.0 ignores the fourth argument
+pub unsafe fn reboot(
+    magic: Int,
+    magic_too: Int,
+    cmd: Int,
+    arg: *const Void,
+) -> Int {
+    // SAFETY: guaranteed by caller. Linux 1.0 ignores the fourth argument
     // entirely, while current kernels validate or copy from it as part of the
     // syscall.
     unsafe {
@@ -76,16 +84,11 @@ pub fn reboot(magic: Int, magic_too: Int, cmd: Int, arg: *const Void) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::Int;
     use core::ptr;
 
     use crate::arch::current::Sysno;
 
     use super::reboot;
-
-    const LINUX_REBOOT_MAGIC1: u32 = 0xfee1dead;
-    const LINUX_REBOOT_MAGIC2: Int = 672_274_793;
-    const LINUX_REBOOT_CMD_RESTART2: Int = 0xA1B2C3D4_u32 as Int;
 
     #[test]
     fn test_reboot_syscall_number() {
@@ -94,7 +97,8 @@ mod tests {
 
     #[test]
     fn test_reboot_bad_magic_is_rejected_or_permission_denied() {
-        let ret = reboot(0, 0, 0, ptr::null());
+        // SAFETY: this command does not cause the kernel to read `arg`.
+        let ret = unsafe { reboot(0, 0, 0, ptr::null()) };
         let expected = [-1, -22];
 
         // Current kernels check privilege before validating the magic values,
@@ -103,22 +107,6 @@ mod tests {
         assert!(
             expected.contains(&ret),
             "expected EPERM or EINVAL from reboot with bad magic, got {ret}",
-        );
-    }
-
-    #[test]
-    fn test_reboot_restart2_without_pointer_fails_or_needs_privilege() {
-        let ret = reboot(
-            LINUX_REBOOT_MAGIC1 as Int,
-            LINUX_REBOOT_MAGIC2,
-            LINUX_REBOOT_CMD_RESTART2,
-            ptr::null(),
-        );
-        let expected = [-1, -14];
-
-        assert!(
-            expected.contains(&ret),
-            "expected EPERM or EFAULT from reboot(RESTART2, null), got {ret}",
         );
     }
 }

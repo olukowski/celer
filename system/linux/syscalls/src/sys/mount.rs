@@ -4,6 +4,14 @@ use crate::arch::current::{Sysno, syscall5};
 
 /// Mount or remount a filesystem.
 ///
+/// # Safety
+/// - `target` must be valid to read a NUL-terminated string for the duration
+///   of the syscall.
+/// - Any non-null `source` and `filesystemtype` pointers must be valid to
+///   read NUL-terminated strings for the duration of the syscall.
+/// - Any non-null `data` pointer must satisfy the memory contract for the
+///   selected filesystem and mount flags.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: Linux 1.0 only honors `mountflags` and `data` when the
@@ -72,16 +80,14 @@ use crate::arch::current::{Sysno, syscall5};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/super.c?h=0.10#n199)
-pub fn mount(
+pub unsafe fn mount(
     source: *const Char,
     target: *const Char,
     filesystemtype: *const Char,
     mountflags: UnsignedLong,
     data: *const Void,
 ) -> Long {
-    // SAFETY: this wrapper forwards the raw user pointers without
-    // dereferencing them in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall5(
             Sysno::Mount,
@@ -97,19 +103,27 @@ pub fn mount(
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::UnsignedLong;
+    use celer_system_linux_ctypes::{Char, UnsignedLong};
 
     use super::mount;
 
     #[test]
     fn test_mount_invalid_parameters() {
-        let ret = mount(
-            core::ptr::null(),
-            core::ptr::null(),
-            core::ptr::null(),
-            0 as UnsignedLong,
-            core::ptr::null(),
-        );
+        let source = c"/definitely/not/a/celer-mount-source";
+        let target = c"/definitely/not/a/celer-mount-target";
+        let fstype = c"definitely-not-a-celer-fs";
+
+        // SAFETY: all non-null string pointers are NUL-terminated and remain
+        // valid for the duration of the syscall.
+        let ret = unsafe {
+            mount(
+                source.as_ptr().cast::<Char>(),
+                target.as_ptr().cast::<Char>(),
+                fstype.as_ptr().cast::<Char>(),
+                0 as UnsignedLong,
+                core::ptr::null(),
+            )
+        };
 
         assert!(ret < 0, "mount unexpectedly succeeded: {}", ret);
     }

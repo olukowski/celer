@@ -10,6 +10,10 @@ use crate::arch::current::{Sysno, syscall2};
 /// compatible with Linux 1.0 because that historical entrypoint only consumes
 /// the pathname argument.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.95
 /// - Behavior changes: Linux 1.0 accepted only a pathname and therefore
@@ -64,7 +68,7 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First verified appearance: [Linux 0.95](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/swap.c?h=0.95#n234)
-pub fn swapon(specialfile: *const Char, swap_flags: Int) -> Int {
+pub unsafe fn swapon(specialfile: *const Char, swap_flags: Int) -> Int {
     // SAFETY: this wrapper forwards the raw pathname pointer without
     // dereferencing it in Rust. Linux 1.0 ignores the extra argument, while
     // current kernels interpret it as `swap_flags`.
@@ -116,7 +120,8 @@ mod tests {
         let ptr = path.as_ptr().cast::<Char>();
         let flags = 0x1234_5678_u32 as Int;
 
-        let wrapped = swapon(ptr, flags);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let wrapped = unsafe { swapon(ptr, flags) };
         // SAFETY: this uses the same raw pointer and `swap_flags` value as
         // the wrapper under test.
         let raw = unsafe {

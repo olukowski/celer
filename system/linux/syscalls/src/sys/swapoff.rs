@@ -8,6 +8,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// Current x86-32 kernels keep syscall number 115 as `swapoff` with the same
 /// single-pathname calling convention.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.97.3
 /// - Behavior changes: Linux 1.0 resolves `specialfile` with `namei()` and
@@ -56,10 +60,8 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First verified appearance: [Linux 0.97.3](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/swap.c?h=0.97.3#n531)
-pub fn swapoff(specialfile: *const Char) -> Int {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn swapoff(specialfile: *const Char) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Swapoff, specialfile.addr() as isize) as Int }
 }
 
@@ -101,23 +103,11 @@ mod tests {
         let path = missing_path_bytes();
         let ptr = path.as_ptr().cast::<Char>();
 
-        let wrapped = swapoff(ptr);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let wrapped = unsafe { swapoff(ptr) };
         // SAFETY: this uses the same raw pointer as the wrapper under test.
         let raw =
             unsafe { syscall1(Sysno::Swapoff, ptr.addr() as isize) as i32 };
-
-        assert_eq!(wrapped, raw, "swapoff wrapper should match raw syscall");
-        assert!(wrapped < 0, "swapoff unexpectedly succeeded: {wrapped}");
-    }
-
-    #[test]
-    fn test_swapoff_null_matches_raw_syscall() {
-        let wrapped = swapoff(core::ptr::null());
-        // SAFETY: this uses the same null pointer as the wrapper under test.
-        let raw = unsafe {
-            syscall1(Sysno::Swapoff, core::ptr::null::<Char>().addr() as isize)
-                as i32
-        };
 
         assert_eq!(wrapped, raw, "swapoff wrapper should match raw syscall");
         assert!(wrapped < 0, "swapoff unexpectedly succeeded: {wrapped}");

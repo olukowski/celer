@@ -8,6 +8,10 @@ use crate::arch::current::{Sysno, syscall2};
 /// Linux 1.0 reads only `module_name`; current x86-32 kernels keep syscall
 /// number 129 as `delete_module` and add `flags`, which Linux 1.0 ignores.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 accepts a null `module_name` and then only
@@ -67,9 +71,11 @@ use crate::arch::current::{Sysno, syscall2};
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys_ni.c?h=v6.18.18#n92)
 /// - First stable:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n110)
-pub fn delete_module(module_name: *const Char, flags: UnsignedInt) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust. Linux 1.0 ignores `flags`, while current
+pub unsafe fn delete_module(
+    module_name: *const Char,
+    flags: UnsignedInt,
+) -> Int {
+    // SAFETY: guaranteed by caller. Linux 1.0 ignores `flags`, while current
     // kernels interpret it as the modern unload-flags argument.
     unsafe {
         syscall2(
@@ -97,7 +103,8 @@ mod tests {
     #[test]
     fn test_delete_module_matches_raw_syscall_for_missing_module() {
         let wrapped =
-            delete_module(c"definitely_not_a_loaded_celer_module".as_ptr(), 0);
+            // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+            unsafe { delete_module(c"definitely_not_a_loaded_celer_module".as_ptr(), 0) };
         // SAFETY: this uses the same raw pointer and flags as the wrapper.
         let raw = unsafe {
             syscall2(
@@ -119,32 +126,11 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_module_null_name_matches_raw_syscall() {
-        let wrapped = delete_module(core::ptr::null::<Char>(), 0);
-        // SAFETY: this uses the same null pointer and flags as the wrapper.
-        let raw = unsafe {
-            syscall2(
-                Sysno::DeleteModule,
-                core::ptr::null::<Char>().addr() as isize,
-                0,
-            ) as Int
-        };
-
-        assert_eq!(
-            wrapped, raw,
-            "delete_module wrapper should match raw syscall"
-        );
-        assert!(
-            matches!(wrapped, -1 | -14 | -38),
-            "expected EPERM, EFAULT, or ENOSYS from delete_module(null), got {wrapped}"
-        );
-    }
-
-    #[test]
     fn test_delete_module_long_name_matches_raw_syscall() {
         let name = [b'a'; 64];
         let wrapped =
-            delete_module(name.as_ptr().cast::<Char>(), 0 as UnsignedInt);
+            // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+            unsafe { delete_module(name.as_ptr().cast::<Char>(), 0 as UnsignedInt) };
         // SAFETY: this uses the same non-NUL-terminated name buffer and flags
         // as the wrapper under test.
         let raw = unsafe {
@@ -168,10 +154,13 @@ mod tests {
     #[test]
     fn test_delete_module_nonzero_flags_match_raw_syscall() {
         let flags = 0x1234_5678_u32 as UnsignedInt;
-        let wrapped = delete_module(
-            c"definitely_not_a_loaded_celer_module".as_ptr(),
-            flags,
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let wrapped = unsafe {
+            delete_module(
+                c"definitely_not_a_loaded_celer_module".as_ptr(),
+                flags,
+            )
+        };
         // SAFETY: this uses the same raw pointer and nonzero flags as the
         // wrapper under test.
         let raw = unsafe {

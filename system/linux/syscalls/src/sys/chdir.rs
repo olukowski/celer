@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Change the calling process's current working directory.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -25,10 +29,8 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n75)
-pub fn chdir(filename: *const Char) -> Int {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn chdir(filename: *const Char) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Chdir, filename.addr() as isize) as Int }
 }
 
@@ -69,7 +71,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let result = chdir(path_bytes.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let result = unsafe { chdir(path_bytes.as_ptr().cast::<Char>()) };
         assert_eq!(result, 0, "chdir failed: {result}");
 
         assert_eq!(env::current_dir().unwrap(), path);
@@ -78,7 +81,8 @@ mod tests {
             original_dir.as_os_str().as_encoded_bytes().to_vec();
         original_bytes.push(0);
 
-        let restore = chdir(original_bytes.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let restore = unsafe { chdir(original_bytes.as_ptr().cast::<Char>()) };
         assert_eq!(restore, 0, "restoring cwd failed: {restore}");
 
         fs::remove_dir(&path).unwrap();

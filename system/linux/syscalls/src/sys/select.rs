@@ -245,7 +245,9 @@ mod tests {
         assert_eq!(rc, 0, "pipe failed: {rc}");
 
         let msg = [b'x'];
-        let written = write(fds[1] as _, msg.as_ptr().cast(), msg.len());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let written =
+            unsafe { write(fds[1] as _, msg.as_ptr().cast(), msg.len()) };
         assert_eq!(written, 1, "write failed: {written}");
 
         let mut readfds = empty_fd_set();

@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Change the calling process's root directory.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Available in Linux 1.0
 /// - Behavior changes: current kernels add path-permission, capability, and
@@ -34,10 +38,8 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v6.19#n588)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/open.c?h=v6.18.18#n588)
 /// - First stable implementation: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n232)
-pub fn chroot(name: *const Char) -> Int {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn chroot(name: *const Char) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Chroot, name.addr() as isize) as Int }
 }
 
@@ -66,7 +68,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let result = chroot(path_bytes.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let result = unsafe { chroot(path_bytes.as_ptr().cast::<Char>()) };
         assert_eq!(result, -2, "chroot should fail with ENOENT: {result}");
     }
 
@@ -83,7 +86,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let result = chroot(path_bytes.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let result = unsafe { chroot(path_bytes.as_ptr().cast::<Char>()) };
         assert_eq!(result, -20, "chroot should fail with ENOTDIR: {result}");
 
         fs::remove_file(&path).unwrap();

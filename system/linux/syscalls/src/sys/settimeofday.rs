@@ -6,6 +6,10 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// This is the historical x86 `settimeofday` entry point from Linux 1.0.
 ///
+/// # Safety
+/// - Any non-null `tv` must be valid to read one [`Timeval`].
+/// - Any non-null `tz` must be valid to read one [`Timezone`].
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Availability: x86 Linux only for now
@@ -43,10 +47,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/time.c?h=v7.0#n199)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/time.c?h=v6.18.18#n199)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/time.c?h=1.0#n240)
-pub fn settimeofday(tv: *const Timeval, tz: *const Timezone) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointers without
-    // dereferencing them in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn settimeofday(tv: *const Timeval, tz: *const Timezone) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe {
         syscall2(Sysno::Settimeofday, tv.addr() as isize, tz.addr() as isize)
             as Int
@@ -56,27 +58,9 @@ pub fn settimeofday(tv: *const Timeval, tz: *const Timezone) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{Timeval, Timezone};
+    use celer_system_linux_ctypes::Timeval;
 
     use super::settimeofday;
-
-    #[test]
-    fn test_settimeofday_bad_tv_pointer_faults() {
-        let tv = core::ptr::without_provenance::<Timeval>(1);
-
-        let ret = settimeofday(tv, core::ptr::null());
-
-        assert_eq!(ret, -14);
-    }
-
-    #[test]
-    fn test_settimeofday_bad_tz_pointer_faults() {
-        let tz = core::ptr::without_provenance::<Timezone>(1);
-
-        let ret = settimeofday(core::ptr::null(), tz);
-
-        assert_eq!(ret, -14);
-    }
 
     #[test]
     fn test_settimeofday_invalid_tv_usec_rejected_before_privilege_check() {
@@ -85,7 +69,8 @@ mod tests {
             tv_usec: 1_000_001,
         };
 
-        let ret = settimeofday(&tv, core::ptr::null());
+        // SAFETY: `tv` is readable for one `Timeval`; null `tz` is accepted.
+        let ret = unsafe { settimeofday(&tv, core::ptr::null()) };
 
         assert_eq!(ret, -22);
     }

@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Create a hard link from `newname` to `oldname`.
 ///
+/// # Safety
+/// - Both pathname pointers must be valid to read NUL-terminated strings for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: none known
@@ -26,10 +30,8 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/namei.c?h=0.10#n712)
-pub fn link(oldname: *const Char, newname: *const Char) -> Long {
-    // SAFETY: this wrapper forwards the raw pathname pointers without
-    // dereferencing them in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn link(oldname: *const Char, newname: *const Char) -> Long {
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(
             Sysno::Link,
@@ -78,10 +80,13 @@ mod tests {
         let mut new_bytes = new_path.as_os_str().as_encoded_bytes().to_vec();
         new_bytes.push(0);
 
-        let ret = link(
-            old_bytes.as_ptr().cast::<Char>(),
-            new_bytes.as_ptr().cast::<Char>(),
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let ret = unsafe {
+            link(
+                old_bytes.as_ptr().cast::<Char>(),
+                new_bytes.as_ptr().cast::<Char>(),
+            )
+        };
 
         assert_eq!(ret, 0, "link failed: {ret}");
 

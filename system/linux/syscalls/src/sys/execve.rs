@@ -4,6 +4,11 @@ use crate::arch::current::{Sysno, syscall3};
 
 /// Replace the current process image with a new program.
 ///
+/// # Safety
+/// - `filename` must be valid to read a NUL-terminated string.
+/// - `argv` and `envp` must be valid null-terminated arrays of pointers to
+///   NUL-terminated strings for the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes:
@@ -57,14 +62,12 @@ use crate::arch::current::{Sysno, syscall3};
 /// - First appearance:
 ///   [Linux 0.10 syscall table entry](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n154)
 #[cfg_attr(coverage_nightly, coverage(off))]
-pub fn execve(
+pub unsafe fn execve(
     filename: *const Char,
     argv: *const *const Char,
     envp: *const *const Char,
 ) -> Long {
-    // SAFETY: this wrapper forwards the raw user pointers without
-    // dereferencing them in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+    // SAFETY: guaranteed by caller.
     (unsafe {
         syscall3(
             Sysno::Execve,
@@ -93,11 +96,14 @@ mod tests {
                     [filename.as_ptr().cast(), core::ptr::null()];
                 let envp: [*const Char; 1] = [core::ptr::null()];
 
-                let ret = execve(
-                    filename.as_ptr().cast(),
-                    argv.as_ptr(),
-                    envp.as_ptr(),
-                );
+                // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+                let ret = unsafe {
+                    execve(
+                        filename.as_ptr().cast(),
+                        argv.as_ptr(),
+                        envp.as_ptr(),
+                    )
+                };
 
                 if ret < 0 {
                     exit(1);

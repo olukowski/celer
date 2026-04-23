@@ -14,6 +14,12 @@ use crate::arch::{
 /// `sys_init_module(char *module_name, char *code, unsigned codesize,
 /// struct mod_routines *routines)`.
 ///
+/// # Safety
+/// - `umod` must be valid to read `len` bytes for the duration of the
+///   syscall.
+/// - `uargs` must be valid to read a NUL-terminated string for the duration
+///   of the syscall.
+///
 /// # Kernel Support
 /// - Historical slot introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 loaded a named module into an existing
@@ -73,14 +79,12 @@ use crate::arch::{
 /// # Historical References
 /// - Linux 1.0 implementation with the incompatible 4-argument ABI:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n71)
-pub fn init_module(
+pub unsafe fn init_module(
     umod: *const Void,
     len: UnsignedLong,
     uargs: *const Char,
 ) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointers without
-    // dereferencing them in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+    // SAFETY: guaranteed by caller.
     unsafe {
         syscall3(
             Sysno::InitModule,
@@ -201,11 +205,14 @@ mod tests {
         let image: [u8; 0] = [];
         let params = c"";
 
-        let wrapped = init_module(
-            image.as_ptr().cast::<Void>(),
-            image.len() as UnsignedLong,
-            params.as_ptr().cast::<Char>(),
-        );
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let wrapped = unsafe {
+            init_module(
+                image.as_ptr().cast::<Void>(),
+                image.len() as UnsignedLong,
+                params.as_ptr().cast::<Char>(),
+            )
+        };
         let raw = unsafe {
             syscall3(
                 Sysno::InitModule,

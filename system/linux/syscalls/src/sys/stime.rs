@@ -6,6 +6,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// This is the legacy `stime` entry point on x86 Linux.
 ///
+/// # Safety
+/// - `tptr` must be valid to read one [`TimeT`] for the duration of the
+///   syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: Linux 1.0 checked permission before reading `tptr` and
@@ -41,26 +45,16 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n148)
-pub fn stime(tptr: *const TimeT) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer to the kernel
-    // without dereferencing it in Rust. Current kernels report unreadable
-    // pointers as `EFAULT`; Linux 1.0 does not document a recoverable errno
-    // path for invalid pointers in this syscall body.
+pub unsafe fn stime(tptr: *const TimeT) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Stime, tptr.addr() as isize) as Int }
 }
 
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use super::stime;
-
     #[test]
-    fn test_stime_null_pointer_faults() {
-        // SAFETY: passing a null pointer is permitted by the kernel ABI. On
-        // current kernels this should fail with `EFAULT` before setting the
-        // clock.
-        let ret = stime(core::ptr::null());
-
-        assert_eq!(ret, -14);
+    fn test_stime_syscall_number() {
+        assert_eq!(crate::arch::current::Sysno::Stime as isize, 25);
     }
 }

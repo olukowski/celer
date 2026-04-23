@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Remove an empty directory named by `pathname`.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: Linux 0.10 required superuser privileges; Linux 1.0
@@ -30,10 +34,8 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/namei.c?h=0.10#n583)
-pub fn rmdir(pathname: *const Char) -> Long {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn rmdir(pathname: *const Char) -> Long {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Rmdir, pathname.addr() as isize) as Long }
 }
 
@@ -70,7 +72,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let rc = rmdir(path_bytes.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe { rmdir(path_bytes.as_ptr().cast::<Char>()) };
 
         assert_eq!(rc, 0, "rmdir failed: {rc}");
         assert!(!path.exists(), "rmdir did not remove the directory");
@@ -85,7 +88,8 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let rc = rmdir(path_bytes.as_ptr().cast::<Char>());
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe { rmdir(path_bytes.as_ptr().cast::<Char>()) };
 
         assert_eq!(rc, -39, "rmdir should fail with ENOTEMPTY: {rc}");
 

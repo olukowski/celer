@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Unmount a filesystem or mount point.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: Linux 1.0 accepts either a mounted block-device path
@@ -51,21 +55,24 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/super.c?h=0.10#n166)
-pub fn umount(name: *const Char) -> Int {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn umount(name: *const Char) -> Int {
+    // SAFETY: guaranteed by caller.
     unsafe { syscall1(Sysno::Umount, name.addr() as isize) as Int }
 }
 
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use celer_system_linux_ctypes::Char;
+
     use super::umount;
 
     #[test]
     fn test_umount_invalid_name() {
-        let result = umount(core::ptr::null());
+        let path = c"/definitely/not/a/celer-mount-target";
+
+        // SAFETY: `path` is NUL-terminated and valid for the syscall.
+        let result = unsafe { umount(path.as_ptr().cast::<Char>()) };
         assert!(result < 0, "umount unexpectedly succeeded: {result}");
     }
 }

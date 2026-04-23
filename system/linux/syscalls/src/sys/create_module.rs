@@ -9,6 +9,10 @@ use crate::arch::current::{Sysno, syscall2};
 /// Current x86 kernels keep the historical syscall number reserved, but route
 /// it to `sys_ni_syscall`, which returns `ENOSYS`.
 ///
+/// # Safety
+/// - `module_name` must be valid to read a NUL-terminated string for the
+///   duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 allocates module metadata and vmalloc-backed
@@ -63,12 +67,11 @@ use crate::arch::current::{Sysno, syscall2};
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys_ni.c?h=v6.18.18#n20)
 /// - First stable:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n20)
-pub fn create_module(
+pub unsafe fn create_module(
     module_name: *const Char,
     size: UnsignedLong,
 ) -> UnsignedLong {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust.
+    // SAFETY: guaranteed by caller.
     unsafe {
         syscall2(
             Sysno::CreateModule,
@@ -99,7 +102,8 @@ mod tests {
         let name = CString::new("celer_test_module").unwrap();
         let size = 4096 as UnsignedLong;
 
-        let wrapped = create_module(name.as_ptr().cast(), size);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let wrapped = unsafe { create_module(name.as_ptr().cast(), size) };
         // SAFETY: this uses the same valid string pointer and size as the
         // wrapper under test.
         let raw = unsafe {

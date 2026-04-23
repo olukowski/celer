@@ -4,6 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Create a directory named by `pathname`.
 ///
+/// # Safety
+/// - The pathname pointer must be valid to read a NUL-terminated string for
+///   the duration of the syscall.
+///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
 /// - Behavior changes: Linux 0.10 required superuser privileges; Linux 1.0
@@ -31,10 +35,8 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/namei.c?h=0.10#n459)
-pub fn mkdir(pathname: *const Char, mode: UModeT) -> Long {
-    // SAFETY: this wrapper forwards the raw pathname pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+pub unsafe fn mkdir(pathname: *const Char, mode: UModeT) -> Long {
+    // SAFETY: guaranteed by caller.
     unsafe {
         syscall2(Sysno::Mkdir, pathname.addr() as isize, mode as isize) as Long
     }
@@ -72,7 +74,10 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let rc = mkdir(path_bytes.as_ptr().cast::<Char>(), 0o700 as UModeT);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            mkdir(path_bytes.as_ptr().cast::<Char>(), 0o700 as UModeT)
+        };
 
         assert_eq!(rc, 0, "mkdir failed: {rc}");
         assert!(path.exists(), "mkdir did not create the directory");
@@ -89,7 +94,10 @@ mod tests {
         let mut path_bytes = path.as_os_str().as_encoded_bytes().to_vec();
         path_bytes.push(0);
 
-        let rc = mkdir(path_bytes.as_ptr().cast::<Char>(), 0o700 as UModeT);
+        // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
+        let rc = unsafe {
+            mkdir(path_bytes.as_ptr().cast::<Char>(), 0o700 as UModeT)
+        };
 
         assert_eq!(rc, -17, "mkdir should fail with EEXIST: {rc}");
 
