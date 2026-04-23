@@ -248,6 +248,8 @@ pub enum Sysno {
     Newuname = 109,
     /// <https://man7.org/linux/man-pages/man2/iopl.2.html>
     Iopl = 110,
+    /// Historical i386 `idle` syscall.
+    Idle = 112,
 }
 
 /// Invoke a syscall with `0` arguments.
