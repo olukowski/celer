@@ -126,7 +126,6 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `101 sys_ioperm`
 - [x] `102 sys_socketcall`
 - [x] `103 sys_syslog`
-- [x] `105 sys_setitimer`
 - [x] `104 sys_setitimer`
 - [x] `105 sys_getitimer`
 - [ ] `106 sys_newstat`
