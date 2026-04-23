@@ -130,7 +130,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `105 sys_getitimer`
 - [ ] `106 sys_newstat`
 - [ ] `107 sys_newlstat`
-- [ ] `108 sys_newfstat`
+- [x] `108 sys_newfstat` - wrapped as `newfstat`
 - [ ] `109 sys_newuname`
 - [ ] `110 sys_iopl`
 - [ ] `111 sys_vhangup`

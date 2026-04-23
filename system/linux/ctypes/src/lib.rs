@@ -108,6 +108,33 @@ pub struct Stat {
     pub st_ctime: UnsignedLong,
 }
 
+/// Linux 1.0 `struct new_stat` used by the historical `newstat`,
+/// `newlstat`, and `newfstat` syscall ABIs on x86.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct NewStat {
+    pub st_dev: UnsignedShort,
+    pub __pad1: UnsignedShort,
+    pub st_ino: UnsignedLong,
+    pub st_mode: UnsignedShort,
+    pub st_nlink: UnsignedShort,
+    pub st_uid: UnsignedShort,
+    pub st_gid: UnsignedShort,
+    pub st_rdev: UnsignedShort,
+    pub __pad2: UnsignedShort,
+    pub st_size: UnsignedLong,
+    pub st_blksize: UnsignedLong,
+    pub st_blocks: UnsignedLong,
+    pub st_atime: UnsignedLong,
+    pub __unused1: UnsignedLong,
+    pub st_mtime: UnsignedLong,
+    pub __unused2: UnsignedLong,
+    pub st_ctime: UnsignedLong,
+    pub __unused3: UnsignedLong,
+    pub __unused4: UnsignedLong,
+    pub __unused5: UnsignedLong,
+}
+
 /// Linux `struct utimbuf` used by the `utime` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

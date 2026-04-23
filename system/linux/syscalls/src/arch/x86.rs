@@ -238,6 +238,8 @@ pub enum Sysno {
     Setitimer = 104,
     /// <https://man7.org/linux/man-pages/man2/getitimer.2.html>
     Getitimer = 105,
+    /// Historical Linux 1.0 `newfstat` ABI using `struct new_stat`.
+    Newfstat = 108,
 }
 
 /// Invoke a syscall with `0` arguments.
