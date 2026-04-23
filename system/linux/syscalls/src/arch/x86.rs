@@ -212,6 +212,8 @@ pub enum Sysno {
     Mmap = 90,
     /// <https://man7.org/linux/man-pages/man2/munmap.2.html>
     Munmap = 91,
+    /// <https://man7.org/linux/man-pages/man2/truncate.2.html>
+    Truncate = 92,
     /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
     Fchmod = 94,
 }
