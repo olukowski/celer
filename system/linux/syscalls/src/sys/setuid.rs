@@ -5,7 +5,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// Set the calling process's user ID through the legacy i386 `setuid16` ABI.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.10
 /// - Behavior changes: modern i386 uses the legacy 16-bit `setuid` entry
 ///   (`sys_setuid16`) which forwards to the core credential logic
 /// - Availability: always present on supported Linux kernels
@@ -35,12 +35,12 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/setuid.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n651)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n651)
+/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/uid16.c?h=v7.0#n53)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/uid16.c?h=v6.18.18#n53)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n374)
 ///
 /// # Historical References
-/// - First appearance: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n125)
+/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n143)
 pub fn setuid16(uid: OldUidT) -> Int {
     // SAFETY: `setuid16` takes a single integer argument and has no pointer
     // validity requirements.

@@ -7,8 +7,9 @@ use crate::arch::current::{Sysno, syscall4};
 /// This is the Linux `ptrace` syscall entry point.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Introduced: Linux 0.95 for the first implemented `ptrace` syscall
+/// - Behavior changes: Linux 0.95 used a packed user-memory argument buffer;
+///   Linux 0.96a and Linux 1.0 use the four-argument ABI modeled here
 /// - Availability: common Linux syscall
 ///
 /// # Required Privileges
@@ -37,7 +38,10 @@ use crate::arch::current::{Sysno, syscall4};
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/ptrace.c?h=v6.18.18#n1387)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n26)
+/// - Slot stub: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n26)
+/// - First implemented ABI: [Linux 0.95](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/ptrace.c?h=0.95#n203)
+/// - First verified four-argument ABI: [Linux 0.96a](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/ptrace.c?h=0.96a#n222)
+/// - First stable four-argument ABI: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/ptrace.c?h=1.0#n237)
 pub unsafe fn ptrace(
     request: Long,
     pid: Long,
