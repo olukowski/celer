@@ -63,8 +63,8 @@ mod tests {
     use celer_system_linux_ctypes::{Int, Long, OldSigsetT, PidT};
 
     use crate::sys::{
-        SIG_IGN, SigHandler, exit, fork, getpid, kill, sig_handler,
-        sig_handler_from_raw, sgetmask, signal, ssetmask, waitpid,
+        SIG_IGN, SigHandler, exit, fork, getpid, kill, sgetmask, sig_handler,
+        sig_handler_from_raw, signal, ssetmask, waitpid,
     };
 
     use super::sigsuspend;
@@ -138,9 +138,8 @@ mod tests {
         assert!(pid >= 0, "fork failed: {pid}");
         fn use_pid(pid: PidT) {
             if pid == 0 {
-                let old_handler = unsafe {
-                    signal(SIGUSR1, sig_handler(handle_sigusr1))
-                };
+                let old_handler =
+                    unsafe { signal(SIGUSR1, sig_handler(handle_sigusr1)) };
                 assert!(
                     old_handler >= 0,
                     "installing SIGUSR1 handler failed: {old_handler}"
@@ -197,9 +196,8 @@ mod tests {
                     old_handler: sig_handler_from_raw(old_usr1),
                 };
 
-                let old_usr2 = unsafe {
-                    signal(SIGUSR2, sig_handler(handle_sigusr2))
-                };
+                let old_usr2 =
+                    unsafe { signal(SIGUSR2, sig_handler(handle_sigusr2)) };
                 assert!(
                     old_usr2 >= 0,
                     "installing SIGUSR2 handler failed: {old_usr2}"

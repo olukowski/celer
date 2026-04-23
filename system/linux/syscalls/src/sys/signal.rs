@@ -76,7 +76,26 @@ pub unsafe fn signal(sig: Int, handler: SigHandler) -> Long {
 mod tests {
     use celer_system_linux_ctypes::Int;
 
-    use super::{SIG_DFL, signal};
+    use super::{
+        SIG_DFL, SIG_IGN, SigHandler, sig_handler, sig_handler_from_raw, signal,
+    };
+
+    extern "C" fn test_handler(_: Int) {}
+
+    #[test]
+    fn test_sig_handler_from_raw_restores_disposition_word() {
+        let restored = sig_handler_from_raw(SIG_IGN.addr() as _);
+
+        assert_eq!(restored.addr(), SIG_IGN.addr());
+    }
+
+    #[test]
+    fn test_sig_handler_converts_function_to_handler_word() {
+        let handler_word = sig_handler(test_handler);
+        let expected = test_handler as SigHandler;
+
+        assert_eq!(handler_word.addr(), expected.addr());
+    }
 
     #[test]
     fn test_signal_invalid_sig() {

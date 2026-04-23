@@ -103,10 +103,7 @@ mod tests {
         fn exercise_sigpending_in_child(pid: PidT) {
             if pid == 0 {
                 let previous = unsafe {
-                    crate::sys::signal(
-                        SIGUSR1,
-                        sig_handler(noop_handler),
-                    )
+                    crate::sys::signal(SIGUSR1, sig_handler(noop_handler))
                 };
                 assert!(
                     previous >= 0,
