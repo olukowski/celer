@@ -20,7 +20,6 @@ pub mod linux_1_0 {
     ///
     /// The caller must ensure:
     /// - `sysno` identifies a Linux 1.0 syscall that takes one argument.
-    /// - Any irreversible side effects of the syscall are intended.
     /// - `arg1` is a valid argument for `sysno`. If it encodes a pointer, the
     ///   pointed-to memory must be valid for the duration of the syscall; see
     ///   [`core::ptr::read`] and [`core::ptr::write`] for what validity
@@ -49,7 +48,6 @@ pub mod linux_1_0 {
     ///
     /// The caller must ensure:
     /// - `sysno` identifies a Linux 1.0 syscall that takes four arguments.
-    /// - Any irreversible side effects of the syscall are intended.
     /// - `arg1` through `arg4` are valid arguments for `sysno`. If any encode
     ///   a pointer, the pointed-to memory must be valid for the duration of
     ///   the syscall; see [`core::ptr::read`] and [`core::ptr::write`] for
@@ -342,7 +340,6 @@ pub enum Sysno {
 ///
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes no arguments.
-/// - Any irreversible side effects of the syscall are intended.
 /// - The selected syscall does not rely on additional caller-held invariants
 ///   beyond the empty register ABI. Some historical zero-argument syscalls,
 ///   such as signal-frame return paths, still depend on external kernel-
@@ -370,7 +367,6 @@ pub unsafe fn syscall0(sysno: Sysno) -> isize {
 ///
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes one argument.
-/// - Any irreversible side effects of the syscall are intended.
 /// - `arg1` is a valid argument for `sysno`. If it encodes a pointer, the
 ///   pointed-to memory must be valid for the duration of the syscall; see
 ///   [`core::ptr::read`] and [`core::ptr::write`] for what validity requires
@@ -399,7 +395,6 @@ pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
 ///
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes two arguments.
-/// - Any irreversible side effects of the syscall are intended.
 /// - `arg1` and `arg2` are valid arguments for `sysno`. If either encodes a
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
@@ -429,7 +424,6 @@ pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
 ///
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes three arguments.
-/// - Any irreversible side effects of the syscall are intended.
 /// - `arg1` through `arg3` are valid arguments for `sysno`. If any encode a
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
@@ -465,7 +459,6 @@ pub unsafe fn syscall3(
 ///
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes four arguments.
-/// - Any irreversible side effects of the syscall are intended.
 /// - `arg1` through `arg4` are valid arguments for `sysno`. If any encode a
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
@@ -508,7 +501,6 @@ pub unsafe fn syscall4(
 ///
 /// The caller must ensure:
 /// - `sysno` identifies a syscall that takes five arguments.
-/// - Any irreversible side effects of the syscall are intended.
 /// - `arg1` through `arg5` are valid arguments for `sysno`. If any encode a
 ///   pointer, the pointed-to memory must be valid for the duration of the
 ///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what

@@ -21,9 +21,6 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Errors
 /// - Never fails (the return value reports the previous alarm instead of errno).
 ///
-/// # Safety
-/// - The caller must accept the side effect of changing the process alarm timer.
-///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/alarm.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/itimer.c?h=v6.19#n325)
