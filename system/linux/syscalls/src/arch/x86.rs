@@ -220,6 +220,8 @@ pub enum Sysno {
     Fchmod = 94,
     /// Historical i386 `fchown16` ABI.
     Fchown = 95,
+    /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
+    Fchdir = 133,
     /// <https://man7.org/linux/man-pages/man2/getpriority.2.html>
     Getpriority = 96,
     /// <https://man7.org/linux/man-pages/man2/setpriority.2.html>
