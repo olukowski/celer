@@ -14,6 +14,10 @@ use crate::arch::current::{Sysno, syscall0};
 /// # Required Privileges
 /// - None
 ///
+/// # Behavior
+/// - Returns the thread-group ID of the caller's real parent in the caller's
+///   active PID namespace, or `0` when that parent is not visible there.
+///
 /// # Errors
 /// - Never fails (no error conditions)
 ///

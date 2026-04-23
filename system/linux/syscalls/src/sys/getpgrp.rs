@@ -13,6 +13,9 @@ use crate::arch::current::{Sysno, syscall0};
 /// # Required Privileges
 /// - None
 ///
+/// # Behavior
+/// - Returns the process group ID of the calling process.
+///
 /// # Errors
 /// - Never fails (no error conditions)
 ///

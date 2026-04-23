@@ -21,6 +21,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Checks execute permission on the resolved directory.
 /// - On success, updates the caller's current working directory.
 ///
+/// # Errors
+/// - Returns errors from directory pathname resolution and the final execute
+///   permission check.
+///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/chdir.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v6.19#n552)

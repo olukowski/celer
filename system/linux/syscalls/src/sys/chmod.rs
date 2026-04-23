@@ -19,6 +19,10 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Resolves `pathname` to a file and updates its mode bits.
 /// - On success, returns `0`.
 ///
+/// # Errors
+/// - Returns errors from pathname resolution, mount write access, inode locking,
+///   security hooks, and filesystem attribute-change checks.
+///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/chmod.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v6.19#n716)

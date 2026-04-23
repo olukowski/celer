@@ -27,6 +27,11 @@ use crate::arch::current::{Sysno, syscall1};
 /// - The raw return value is an address value, so callers must compare it
 ///   against the requested break instead of assuming negative means failure.
 ///
+/// # Errors
+/// - The raw return value is address-valued: most unsatisfied requests return
+///   the previous break value rather than a conventional errno.
+/// - Interrupted mmap-lock acquisition can return raw `-EINTR`.
+///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/brk.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/mmap.c?h=v6.19#n115)

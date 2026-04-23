@@ -20,6 +20,11 @@ use crate::arch::current::{Sysno, syscall3};
 /// - Modern kernels expose the no-follow behavior as `lchown`.
 /// - The plain `chown` name now refers to the follow-symlinks variant.
 ///
+/// # Required Privileges
+/// - Ownership changes are subject to the kernel's `chown_common` checks,
+///   including user/group validity, security hooks, and filesystem attribute
+///   permission checks.
+///
 /// # Behavior
 /// - Legacy i386 syscall `16` uses 16-bit `old_uid_t` / `old_gid_t` values and
 ///   widens them before delegating to the kernel's modern ownership logic.
@@ -27,6 +32,11 @@ use crate::arch::current::{Sysno, syscall3};
 ///   AT_SYMLINK_NOFOLLOW)`.
 /// - The kernel resolves the path without following the final symlink, then
 ///   applies the ownership change to the referenced path component.
+///
+/// # Errors
+/// - Returns errors from pathname resolution, mount write access, invalid
+///   user/group mappings, interrupted inode locking, security hooks, and
+///   filesystem attribute-change checks.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/lchown.2.html)

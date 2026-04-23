@@ -22,10 +22,15 @@ use crate::arch::current::{Sysno, syscall2};
 /// - On success, `newname` becomes another directory entry for the same
 ///   underlying inode as `oldname`.
 ///
+/// # Errors
+/// - Returns errors from pathname lookup and hard-link creation checks,
+///   including cross-mount links, security hooks, and filesystem `link`
+///   operations.
+///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/link.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/namei.c?h=v6.19#n5757)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/namei.c?h=v6.18.18#n5757)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/namei.c?h=v6.18.18#n5043)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/namei.c?h=1.0#n656)
 ///
 /// # Historical References

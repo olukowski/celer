@@ -35,10 +35,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/time.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/time.c?h=v6.19#n62)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/time.c?h=v6.18.18#n62)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/time/time.c?h=1.0#n26)
+/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/time.c?h=1.0#n81)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/time.c?h=0.10#n1)
+/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n102)
 pub unsafe fn time(tloc: *mut TimeT) -> TimeT {
     // SAFETY: `tloc` is passed through exactly as provided by the caller.
     unsafe { syscall1(Sysno::Time, tloc.addr() as isize) as TimeT }

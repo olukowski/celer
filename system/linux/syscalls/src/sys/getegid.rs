@@ -13,6 +13,10 @@ use crate::arch::current::{Sysno, syscall0};
 /// # Required Privileges
 /// - None
 ///
+/// # Behavior
+/// - Returns the caller's effective group ID mapped into the caller's user
+///   namespace.
+///
 /// # Errors
 /// - Never fails (no error conditions)
 ///

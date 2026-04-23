@@ -12,6 +12,10 @@ use crate::arch::current::{Sysno, syscall0};
 /// # Required Privileges
 /// - None
 ///
+/// # Behavior
+/// - Returns the thread-group ID of the calling process in the caller's active
+///   PID namespace.
+///
 /// # Errors
 /// - Never fails (no error conditions)
 ///
