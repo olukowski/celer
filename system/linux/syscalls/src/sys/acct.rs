@@ -2,34 +2,49 @@ use celer_system_linux_ctypes::{Char, Int};
 
 use crate::arch::current::{Sysno, syscall1};
 
-/// Enable or disable process accounting for the current PID namespace.
+/// Enable or disable process accounting through the historical `acct` syscall
+/// slot.
+///
+/// Linux 1.0 exposed syscall number `51` as `acct`, but its entrypoint was a
+/// stub that always returned `-ENOSYS`. Current kernels implement process
+/// accounting on that same slot.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Behavior changes: none known
-/// - Availability: always present on supported Linux kernels
+/// - Behavior changes:
+///   - Linux 1.0 returned `-ENOSYS` unconditionally from the syscall
+///     entrypoint.
+///   - Current kernels enable accounting on the named file, or disable it when
+///     `name` is null.
+/// - Availability: present on supported Linux kernels
 ///
 /// # Required Privileges
-/// - `CAP_SYS_PACCT`
+/// - Linux 1.0: none are reachable, because the syscall entrypoint always
+///   returns `-ENOSYS`.
+/// - Current kernels require `CAP_SYS_PACCT`.
 ///
 /// # Behavior
-/// - A null `name` disables accounting for the current PID namespace.
-/// - A non-null `name` enables accounting on the named file.
-/// - The kernel rejects callers without `CAP_SYS_PACCT` before consulting the
-///   path.
+/// - On Linux 1.0, the syscall does not inspect `name`.
+/// - On Linux 1.0, the kernel does not enable or disable accounting.
+/// - On Linux 1.0, every call returns `-ENOSYS`.
+/// - On current kernels, a null `name` disables accounting for the current PID
+///   namespace.
+/// - On current kernels, a non-null `name` enables accounting on the named
+///   file.
+/// - Current kernels reject callers without `CAP_SYS_PACCT` before consulting
+///   the path.
 ///
 /// # Errors
-/// - `EPERM`: the caller lacks `CAP_SYS_PACCT`.
-/// - Additional errno values may come from the kernel's path and file handling
-///   helpers when `name` is non-null.
+/// - `ENOSYS`: always returned by the Linux 1.0 syscall entrypoint.
+/// - `EPERM`: on current kernels, the caller lacks `CAP_SYS_PACCT`.
+/// - Current kernels may also return pathname- and file-handling errors when
+///   `name` is non-null.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/acct.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/acct.c?h=v6.19#n293)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/acct.c?h=v6.18.18#n293)
-///
-/// # Historical References
-/// - First appearance: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n294)
+/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n294)
 pub fn acct(name: *const Char) -> Int {
     // SAFETY: this wrapper forwards the raw pathname pointer without
     // dereferencing it in Rust, so invalid pointers are reported by the
