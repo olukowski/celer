@@ -117,6 +117,7 @@ mod unlink;
 mod uselib;
 mod ustat;
 mod utime;
+mod vhangup;
 mod waitpid;
 mod write;
 
@@ -224,5 +225,6 @@ pub use unlink::unlink;
 pub use uselib::uselib;
 pub use ustat::ustat;
 pub use utime::utime;
+pub use vhangup::vhangup;
 pub use waitpid::waitpid;
 pub use write::write;
