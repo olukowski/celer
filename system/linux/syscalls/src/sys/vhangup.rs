@@ -33,7 +33,7 @@ use crate::arch::current::{Sysno, syscall0};
 pub fn vhangup() -> Int {
     // SAFETY: `vhangup` takes no arguments and has no caller-visible
     // memory-safety preconditions.
-    syscall0(Sysno::Vhangup) as Int
+    unsafe { syscall0(Sysno::Vhangup) as Int }
 }
 
 #[cfg(test)]
@@ -69,7 +69,7 @@ mod tests {
                 );
 
                 let wrapped = vhangup();
-                let raw = syscall0(Sysno::Vhangup) as Int;
+                let raw = unsafe { syscall0(Sysno::Vhangup) as Int };
 
                 assert_eq!(
                     wrapped, raw,

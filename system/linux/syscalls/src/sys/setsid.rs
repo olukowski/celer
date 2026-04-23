@@ -42,7 +42,7 @@ use crate::arch::current::{Sysno, syscall0};
 pub fn setsid() -> PidT {
     // SAFETY: `setsid` takes no arguments and has no caller-visible
     // memory-safety precondition.
-    syscall0(Sysno::Setsid) as PidT
+    unsafe { syscall0(Sysno::Setsid) as PidT }
 }
 
 #[cfg(test)]

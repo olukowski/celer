@@ -25,7 +25,9 @@ use crate::arch::current::{Sysno, syscall0};
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n377)
 pub fn getegid16() -> OldGidT {
-    syscall0(Sysno::Getegid) as OldGidT
+    // SAFETY: `getegid16` takes no arguments and has no caller-visible
+    // memory-safety preconditions.
+    unsafe { syscall0(Sysno::Getegid) as OldGidT }
 }
 
 #[cfg(test)]
@@ -39,7 +41,7 @@ mod tests {
     #[test]
     fn test_getegid() {
         let egid = getegid16();
-        let expected = syscall0(Sysno::Getegid) as OldGidT;
+        let expected = unsafe { syscall0(Sysno::Getegid) as OldGidT };
 
         assert_eq!(egid, expected, "getegid16 should match the raw syscall");
     }

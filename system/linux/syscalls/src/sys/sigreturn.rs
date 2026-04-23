@@ -59,7 +59,7 @@ use crate::arch::current::{Sysno, syscall0};
 pub unsafe fn sigreturn() -> Long {
     // SAFETY: the caller guarantees that the current stack contains a valid
     // signal frame whose saved register state may be restored by the kernel.
-    syscall0(Sysno::Sigreturn) as Long
+    unsafe { syscall0(Sysno::Sigreturn) as Long }
 }
 
 #[cfg(test)]

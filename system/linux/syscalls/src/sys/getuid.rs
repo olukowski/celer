@@ -25,7 +25,9 @@ use crate::arch::current::{Sysno, syscall0};
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n362)
 pub fn getuid16() -> OldUidT {
-    syscall0(Sysno::Getuid) as OldUidT
+    // SAFETY: `getuid16` takes no arguments and has no caller-visible
+    // memory-safety preconditions.
+    unsafe { syscall0(Sysno::Getuid) as OldUidT }
 }
 
 #[cfg(test)]
@@ -39,7 +41,7 @@ mod tests {
     #[test]
     fn test_getuid() {
         let uid = getuid16();
-        let expected = syscall0(Sysno::Getuid) as OldUidT;
+        let expected = unsafe { syscall0(Sysno::Getuid) as OldUidT };
 
         assert_eq!(uid, expected, "getuid16 should match the raw syscall");
     }

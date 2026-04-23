@@ -27,7 +27,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n356)
 pub fn getppid() -> PidT {
     // SAFETY: `getppid` is always safe to call.
-    syscall0(Sysno::Getppid) as PidT
+    unsafe { syscall0(Sysno::Getppid) as PidT }
 }
 
 #[cfg(test)]
@@ -42,7 +42,7 @@ mod tests {
     #[test]
     fn test_getppid() {
         let ppid = getppid();
-        let raw = syscall0(Sysno::Getppid) as PidT;
+        let raw = unsafe { syscall0(Sysno::Getppid) as PidT };
 
         assert_eq!(ppid, raw, "getppid should match the raw syscall result");
     }

@@ -33,5 +33,5 @@ use crate::arch::current::{Sysno, syscall0};
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn pause() -> Long {
     // SAFETY: pause takes no arguments and has no caller-side preconditions.
-    syscall0(Sysno::Pause) as Long
+    unsafe { syscall0(Sysno::Pause) as Long }
 }

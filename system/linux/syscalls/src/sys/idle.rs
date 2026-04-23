@@ -51,7 +51,7 @@ use crate::arch::current::{Sysno, syscall0};
 pub fn idle() -> Int {
     // SAFETY: `idle` takes no arguments and has no caller-visible memory-
     // safety preconditions.
-    syscall0(Sysno::Idle) as Int
+    unsafe { syscall0(Sysno::Idle) as Int }
 }
 
 #[cfg(test)]
@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn test_idle_matches_raw_syscall() {
         let wrapped = idle();
-        let raw = syscall0(Sysno::Idle) as Int;
+        let raw = unsafe { syscall0(Sysno::Idle) as Int };
 
         assert_eq!(wrapped, raw, "idle wrapper should match raw syscall");
         assert_eq!(

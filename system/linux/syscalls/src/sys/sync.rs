@@ -32,7 +32,7 @@ use crate::arch::current::{Sysno, syscall0};
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn sync() -> Long {
     // SAFETY: `sync` takes no arguments and has no caller-side preconditions.
-    syscall0(Sysno::Sync) as Long
+    unsafe { syscall0(Sysno::Sync) as Long }
 }
 
 #[cfg(test)]

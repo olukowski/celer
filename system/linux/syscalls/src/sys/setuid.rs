@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn test_setuid16_current_uid() {
-        let uid = syscall0(Sysno::Getuid) as OldUidT;
+        let uid = unsafe { syscall0(Sysno::Getuid) as OldUidT };
         let result = setuid16(uid);
 
         assert_eq!(result, 0, "setuid16(current uid) failed: {result}");

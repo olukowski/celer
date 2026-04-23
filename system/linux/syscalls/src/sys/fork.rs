@@ -44,7 +44,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/system_call.s?h=0.10#n162)
 pub fn fork() -> PidT {
     // SAFETY: `fork` is safe to call.
-    syscall0(Sysno::Fork) as PidT
+    unsafe { syscall0(Sysno::Fork) as PidT }
 }
 
 #[cfg(test)]

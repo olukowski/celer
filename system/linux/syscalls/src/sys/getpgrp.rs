@@ -26,7 +26,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n201)
 pub fn getpgrp() -> PidT {
     // SAFETY: `getpgrp` is always safe to call.
-    syscall0(Sysno::Getpgrp) as PidT
+    unsafe { syscall0(Sysno::Getpgrp) as PidT }
 }
 
 #[cfg(test)]

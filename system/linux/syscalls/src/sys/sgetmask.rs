@@ -43,7 +43,9 @@ use crate::arch::current::{Sysno, syscall0};
 /// - Linux 1.0 syscall table:
 ///   [include/linux/unistd.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n77)
 pub fn sgetmask() -> OldSigsetT {
-    syscall0(Sysno::Sgetmask) as OldSigsetT
+    // SAFETY: `sgetmask` takes no arguments and has no caller-visible
+    // memory-safety preconditions.
+    unsafe { syscall0(Sysno::Sgetmask) as OldSigsetT }
 }
 
 #[cfg(test)]
@@ -58,7 +60,7 @@ mod tests {
     #[test]
     fn test_sgetmask_matches_raw_syscall() {
         let mask = sgetmask();
-        let expected = syscall0(Sysno::Sgetmask) as OldSigsetT;
+        let expected = unsafe { syscall0(Sysno::Sgetmask) as OldSigsetT };
 
         assert_eq!(mask, expected, "sgetmask should match the raw syscall");
     }

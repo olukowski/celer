@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_setgid16_current_gid() {
-        let gid = syscall0(Sysno::Getgid) as OldGidT;
+        let gid = unsafe { syscall0(Sysno::Getgid) as OldGidT };
         let result = setgid16(gid);
 
         assert_eq!(result, 0, "setgid16(current gid) failed: {result}");

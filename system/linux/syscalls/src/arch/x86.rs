@@ -294,8 +294,15 @@ pub enum Sysno {
 ///
 /// # Safety
 ///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes no arguments.
+/// - Any irreversible side effects of the syscall are intended.
+/// - The selected syscall does not rely on additional caller-held invariants
+///   beyond the empty register ABI. Some historical zero-argument syscalls,
+///   such as signal-frame return paths, still depend on external kernel-
+///   managed process state.
 #[cfg_attr(coverage_nightly, coverage(off))]
-pub fn syscall0(sysno: Sysno) -> isize {
+pub unsafe fn syscall0(sysno: Sysno) -> isize {
     let mut ret: isize;
 
     // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
