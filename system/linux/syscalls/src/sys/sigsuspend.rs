@@ -63,7 +63,8 @@ mod tests {
     use celer_system_linux_ctypes::{Int, Long, OldSigsetT, PidT};
 
     use crate::sys::{
-        exit, fork, getpid, kill, sgetmask, signal, ssetmask, waitpid,
+        SIG_IGN, SigHandler, exit, fork, getpid, kill, sig_handler,
+        sig_handler_from_raw, sgetmask, signal, ssetmask, waitpid,
     };
 
     use super::sigsuspend;
@@ -71,8 +72,6 @@ mod tests {
     const EINTR: Long = -4;
     const SIGUSR1: Int = 10;
     const SIGUSR2: Int = 12;
-    const SIG_IGN: usize = 1;
-
     static SIGUSR2_HANDLED: AtomicBool = AtomicBool::new(false);
 
     extern "C" fn handle_sigusr1(_sig: Int) {}
@@ -83,12 +82,12 @@ mod tests {
 
     struct RestoreSignal {
         sig: Int,
-        old_handler: Long,
+        old_handler: SigHandler,
     }
 
     impl Drop for RestoreSignal {
         fn drop(&mut self) {
-            let _ = unsafe { signal(self.sig, self.old_handler as usize) };
+            let _ = unsafe { signal(self.sig, self.old_handler) };
         }
     }
 
@@ -140,7 +139,7 @@ mod tests {
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 let old_handler = unsafe {
-                    signal(SIGUSR1, handle_sigusr1 as *const () as usize)
+                    signal(SIGUSR1, sig_handler(handle_sigusr1))
                 };
                 assert!(
                     old_handler >= 0,
@@ -148,7 +147,7 @@ mod tests {
                 );
                 let _restore_signal = RestoreSignal {
                     sig: SIGUSR1,
-                    old_handler,
+                    old_handler: sig_handler_from_raw(old_handler),
                 };
 
                 let requested_mask =
@@ -195,11 +194,11 @@ mod tests {
                 assert!(old_usr1 >= 0, "installing SIG_IGN failed: {old_usr1}");
                 let _restore_usr1 = RestoreSignal {
                     sig: SIGUSR1,
-                    old_handler: old_usr1,
+                    old_handler: sig_handler_from_raw(old_usr1),
                 };
 
                 let old_usr2 = unsafe {
-                    signal(SIGUSR2, handle_sigusr2 as *const () as usize)
+                    signal(SIGUSR2, sig_handler(handle_sigusr2))
                 };
                 assert!(
                     old_usr2 >= 0,
@@ -207,7 +206,7 @@ mod tests {
                 );
                 let _restore_usr2 = RestoreSignal {
                     sig: SIGUSR2,
-                    old_handler: old_usr2,
+                    old_handler: sig_handler_from_raw(old_usr2),
                 };
 
                 let sender = spawn_signal_sender(

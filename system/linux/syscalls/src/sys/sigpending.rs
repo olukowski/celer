@@ -56,7 +56,10 @@ mod tests {
     use celer_system_linux_ctypes::{Int, OldSigsetT, PidT};
 
     use crate::arch::current::{Sysno, syscall1};
-    use crate::sys::{exit, fork, getpid, kill, ssetmask, waitpid};
+    use crate::sys::{
+        SigHandler, exit, fork, getpid, kill, sig_handler,
+        sig_handler_from_raw, ssetmask, waitpid,
+    };
 
     use super::sigpending;
 
@@ -76,7 +79,7 @@ mod tests {
 
     struct RestoreHandler {
         sig: Int,
-        old: usize,
+        old: SigHandler,
     }
 
     impl Drop for RestoreHandler {
@@ -102,7 +105,7 @@ mod tests {
                 let previous = unsafe {
                     crate::sys::signal(
                         SIGUSR1,
-                        noop_handler as *const () as usize,
+                        sig_handler(noop_handler),
                     )
                 };
                 assert!(
@@ -111,7 +114,7 @@ mod tests {
                 );
                 let _restore_handler = RestoreHandler {
                     sig: SIGUSR1,
-                    old: previous as usize,
+                    old: sig_handler_from_raw(previous),
                 };
 
                 let blocked = (1 as OldSigsetT) << (SIGUSR1 - 1);

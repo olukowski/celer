@@ -1,6 +1,31 @@
+use core::ptr;
+
 use celer_system_linux_ctypes::{Int, Long};
 
 use crate::arch::current::{Sysno, syscall2};
+
+/// Legacy `sys_signal` handler/disposition word.
+pub type SigHandler = *const ();
+
+/// Default signal disposition.
+pub const SIG_DFL: SigHandler = ptr::null();
+
+/// Ignore the delivered signal.
+pub const SIG_IGN: SigHandler = ptr::without_provenance::<()>(1);
+
+/// Convert a legacy `signal` raw return value back into a handler word.
+///
+/// `raw` must be a nonnegative handler/disposition value previously returned
+/// by a successful call to [`signal`].
+pub fn sig_handler_from_raw(raw: Long) -> SigHandler {
+    debug_assert!(raw >= 0);
+    ptr::without_provenance::<()>(raw as usize)
+}
+
+/// Convert a C-compatible signal handler function into a legacy handler word.
+pub fn sig_handler(handler: extern "C" fn(Int)) -> SigHandler {
+    handler as SigHandler
+}
 
 /// Install a legacy signal handler for `sig`.
 ///
@@ -38,10 +63,12 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=0.10#n48)
-pub unsafe fn signal(sig: Int, handler: usize) -> Long {
+pub unsafe fn signal(sig: Int, handler: SigHandler) -> Long {
     // SAFETY: the caller must uphold the ABI and lifetime requirements for any
     // installed signal handler address.
-    unsafe { syscall2(Sysno::Signal, sig as isize, handler as isize) as Long }
+    unsafe {
+        syscall2(Sysno::Signal, sig as isize, handler.addr() as isize) as Long
+    }
 }
 
 #[cfg(test)]
@@ -49,11 +76,11 @@ pub unsafe fn signal(sig: Int, handler: usize) -> Long {
 mod tests {
     use celer_system_linux_ctypes::Int;
 
-    use super::signal;
+    use super::{SIG_DFL, signal};
 
     #[test]
     fn test_signal_invalid_sig() {
-        let result = unsafe { signal(0 as Int, 0) };
+        let result = unsafe { signal(0 as Int, SIG_DFL) };
 
         assert!(result < 0, "signal should have failed: {result}");
     }

@@ -228,7 +228,9 @@ pub use setuid::setuid16;
 pub use setup::setup;
 pub use sgetmask::sgetmask;
 pub use sigaction::sigaction;
-pub use signal::signal;
+pub use signal::{
+    SIG_DFL, SIG_IGN, SigHandler, sig_handler, sig_handler_from_raw, signal,
+};
 pub use sigpending::sigpending;
 pub use sigprocmask::{SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK, sigprocmask};
 pub use sigreturn::sigreturn;

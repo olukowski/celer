@@ -128,7 +128,8 @@ mod tests {
 
     use crate::arch::current::Sysno;
     use crate::sys::{
-        close, exit, fork, getpid, kill, pipe, signal, waitpid, write,
+        SigHandler, close, exit, fork, getpid, kill, pipe, sig_handler,
+        sig_handler_from_raw, signal, waitpid, write,
     };
 
     use super::{SelectArgs, select};
@@ -143,7 +144,7 @@ mod tests {
 
     struct RestoreHandler {
         sig: Int,
-        old: usize,
+        old: SigHandler,
     }
 
     impl Drop for RestoreHandler {
@@ -382,13 +383,11 @@ mod tests {
         let pid = fork();
         assert!(pid >= 0, "fork failed: {pid}");
         if pid == 0 {
-            let old = unsafe {
-                signal(SIGUSR1, handle_sigalrm as *const () as usize)
-            };
+            let old = unsafe { signal(SIGUSR1, sig_handler(handle_sigalrm)) };
             assert!(old >= 0, "installing SIGUSR1 handler failed: {old}");
             let _restore = RestoreHandler {
                 sig: SIGUSR1,
-                old: old as usize,
+                old: sig_handler_from_raw(old),
             };
 
             let sender = spawn_signal_sender(getpid(), SIGUSR1);
