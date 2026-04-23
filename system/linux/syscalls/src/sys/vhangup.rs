@@ -27,7 +27,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/vhangup.2.html)
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v7.0#n1528)
-/// - LTS: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/open.c?h=v7.0#n1528)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/open.c?h=v6.18.18#n1608)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n482)
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn vhangup() -> Int {

@@ -51,7 +51,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/swapon.2.html)
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/swapfile.c?h=v7.0#n2769)
-/// - LTS: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/swapfile.c?h=v7.0#n2769)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/swapfile.c?h=v6.18.18#n2868)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/swap.c?h=1.0#n674)
 ///
 /// # Historical References

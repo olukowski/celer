@@ -46,7 +46,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/sigreturn.2.html)
 /// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/kernel/signal_32.c?h=v7.0#n149)
-/// - LTS: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/kernel/signal_32.c?h=v7.0#n149)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/kernel/signal_32.c?h=v6.18.18#n149)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=1.0#n217)
 ///
 /// # Historical References
