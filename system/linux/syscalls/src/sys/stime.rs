@@ -53,8 +53,26 @@ pub unsafe fn stime(tptr: *const TimeT) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use celer_system_linux_ctypes::TimeT;
+
+    use super::stime;
+
     #[test]
     fn test_stime_syscall_number() {
         assert_eq!(crate::arch::current::Sysno::Stime as isize, 25);
+    }
+
+    #[test]
+    fn test_stime_invalid_time_is_rejected_or_permission_denied() {
+        let invalid = -1 as TimeT;
+
+        // SAFETY: `invalid` is readable for one `TimeT` for the duration of
+        // the syscall.
+        let ret = unsafe { stime(&raw const invalid) };
+
+        assert!(
+            matches!(ret, -1 | -22),
+            "expected EPERM or EINVAL from stime(-1), got {ret}",
+        );
     }
 }
