@@ -58,29 +58,24 @@ pub unsafe fn munmap(addr: UnsignedLong, len: SizeT) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use core::ffi::c_void;
+    use core::ptr;
 
-    use celer_system_linux_ctypes::{Int, SizeT, UnsignedLong};
+    use celer_system_linux_ctypes::{
+        Long, SizeT, UnsignedInt, UnsignedLong, Void,
+    };
 
     use crate::arch::current::Sysno;
 
     use super::munmap;
+    use crate::sys::mmap;
 
-    const PROT_READ: Int = 0x1;
-    const PROT_WRITE: Int = 0x2;
-    const MAP_PRIVATE: Int = 0x02;
-    const MAP_ANONYMOUS: Int = 0x20;
-    const MAP_FAILED: isize = -1;
+    const PROT_READ: UnsignedLong = 0x1;
+    const PROT_WRITE: UnsignedLong = 0x2;
+    const MAP_PRIVATE: UnsignedLong = 0x02;
+    const MAP_ANONYMOUS: UnsignedLong = 0x20;
 
-    unsafe extern "C" {
-        fn mmap(
-            addr: *mut c_void,
-            len: usize,
-            prot: Int,
-            flags: Int,
-            fd: Int,
-            offset: isize,
-        ) -> *mut c_void;
+    fn is_errno_result(raw: UnsignedLong) -> bool {
+        raw >= ((-4095 as Long) as UnsignedLong)
     }
 
     fn page_size() -> usize {
@@ -97,26 +92,31 @@ mod tests {
         let len = page_size();
         let mapping = unsafe {
             mmap(
-                core::ptr::null_mut(),
-                len,
+                ptr::null_mut(),
+                len as SizeT,
                 PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS,
-                -1,
+                0 as UnsignedInt,
                 0,
             )
         };
 
-        assert_ne!(mapping as isize, MAP_FAILED, "mmap failed: {mapping:p}");
+        assert!(
+            !is_errno_result(mapping),
+            "mmap failed: {}",
+            mapping as Long
+        );
 
-        let addr = mapping as usize as UnsignedLong;
+        let addr = mapping as *mut Void;
 
         // SAFETY: this test stops using the mapping after unmapping it.
-        let rc = unsafe { munmap(addr, len as SizeT) };
+        let rc = unsafe { munmap(addr.addr() as UnsignedLong, len as SizeT) };
         assert_eq!(rc, 0, "munmap failed: {rc}");
 
         // SAFETY: the range is already unmapped, so Linux should treat this as
         // a successful no-op.
-        let second = unsafe { munmap(addr, len as SizeT) };
+        let second =
+            unsafe { munmap(addr.addr() as UnsignedLong, len as SizeT) };
         assert_eq!(second, 0, "second munmap should be a no-op: {second}");
     }
 
@@ -125,26 +125,31 @@ mod tests {
         let len = page_size();
         let mapping = unsafe {
             mmap(
-                core::ptr::null_mut(),
-                len,
+                ptr::null_mut(),
+                len as SizeT,
                 PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS,
-                -1,
+                0 as UnsignedInt,
                 0,
             )
         };
 
-        assert_ne!(mapping as isize, MAP_FAILED, "mmap failed: {mapping:p}");
+        assert!(
+            !is_errno_result(mapping),
+            "mmap failed: {}",
+            mapping as Long
+        );
 
-        let addr = mapping as usize as UnsignedLong;
+        let addr = mapping as *mut Void;
 
         // SAFETY: this test stops using the mapping after unmapping it.
-        let rc = unsafe { munmap(addr, 1 as SizeT) };
+        let rc = unsafe { munmap(addr.addr() as UnsignedLong, 1 as SizeT) };
         assert_eq!(rc, 0, "munmap failed: {rc}");
 
         // SAFETY: if the kernel rounded `len` up to a full page, this second
         // call is a successful no-op.
-        let second = unsafe { munmap(addr, len as SizeT) };
+        let second =
+            unsafe { munmap(addr.addr() as UnsignedLong, len as SizeT) };
         assert_eq!(second, 0, "rounded munmap should have removed the page");
     }
 

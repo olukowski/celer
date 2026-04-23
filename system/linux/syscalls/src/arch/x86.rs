@@ -208,7 +208,6 @@ pub enum Sysno {
     Reboot = 88,
     /// <https://man7.org/linux/man-pages/man2/readdir.2.html>
     Readdir = 89,
-<<<<<<< HEAD
     /// Historical i386 `mmap` ABI that takes a pointer to six packed words.
     Mmap = 90,
     /// <https://man7.org/linux/man-pages/man2/munmap.2.html>
