@@ -140,7 +140,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `115 sys_swapoff`
 - [x] `116 sys_sysinfo`
 - [x] `117 sys_ipc`
-- [ ] `118 sys_fsync`
+- [x] `118 sys_fsync`
 - [x] `119 sys_sigreturn`
 - [x] `120 sys_setdomainname`
 - [ ] `121 sys_olduname` - historical legacy uname entry; wrapped today as `oldolduname` via nr 59, not as a separate newer uname variant
