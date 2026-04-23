@@ -41,6 +41,9 @@ use crate::arch::current::{Sysno, syscall3};
 ///   the duration of the syscall.
 /// - `oldaction`, when non-null, must be valid to write one [`OldSigaction`]
 ///   for the duration of the syscall.
+/// - If `action` is non-null and installs a user handler or restorer address,
+///   that callback state must remain valid for future signal delivery and use
+///   the correct ABI expected by this historical interface.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/sigaction.2.html)
