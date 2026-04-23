@@ -153,7 +153,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [ ] `125 sys_mprotect` - present in Linux 1.0, but explicitly marked not implemented yet: always returns `-EINVAL`
 - [ ] `126 sys_sigprocmask`
 - [x] `127 sys_create_module`
-- [ ] `128 sys_init_module`
+- [x] `128 sys_init_module`
 - [x] `129 sys_delete_module`
 - [ ] `130 sys_get_kernel_syms`
 - [ ] `131 sys_quotactl` - placeholder in Linux 1.0: mapped to `sys_ni_syscall` in `sys.h`
