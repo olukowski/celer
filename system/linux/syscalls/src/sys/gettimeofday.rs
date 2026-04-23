@@ -9,6 +9,9 @@ use crate::arch::current::{Sysno, syscall2};
 ///   duration of the syscall.
 /// - `tz`, when non-null, must be valid to write one `Timezone` value for the
 ///   duration of the syscall.
+/// - `tv` and `tz`, when non-null, must not alias live Rust references or
+///   other memory that would violate Rust's aliasing rules while the kernel
+///   may write through those pointers.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.12

@@ -49,6 +49,9 @@ pub const SIG_SETMASK: Int = 2;
 ///   duration of the syscall.
 /// - `oset`, when non-null, must be valid to write one [`OldSigsetT`] for the
 ///   duration of the syscall.
+/// - `oset`, when non-null, must not alias live Rust references or other
+///   memory that would violate Rust's aliasing rules while the kernel may
+///   write through that pointer.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/sigprocmask.2.html)

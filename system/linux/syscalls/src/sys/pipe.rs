@@ -7,6 +7,9 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Safety
 /// - `fildes` must be valid to write two `Int` values for the duration of the
 ///   syscall.
+/// - `fildes` must not alias live Rust references or other memory that would
+///   violate Rust's aliasing rules while the kernel may write through that
+///   pointer.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10

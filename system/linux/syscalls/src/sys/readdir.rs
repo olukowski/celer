@@ -19,6 +19,9 @@ use crate::arch::current::{Sysno, syscall3};
 /// - Current x86 kernels reject names with `namlen >= PATH_MAX`, so a buffer
 ///   intended to be large enough for any successful current-kernel result
 ///   needs `10 + PATH_MAX` writable bytes on 32-bit x86.
+/// - `dirent` must not alias live Rust references or other memory that would
+///   violate Rust's aliasing rules while the kernel may write through that
+///   pointer.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0

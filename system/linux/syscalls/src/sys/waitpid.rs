@@ -33,6 +33,9 @@ use crate::arch::current::{Sysno, syscall3};
 /// # Safety
 /// - `stat_addr`, when non-null, must be valid to write a single `Int` value
 ///   for the duration of the syscall.
+/// - `stat_addr`, when non-null, must not alias live Rust references or other
+///   memory that would violate Rust's aliasing rules while the kernel may
+///   write through that pointer.
 /// - The caller must ensure the `pid` and `options` arguments are valid for the
 ///   kernel's `waitpid(2)` ABI.
 /// - Any irreversible side effects of reaping a child are intended.

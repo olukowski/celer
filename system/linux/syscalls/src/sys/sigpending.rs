@@ -32,6 +32,9 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Safety
 /// - `set` must be valid to write one [`OldSigsetT`] for the duration of the
 ///   syscall.
+/// - `set` must not alias live Rust references or other memory that would
+///   violate Rust's aliasing rules while the kernel may write through that
+///   pointer.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/sigpending.2.html)

@@ -20,6 +20,9 @@ use crate::arch::current::{Sysno, syscall2};
 ///   for `gidsetsize` consecutive [`OldGidT`] values because the syscall
 ///   validated the full requested span before truncating any copy.
 /// - `grouplist` may be null only when no write occurs.
+/// - `grouplist`, when the kernel may write through it, must not alias live
+///   Rust references or other memory that would violate Rust's aliasing
+///   rules.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0

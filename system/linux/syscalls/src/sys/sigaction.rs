@@ -41,6 +41,9 @@ use crate::arch::current::{Sysno, syscall3};
 ///   the duration of the syscall.
 /// - `oldaction`, when non-null, must be valid to write one [`OldSigaction`]
 ///   for the duration of the syscall.
+/// - `oldaction`, when non-null, must not alias live Rust references or other
+///   memory that would violate Rust's aliasing rules while the kernel may
+///   write through that pointer.
 /// - If `action` is non-null and installs a user handler or restorer address,
 ///   that callback state must remain valid for future signal delivery and use
 ///   the correct ABI expected by this historical interface.

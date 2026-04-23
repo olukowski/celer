@@ -8,6 +8,9 @@ use crate::arch::current::{Sysno, syscall2};
 /// # Safety
 /// - `buf` must point to writable memory for one [`Statfs`] value for the
 ///   duration of the syscall.
+/// - `buf` must not alias live Rust references or other memory that would
+///   violate Rust's aliasing rules while the kernel may write through that
+///   pointer.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0

@@ -8,6 +8,8 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Safety
 /// - If `name` is non-null, it must point to writable memory for one 45-byte
 ///   legacy record for the duration of the syscall.
+/// - `name`, when non-null, must not alias live Rust references or other Rust
+///   allocations that the kernel may mutate through this output buffer.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0

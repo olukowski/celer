@@ -13,6 +13,9 @@ use crate::arch::current::{Sysno, syscall2};
 /// # Safety
 /// - If `ubuf` is non-null, it must point to writable memory for one `Ustat`
 ///   value for the duration of the syscall.
+/// - If `ubuf` is non-null on kernels that copy out a result, it must not
+///   alias live Rust references or other memory that would violate Rust's
+///   aliasing rules while the kernel may write through that pointer.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
