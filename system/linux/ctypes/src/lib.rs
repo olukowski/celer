@@ -186,6 +186,91 @@ pub struct Timezone {
     pub tz_dsttime: Int,
 }
 
+/// Linux `ADJ_OFFSET`.
+pub const ADJ_OFFSET: UnsignedInt = 0x0001;
+
+/// Linux `ADJ_FREQUENCY`.
+pub const ADJ_FREQUENCY: UnsignedInt = 0x0002;
+
+/// Linux `ADJ_MAXERROR`.
+pub const ADJ_MAXERROR: UnsignedInt = 0x0004;
+
+/// Linux `ADJ_ESTERROR`.
+pub const ADJ_ESTERROR: UnsignedInt = 0x0008;
+
+/// Linux `ADJ_STATUS`.
+pub const ADJ_STATUS: UnsignedInt = 0x0010;
+
+/// Linux `ADJ_TIMECONST`.
+pub const ADJ_TIMECONST: UnsignedInt = 0x0020;
+
+/// Linux `ADJ_TAI`.
+pub const ADJ_TAI: UnsignedInt = 0x0080;
+
+/// Linux `ADJ_SETOFFSET`.
+pub const ADJ_SETOFFSET: UnsignedInt = 0x0100;
+
+/// Linux `ADJ_MICRO`.
+pub const ADJ_MICRO: UnsignedInt = 0x1000;
+
+/// Linux `ADJ_NANO`.
+pub const ADJ_NANO: UnsignedInt = 0x2000;
+
+/// Linux `ADJ_TICK`.
+pub const ADJ_TICK: UnsignedInt = 0x4000;
+
+/// Historical Linux `ADJ_OFFSET_SINGLESHOT`.
+pub const ADJ_OFFSET_SINGLESHOT: UnsignedInt = 0x8001;
+
+/// Linux `TIME_OK`.
+pub const TIME_OK: Int = 0;
+
+/// Linux `TIME_INS`.
+pub const TIME_INS: Int = 1;
+
+/// Linux `TIME_DEL`.
+pub const TIME_DEL: Int = 2;
+
+/// Linux `TIME_OOP`.
+pub const TIME_OOP: Int = 3;
+
+/// Linux `TIME_WAIT`.
+pub const TIME_WAIT: Int = 4;
+
+/// Linux `TIME_ERROR`.
+pub const TIME_ERROR: Int = 5;
+
+/// Historical Linux `TIME_BAD`.
+pub const TIME_BAD: Int = 4;
+
+/// Linux `struct timex` / `old_timex32` used by the x86 `adjtimex` syscall
+/// ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Timex {
+    pub modes: UnsignedInt,
+    pub offset: Long,
+    pub freq: Long,
+    pub maxerror: Long,
+    pub esterror: Long,
+    pub status: Int,
+    pub constant: Long,
+    pub precision: Long,
+    pub tolerance: Long,
+    pub time: Timeval,
+    pub tick: Long,
+    pub ppsfreq: Long,
+    pub jitter: Long,
+    pub shift: Int,
+    pub stabil: Long,
+    pub jitcnt: Long,
+    pub calcnt: Long,
+    pub errcnt: Long,
+    pub stbcnt: Long,
+    pub tai: Int,
+    pub __padding: [Int; 11],
+}
+
 /// Linux `struct vm86_regs` used by the historical x86 `vm86` / `vm86old`
 /// syscall ABIs.
 #[repr(C)]

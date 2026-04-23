@@ -19,6 +19,7 @@
 
 mod access;
 mod acct;
+mod adjtimex;
 mod alarm;
 mod brk;
 mod chdir;
@@ -136,6 +137,7 @@ mod write;
 
 pub use access::access;
 pub use acct::acct;
+pub use adjtimex::adjtimex;
 pub use alarm::alarm;
 pub use brk::brk;
 pub use chdir::chdir;
