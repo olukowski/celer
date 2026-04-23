@@ -249,7 +249,7 @@ pub enum Sysno {
     /// Historical Linux 1.0 `newfstat` ABI using `struct new_stat`.
     Newfstat = 108,
     /// <https://man7.org/linux/man-pages/man2/uname.2.html>
-    Newuname = 109,
+    Olduname = 109,
     /// <https://man7.org/linux/man-pages/man2/iopl.2.html>
     Iopl = 110,
     /// <https://man7.org/linux/man-pages/man2/vhangup.2.html>
@@ -272,6 +272,8 @@ pub enum Sysno {
     Sigreturn = 119,
     /// <https://man7.org/linux/man-pages/man2/setdomainname.2.html>
     Setdomainname = 121,
+    /// <https://man7.org/linux/man-pages/man2/uname.2.html>
+    Newuname = 122,
     /// Historical x86 `modify_ldt` ABI.
     ModifyLdt = 123,
     /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>

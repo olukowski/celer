@@ -1,4 +1,4 @@
-use celer_system_linux_ctypes::{Int, NewUtsname, OldOldUtsname};
+use celer_system_linux_ctypes::{Int, NewUtsname, OldOldUtsname, OldUtsname};
 
 use crate::arch::current::{Sysno, syscall1};
 
@@ -40,6 +40,44 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
     (unsafe { syscall1(Sysno::Oldolduname, name.addr() as isize) }) as Int
 }
 
+/// Copy the system identity strings through the i386 `olduname` ABI into the
+/// caller-provided buffer.
+///
+/// # Kernel Support
+/// - Introduced: Linux 1.0
+/// - Behavior changes: Linux 1.0 copied the fixed `struct old_utsname`
+///   directly; current kernels may overwrite `release` for `UNAME26` tasks and
+///   `machine` for `PER_LINUX32` tasks after the main copy.
+/// - Availability: always present on supported Linux kernels
+///
+/// # Required Privileges
+/// - None
+///
+/// # Behavior
+/// - On success, fills `name` with the kernel's five identity strings:
+///   `sysname`, `nodename`, `release`, `version`, and `machine`.
+/// - The kernel copies a fixed-size `struct old_utsname` record with five
+///   65-byte fields.
+/// - Linux 1.0 returns `EFAULT` when `name` is null before attempting the
+///   copy.
+///
+/// # Errors
+/// - `EFAULT`: `name` is null or not writable for one `OldUtsname` record.
+///
+/// # References
+/// - `man` [page](https://man7.org/linux/man-pages/man2/uname.2.html)
+/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1369)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1369)
+/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n604)
+/// - Linux 1.0 ABI layout:
+///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n16)
+pub fn olduname(name: *mut OldUtsname) -> Int {
+    // SAFETY: this wrapper forwards the raw user pointer without
+    // dereferencing it in Rust, so invalid pointers are reported by the
+    // kernel as syscall errors rather than causing Rust UB.
+    (unsafe { syscall1(Sysno::Olduname, name.addr() as isize) }) as Int
+}
+
 /// Copy the system identity strings through the i386 `newuname` ABI into the
 /// caller-provided buffer.
 ///
@@ -71,7 +109,7 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1351)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n592)
 /// - Linux 1.0 ABI layout:
-///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n14)
+///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n24)
 pub fn newuname(name: *mut NewUtsname) -> Int {
     // SAFETY: this wrapper forwards the raw user pointer without
     // dereferencing it in Rust, so invalid pointers are reported by the
@@ -82,11 +120,11 @@ pub fn newuname(name: *mut NewUtsname) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{NewUtsname, OldOldUtsname};
+    use celer_system_linux_ctypes::{NewUtsname, OldOldUtsname, OldUtsname};
 
     use crate::arch::current::Sysno;
 
-    use super::{newuname, oldolduname};
+    use super::{newuname, oldolduname, olduname};
 
     #[test]
     fn test_uname() {
@@ -127,7 +165,50 @@ mod tests {
 
     #[test]
     fn test_newuname_sysno() {
-        assert_eq!(Sysno::Newuname as isize, 109);
+        assert_eq!(Sysno::Olduname as isize, 109);
+        assert_eq!(Sysno::Newuname as isize, 122);
+    }
+
+    #[test]
+    fn test_olduname() {
+        assert_eq!(core::mem::size_of::<OldUtsname>(), 325);
+
+        let mut name = OldUtsname {
+            sysname: [0; 65],
+            nodename: [0; 65],
+            release: [0; 65],
+            version: [0; 65],
+            machine: [0; 65],
+        };
+
+        let ret = olduname(&raw mut name);
+
+        assert_eq!(ret, 0, "olduname failed: {ret}");
+        assert_ne!(name.sysname[0], 0);
+        assert_ne!(name.nodename[0], 0);
+        assert_ne!(name.release[0], 0);
+        assert_ne!(name.version[0], 0);
+        assert_ne!(name.machine[0], 0);
+
+        for field in [
+            &name.sysname,
+            &name.nodename,
+            &name.release,
+            &name.version,
+            &name.machine,
+        ] {
+            assert!(
+                field.contains(&0),
+                "each olduname field should contain a trailing NUL"
+            );
+        }
+    }
+
+    #[test]
+    fn test_olduname_null_pointer() {
+        let ret = olduname(core::ptr::null_mut());
+
+        assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }
 
     #[test]
@@ -151,6 +232,7 @@ mod tests {
         assert_ne!(name.release[0], 0);
         assert_ne!(name.version[0], 0);
         assert_ne!(name.machine[0], 0);
+        assert_ne!(name.domainname[0], 0);
 
         for field in [
             &name.sysname,

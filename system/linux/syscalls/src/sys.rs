@@ -253,7 +253,7 @@ pub use times::times;
 pub use truncate::truncate;
 pub use umask::umask;
 pub use umount::umount;
-pub use uname::{newuname, oldolduname};
+pub use uname::{newuname, oldolduname, olduname};
 pub use unlink::unlink;
 pub use uselib::uselib;
 pub use ustat::ustat;
