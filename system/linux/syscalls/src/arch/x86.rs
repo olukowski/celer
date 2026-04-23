@@ -250,6 +250,8 @@ pub enum Sysno {
     Iopl = 110,
     /// Historical i386 `idle` syscall.
     Idle = 112,
+    /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
+    Swapoff = 115,
 }
 
 /// Invoke a syscall with `0` arguments.
