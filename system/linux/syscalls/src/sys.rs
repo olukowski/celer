@@ -119,6 +119,7 @@ mod ustat;
 mod utime;
 mod vhangup;
 mod vm86;
+mod wait4;
 mod waitpid;
 mod write;
 
@@ -228,5 +229,6 @@ pub use ustat::ustat;
 pub use utime::utime;
 pub use vhangup::vhangup;
 pub use vm86::vm86;
+pub use wait4::wait4;
 pub use waitpid::waitpid;
 pub use write::write;

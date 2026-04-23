@@ -136,7 +136,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `111 sys_vhangup`
 - [x] `112 sys_idle`
 - [x] `113 sys_vm86`
-- [ ] `114 sys_wait4`
+- [x] `114 sys_wait4`
 - [x] `115 sys_swapoff`
 - [ ] `116 sys_sysinfo`
 - [ ] `117 sys_ipc`

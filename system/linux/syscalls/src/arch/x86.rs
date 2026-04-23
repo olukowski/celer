@@ -254,6 +254,8 @@ pub enum Sysno {
     Idle = 112,
     /// Historical x86 `vm86old` / Linux 1.0 `vm86` ABI.
     Vm86 = 113,
+    /// <https://man7.org/linux/man-pages/man2/wait4.2.html>
+    Wait4 = 114,
     /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
     Swapoff = 115,
 }
