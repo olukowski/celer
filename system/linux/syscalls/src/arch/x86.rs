@@ -272,6 +272,8 @@ pub enum Sysno {
     Setdomainname = 121,
     /// Historical Linux 1.0 `create_module` ABI.
     CreateModule = 127,
+    /// <https://man7.org/linux/man-pages/man2/getpgid.2.html>
+    Getpgid = 132,
 }
 
 /// Invoke a syscall with `0` arguments.

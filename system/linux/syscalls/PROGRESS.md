@@ -157,6 +157,6 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [ ] `129 sys_delete_module`
 - [ ] `130 sys_get_kernel_syms`
 - [ ] `131 sys_quotactl` - placeholder in Linux 1.0: mapped to `sys_ni_syscall` in `sys.h`
-- [ ] `132 sys_getpgid`
+- [x] `132 sys_getpgid`
 - [x] `133 sys_fchdir`
 - [ ] `134 sys_bdflush` - placeholder in Linux 1.0: mapped to `sys_ni_syscall` in `sys.h`
