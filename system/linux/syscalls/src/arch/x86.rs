@@ -200,6 +200,8 @@ pub enum Sysno {
     Oldlstat = 84,
     /// <https://man7.org/linux/man-pages/man2/readlink.2.html>
     Readlink = 85,
+    /// <https://man7.org/linux/man-pages/man2/reboot.2.html>
+    Reboot = 88,
     /// <https://man7.org/linux/man-pages/man2/readdir.2.html>
     Readdir = 89,
 }
