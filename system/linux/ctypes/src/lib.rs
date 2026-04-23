@@ -208,6 +208,29 @@ pub struct Ustat {
     pub f_fpack: [Char; 6],
 }
 
+/// Linux `fsid_t` used by the historical `statfs` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct FsidT {
+    pub val: [Long; 2],
+}
+
+/// Linux `struct statfs` used by the historical `statfs` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Statfs {
+    pub f_type: Long,
+    pub f_bsize: Long,
+    pub f_blocks: Long,
+    pub f_bfree: Long,
+    pub f_bavail: Long,
+    pub f_files: Long,
+    pub f_ffree: Long,
+    pub f_fsid: FsidT,
+    pub f_namelen: Long,
+    pub f_spare: [Long; 6],
+}
+
 /// Linux `struct dirent` used by the historical `readdir` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

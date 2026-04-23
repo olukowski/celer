@@ -218,6 +218,8 @@ pub enum Sysno {
     Ftruncate = 93,
     /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
     Fchmod = 94,
+    /// Historical `statfs` ABI.
+    Statfs = 99,
 }
 
 /// Invoke a syscall with `0` arguments.

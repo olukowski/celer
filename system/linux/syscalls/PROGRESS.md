@@ -116,7 +116,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [ ] ` 96 sys_getpriority`
 - [ ] ` 97 sys_setpriority`
 - [ ] ` 98 sys_profil` - stubbed in Linux 1.0: always returns `-ENOSYS`
-- [ ] ` 99 sys_statfs`
+- [x] ` 99 sys_statfs`
 
 ## 100-124
 
