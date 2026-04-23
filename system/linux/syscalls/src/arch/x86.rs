@@ -200,6 +200,8 @@ pub enum Sysno {
     Oldlstat = 84,
     /// <https://man7.org/linux/man-pages/man2/readlink.2.html>
     Readlink = 85,
+    /// Historical i386 `uselib` ABI.
+    Uselib = 86,
     /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
     Swapon = 87,
     /// <https://man7.org/linux/man-pages/man2/reboot.2.html>
