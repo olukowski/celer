@@ -112,7 +112,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] ` 94 sys_fchmod`
 - [x] ` 93 sys_ftruncate`
 - [x] ` 94 sys_fchmod`
-- [ ] ` 95 sys_fchown`
+- [x] ` 95 sys_fchown` - wrapped as `fchown16`
 - [ ] ` 96 sys_getpriority`
 - [x] ` 97 sys_setpriority`
 - [x] ` 96 sys_getpriority`

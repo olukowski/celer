@@ -218,6 +218,8 @@ pub enum Sysno {
     Ftruncate = 93,
     /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
     Fchmod = 94,
+    /// Historical i386 `fchown16` ABI.
+    Fchown = 95,
     /// <https://man7.org/linux/man-pages/man2/getpriority.2.html>
     Getpriority = 96,
     /// <https://man7.org/linux/man-pages/man2/setpriority.2.html>
