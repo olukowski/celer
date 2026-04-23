@@ -139,7 +139,7 @@ This checklist tracks the Linux 1.0 `include/linux/sys.h` entry points against w
 - [x] `114 sys_wait4`
 - [x] `115 sys_swapoff`
 - [ ] `116 sys_sysinfo`
-- [ ] `117 sys_ipc`
+- [x] `117 sys_ipc`
 - [ ] `118 sys_fsync`
 - [ ] `119 sys_sigreturn`
 - [ ] `120 sys_setdomainname`

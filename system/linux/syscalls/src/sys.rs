@@ -54,6 +54,7 @@ mod idle;
 mod ioctl;
 mod ioperm;
 mod iopl;
+mod ipc;
 mod kill;
 mod lchown;
 mod link;
@@ -160,6 +161,10 @@ pub use idle::idle;
 pub use ioctl::ioctl;
 pub use ioperm::ioperm;
 pub use iopl::iopl;
+pub use ipc::{
+    MSGCTL, MSGGET, MSGRCV, MSGSND, SEMCTL, SEMGET, SEMOP, SHMAT, SHMCTL,
+    SHMDT, SHMGET, ipc,
+};
 pub use kill::kill;
 pub use lchown::lchown16;
 pub use link::link;
