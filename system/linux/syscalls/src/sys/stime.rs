@@ -8,6 +8,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
+/// - Behavior changes: Linux 1.0 checked permission before reading `tptr` and
+///   did not validate the user pointer with `verify_area`; current kernels
+///   first read `tptr` with `get_user` and return `EFAULT` when that read
+///   fails
 /// - Availability: x86 Linux only for now
 ///
 /// # Required Privileges
@@ -20,10 +24,15 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Calls the kernel time-setting helper and returns the syscall result.
 /// - A return value of `0` means the syscall body completed, not necessarily
 ///   that the requested clock value was accepted by every internal helper.
+/// - Linux 1.0 performs the explicit permission check before reading `tptr`.
 ///
 /// # Errors
-/// - `EFAULT`: `tptr` does not point to readable memory.
 /// - `EPERM`: the caller is not permitted to set the system time.
+/// - Current kernels return `EFAULT` when `tptr` does not point to readable
+///   memory.
+/// - Linux 1.0 does not implement a source-backed recoverable `EFAULT` path
+///   for invalid `tptr`; its syscall body only contains an explicit `EPERM`
+///   return before the unchecked `get_fs_long(tptr)` load.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/stime.2.html)
@@ -33,9 +42,10 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n148)
 pub fn stime(tptr: *const TimeT) -> Int {
-    // SAFETY: this wrapper forwards the raw user pointer without
-    // dereferencing it in Rust, so invalid pointers are reported by the
-    // kernel as syscall errors rather than causing Rust UB.
+    // SAFETY: this wrapper forwards the raw user pointer to the kernel
+    // without dereferencing it in Rust. Current kernels report unreadable
+    // pointers as `EFAULT`; Linux 1.0 does not document a recoverable errno
+    // path for invalid pointers in this syscall body.
     unsafe { syscall1(Sysno::Stime, tptr.addr() as isize) as Int }
 }
 
@@ -46,8 +56,9 @@ mod tests {
 
     #[test]
     fn test_stime_null_pointer_faults() {
-        // SAFETY: passing a null pointer is permitted by the kernel ABI and
-        // should fail before any attempt to set the clock.
+        // SAFETY: passing a null pointer is permitted by the kernel ABI. On
+        // current kernels this should fail with `EFAULT` before setting the
+        // clock.
         let ret = stime(core::ptr::null());
 
         assert_eq!(ret, -14);
