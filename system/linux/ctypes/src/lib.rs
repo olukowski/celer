@@ -333,6 +333,22 @@ pub struct Ustat {
     pub f_fpack: [Char; 6],
 }
 
+/// Linux 1.0 `struct sysinfo` used by the historical `sysinfo` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Sysinfo {
+    pub uptime: Long,
+    pub loads: [UnsignedLong; 3],
+    pub totalram: UnsignedLong,
+    pub freeram: UnsignedLong,
+    pub sharedram: UnsignedLong,
+    pub bufferram: UnsignedLong,
+    pub totalswap: UnsignedLong,
+    pub freeswap: UnsignedLong,
+    pub procs: UnsignedShort,
+    pub _f: [Char; 22],
+}
+
 /// Linux `fsid_t` used by the historical `statfs` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
