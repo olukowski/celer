@@ -115,7 +115,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `dup`
 - [x] `dup2` - x86, x86_64
 - [x] `execve`
-- [ ] `exit`
+- [x] `exit`
 - [ ] `fchdir`
 - [ ] `fchmod`
 - [ ] `fchown16` - x86

@@ -32,6 +32,7 @@ mod dup;
 mod dup2;
 mod errno;
 mod execve;
+mod exit;
 mod helpers;
 pub mod sys;
 
@@ -55,6 +56,7 @@ pub use dup::{DupError, dup};
 pub use dup2::{Dup2Error, dup2};
 pub use errno::Errno;
 pub use execve::{ExecveError, execve};
+pub use exit::exit;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
