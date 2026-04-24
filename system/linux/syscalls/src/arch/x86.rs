@@ -16,6 +16,8 @@ pub mod linux_1_0 {
         Statfs = 99,
         /// Linux 1.0 `fstatfs` ABI.
         Fstatfs = 100,
+        /// Linux 1.0 unsigned-length `truncate` ABI.
+        Truncate = 92,
         /// Linux 1.0 `newstat` ABI using `struct new_stat`.
         Newstat = 106,
         /// Linux 1.0 `newlstat` ABI using `struct new_stat`.

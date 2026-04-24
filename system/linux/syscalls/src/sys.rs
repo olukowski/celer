@@ -154,6 +154,7 @@ pub mod linux_1_0 {
     pub use super::setup::setup;
     pub use super::statfs::statfs_1_0 as statfs;
     pub use super::sysinfo::sysinfo;
+    pub use super::truncate::truncate_1_0 as truncate;
 }
 
 pub use access::access;
