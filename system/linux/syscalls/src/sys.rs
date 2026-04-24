@@ -146,6 +146,7 @@ mod write;
 /// when the same numeric slot gained different semantics on newer kernels.
 pub mod linux_1_0 {
     pub use super::fstatfs::fstatfs_1_0 as fstatfs;
+    pub use super::ftruncate::ftruncate_1_0 as ftruncate;
     pub use super::init_module::init_module_1_0 as init_module;
     pub use super::newfstat::newfstat_1_0 as newfstat;
     pub use super::newlstat::newlstat_1_0 as newlstat;
