@@ -7,7 +7,7 @@ use crate::arch::current::{Sysno, syscall4};
 ///
 /// This wrapper spans the original Linux 1.0 x86 `wait4` syscall slot `114`
 /// and the current native `wait4(2)` entrypoints exported by this crate on
-/// x86 and aarch64.
+/// x86, x86_64, and aarch64.
 ///
 /// # Safety
 /// - `stat_addr`, when non-null, must be valid to write one [`Int`] value for
@@ -24,7 +24,8 @@ use crate::arch::current::{Sysno, syscall4};
 ///   accept `WCONTINUED`, `__WNOTHREAD`, and `__WALL`, reject other bits with
 ///   `EINVAL`, reject `pid == INT_MIN` with `ESRCH`, and surface `ru`
 ///   copy-out faults as `EFAULT`.
-/// - Availability: present on supported x86 and aarch64 Linux kernels
+/// - Availability: present on supported x86, x86_64, and aarch64 Linux
+///   kernels
 ///
 /// # Required Privileges
 /// - None
@@ -60,10 +61,12 @@ use crate::arch::current::{Sysno, syscall4};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/wait4.2.html)
 /// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/exit.c?h=v7.0#n1905)
 /// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n129)
+/// - Stable x86_64 table: [v7.0 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n73)
 /// - Stable aarch64 syscall numbers:
 ///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n631)
 /// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/exit.c?h=v6.18.18#n1894)
 /// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n129)
+/// - LTS x86_64 table: [v6.18.18 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.18.18#n73)
 /// - LTS aarch64 syscall numbers:
 ///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n631)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/exit.c?h=1.0#n484)

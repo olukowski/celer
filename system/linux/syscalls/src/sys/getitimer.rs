@@ -17,7 +17,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Introduced: Linux 1.0
 /// - Behavior changes: current kernels use different internal timekeeping
 ///   helpers before copying the same user-visible structure
-/// - Availability: present on supported x86 and aarch64 Linux kernels
+/// - Availability: present on supported x86, x86_64, and aarch64 Linux
+///   kernels
 ///
 /// # Required Privileges
 /// - None
@@ -43,10 +44,12 @@ use crate::arch::current::{Sysno, syscall2};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/getitimer.2.html)
 /// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/itimer.c?h=v7.0#n113)
 /// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n120)
+/// - Stable x86_64 table: [v7.0 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n48)
 /// - Stable aarch64 syscall numbers:
 ///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n286)
 /// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/itimer.c?h=v6.18.18#n113)
 /// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n120)
+/// - LTS x86_64 table: [v6.18.18 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.18.18#n48)
 /// - LTS aarch64 syscall numbers:
 ///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n286)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/itimer.c?h=1.0#n56)
