@@ -75,9 +75,13 @@ struct MmapArgs {
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/mmap.2.html)
-/// - Stable:
+/// - Stable i386 entry:
+///   [v7.0 ia32_mmap](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/kernel/sys_ia32.c?h=v7.0#n223)
+/// - Stable shared implementation:
 ///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/mmap.c?h=v6.19#n621)
-/// - LTS:
+/// - LTS i386 entry:
+///   [v6.18.18 ia32_mmap](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/kernel/sys_ia32.c?h=v6.18.18#n223)
+/// - LTS shared implementation:
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/mmap.c?h=v6.18.18#n621)
 /// - First stable:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/mmap.c?h=1.0#n137)
