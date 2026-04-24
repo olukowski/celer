@@ -1,10 +1,11 @@
-use celer_system_linux_ctypes::{
-    Char, Int, ModRoutines, UnsignedInt, UnsignedLong, Void,
-};
+use celer_system_linux_ctypes::{Char, Int, UnsignedLong, Void};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::{ModRoutines, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall3},
-    linux_1_0::{Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4},
+use crate::arch::current::{Sysno, syscall3};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4,
 };
 
 /// Load a kernel module image from user memory.
@@ -152,6 +153,7 @@ pub unsafe fn init_module(
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/module.h?h=1.0#n30)
 /// - Linux 1.0 syscall table:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n137)
+#[cfg(target_arch = "x86")]
 pub unsafe fn init_module_1_0(
     module_name: *const Char,
     code: *const Void,

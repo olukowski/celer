@@ -1,10 +1,11 @@
-use celer_system_linux_ctypes::{
-    Long, Rlimit, UnsignedInt, linux_1_0::Rlimit as Linux10Rlimit,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::Rlimit as Linux10Rlimit;
+use celer_system_linux_ctypes::{Long, Rlimit, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Set the calling task's soft and hard resource limits for one resource.
@@ -102,6 +103,7 @@ pub unsafe fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n701)
 /// - Linux 1.0 `struct rlimit`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/resource.h?h=1.0#n60)
+#[cfg(target_arch = "x86")]
 pub unsafe fn setrlimit_1_0(
     resource: UnsignedInt,
     rlim: *const Linux10Rlimit,

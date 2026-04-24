@@ -1,6 +1,6 @@
 #![no_std]
 #![cfg(target_os = "linux")]
-#![cfg(target_arch = "x86")]
+#![cfg(any(target_arch = "x86", target_arch = "aarch64"))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use core::ffi::{
@@ -64,14 +64,24 @@ pub type UidT = UnsignedInt;
 
 /// Equivalent to the legacy 16-bit `old_uid_t` type used by i386 compatibility
 /// syscall ABIs.
+#[cfg(target_arch = "x86")]
 pub type OldUidT = UnsignedShort;
+
+/// Equivalent to the native `uid_t` type on aarch64.
+#[cfg(target_arch = "aarch64")]
+pub type OldUidT = UidT;
 
 /// Equivalent to the `gid_t` type in the Linux kernel.
 pub type GidT = UnsignedInt;
 
 /// Equivalent to the legacy 16-bit `old_gid_t` type used by the i386
 /// `setgid` syscall ABI.
+#[cfg(target_arch = "x86")]
 pub type OldGidT = UnsignedShort;
+
+/// Equivalent to the native `gid_t` type on aarch64.
+#[cfg(target_arch = "aarch64")]
+pub type OldGidT = GidT;
 
 /// Equivalent to the legacy `old_sigset_t` type used by the i386
 /// `sigaction` syscall ABI.
@@ -180,7 +190,10 @@ pub struct Itimerval {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct FdSet {
+    #[cfg(target_arch = "x86")]
     pub fds_bits: [UnsignedLong; 32],
+    #[cfg(target_arch = "aarch64")]
+    pub fds_bits: [UnsignedLong; 16],
 }
 
 /// Linux `struct timezone` used by the historical `gettimeofday` and
@@ -559,7 +572,10 @@ pub struct Sysinfo {
     pub totalhigh: UnsignedLong,
     pub freehigh: UnsignedLong,
     pub mem_unit: UnsignedInt,
+    #[cfg(target_arch = "x86")]
     pub _f: [Char; 8],
+    #[cfg(target_arch = "aarch64")]
+    pub _f: [Char; 0],
 }
 
 /// Linux `__kernel_fsid_t` used by current i386 filesystem status ABIs.
@@ -571,6 +587,7 @@ pub struct FsidT {
 
 /// Current i386 Linux `struct statfs` used by the `statfs` and `fstatfs`
 /// syscall ABIs.
+#[cfg(target_arch = "x86")]
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Statfs {
@@ -586,6 +603,26 @@ pub struct Statfs {
     pub f_frsize: UnsignedInt,
     pub f_flags: UnsignedInt,
     pub f_spare: [UnsignedInt; 4],
+}
+
+/// Current aarch64 Linux `struct statfs` used by the `statfs` and `fstatfs`
+/// syscall ABIs.
+#[cfg(target_arch = "aarch64")]
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Statfs {
+    pub f_type: Long,
+    pub f_bsize: Long,
+    pub f_blocks: Long,
+    pub f_bfree: Long,
+    pub f_bavail: Long,
+    pub f_files: Long,
+    pub f_ffree: Long,
+    pub f_fsid: FsidT,
+    pub f_namelen: Long,
+    pub f_frsize: Long,
+    pub f_flags: Long,
+    pub f_spare: [Long; 4],
 }
 
 /// Maximum current-kernel filename payload for the legacy `old_readdir` ABI.

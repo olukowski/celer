@@ -1,10 +1,11 @@
-use celer_system_linux_ctypes::{
-    Int, Sysinfo, linux_1_0::Sysinfo as Linux10Sysinfo,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::Sysinfo as Linux10Sysinfo;
+use celer_system_linux_ctypes::{Int, Sysinfo};
 
-use crate::arch::{
-    current::{Sysno, syscall1},
-    linux_1_0::{Sysno as Linux10Sysno, syscall1 as linux_1_0_syscall1},
+use crate::arch::current::{Sysno, syscall1};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall1 as linux_1_0_syscall1,
 };
 
 /// Copy system load, memory, swap, and task summary information into the
@@ -104,6 +105,7 @@ pub unsafe fn sysinfo(info: *mut Sysinfo) -> Int {
 ///   [Linux 0.99.8](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=0.99.8#n17)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/kernel.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/kernel.h?h=1.0#n65)
+#[cfg(target_arch = "x86")]
 pub unsafe fn sysinfo_1_0(info: *mut Linux10Sysinfo) -> Int {
     // SAFETY: `info` is forwarded to the kernel exactly as provided by the
     // caller, which must uphold the pointer validity and aliasing

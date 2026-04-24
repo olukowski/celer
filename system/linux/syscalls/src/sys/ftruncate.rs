@@ -1,8 +1,9 @@
 use celer_system_linux_ctypes::{Int, OffT, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Truncate the open file referred to by `fd` to `length` bytes.
@@ -71,6 +72,7 @@ pub fn ftruncate(fd: UnsignedInt, length: OffT) -> Int {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n94)
 /// - Current implementation:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v7.0#n211)
+#[cfg(target_arch = "x86")]
 pub fn ftruncate_1_0(fd: UnsignedInt, length: UnsignedInt) -> Int {
     // SAFETY: the syscall only takes integer arguments and has no caller-side
     // memory-safety precondition.

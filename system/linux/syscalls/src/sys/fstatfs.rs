@@ -1,10 +1,11 @@
-use celer_system_linux_ctypes::{
-    Long, Statfs, UnsignedInt, linux_1_0::Statfs as Linux10Statfs,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::Statfs as Linux10Statfs;
+use celer_system_linux_ctypes::{Long, Statfs, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Get filesystem status information for an open file descriptor through the
@@ -73,6 +74,7 @@ pub unsafe fn fstatfs(fd: UnsignedInt, buf: *mut Statfs) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n49)
 /// - Linux 1.0 `struct statfs`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/vfs.h?h=1.0#n8)
+#[cfg(target_arch = "x86")]
 pub unsafe fn fstatfs_1_0(fd: UnsignedInt, buf: *mut Linux10Statfs) -> Long {
     // SAFETY: guaranteed by caller.
     unsafe {

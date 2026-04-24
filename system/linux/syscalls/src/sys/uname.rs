@@ -1,4 +1,6 @@
-use celer_system_linux_ctypes::{Int, NewUtsname, OldOldUtsname, OldUtsname};
+use celer_system_linux_ctypes::{Int, NewUtsname};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::{OldOldUtsname, OldUtsname};
 
 use crate::arch::current::{Sysno, syscall1};
 
@@ -38,6 +40,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1392)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n625)
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n216)
+#[cfg(target_arch = "x86")]
 pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
     // SAFETY: guaranteed by caller.
     (unsafe { syscall1(Sysno::Oldolduname, name.addr() as isize) }) as Int
@@ -82,6 +85,7 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
 /// - First appearance: [Linux 0.99.8](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.99.8#n554)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n16)
+#[cfg(target_arch = "x86")]
 pub unsafe fn olduname(name: *mut OldUtsname) -> Int {
     // SAFETY: the caller guarantees that `name` is a valid writable output
     // buffer with no conflicting Rust aliases for the duration of the

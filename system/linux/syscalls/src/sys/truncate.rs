@@ -1,8 +1,11 @@
-use celer_system_linux_ctypes::{Char, Long, OffT, UnsignedInt};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::UnsignedInt;
+use celer_system_linux_ctypes::{Char, Long, OffT};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Set the size of the file named by `path` to `length` bytes.
@@ -77,6 +80,7 @@ pub unsafe fn truncate(path: *const Char, length: OffT) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n68)
 /// - Current implementation:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v7.0#n152)
+#[cfg(target_arch = "x86")]
 pub unsafe fn truncate_1_0(path: *const Char, length: UnsignedInt) -> Long {
     // SAFETY: the wrapper forwards the raw historical ABI argument.
     (unsafe {
