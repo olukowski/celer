@@ -203,10 +203,15 @@ mod tests {
 
     #[test]
     fn test_mod_routines_layout() {
-        assert_eq!(core::mem::size_of::<ModRoutines>(), 8);
-        assert_eq!(core::mem::align_of::<ModRoutines>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (8, 4, 4);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (16, 8, 8);
+
+        assert_eq!(core::mem::size_of::<ModRoutines>(), expected.0);
+        assert_eq!(core::mem::align_of::<ModRoutines>(), expected.1);
         assert_eq!(core::mem::offset_of!(ModRoutines, init), 0);
-        assert_eq!(core::mem::offset_of!(ModRoutines, cleanup), 4);
+        assert_eq!(core::mem::offset_of!(ModRoutines, cleanup), expected.2);
     }
 
     #[test]
