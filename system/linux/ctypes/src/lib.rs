@@ -144,6 +144,32 @@ pub struct NewStat {
     pub __unused5: UnsignedLong,
 }
 
+/// Generic 64-bit Linux `struct stat` used by the aarch64 `fstat` syscall ABI.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Stat64 {
+    pub st_dev: UnsignedLong,
+    pub st_ino: UnsignedLong,
+    pub st_mode: UnsignedInt,
+    pub st_nlink: UnsignedInt,
+    pub st_uid: UnsignedInt,
+    pub st_gid: UnsignedInt,
+    pub st_rdev: UnsignedLong,
+    pub __pad1: UnsignedLong,
+    pub st_size: Long,
+    pub st_blksize: Int,
+    pub __pad2: Int,
+    pub st_blocks: Long,
+    pub st_atime: Long,
+    pub st_atime_nsec: UnsignedLong,
+    pub st_mtime: Long,
+    pub st_mtime_nsec: UnsignedLong,
+    pub st_ctime: Long,
+    pub st_ctime_nsec: UnsignedLong,
+    pub __unused4: UnsignedInt,
+    pub __unused5: UnsignedInt,
+}
+
 /// Linux `struct utimbuf` used by the `utime` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -655,7 +681,7 @@ mod tests {
 
     #[cfg(target_arch = "x86")]
     use super::linux_1_0;
-    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo};
+    use super::{FsidT, NewStat, OldLinuxDirent, Stat64, Statfs, Sysinfo};
 
     #[test]
     fn current_newstat_layout_matches_linux_v7_0_struct_stat() {
@@ -682,28 +708,32 @@ mod tests {
             assert_eq!(offset_of!(NewStat, __unused4), 56);
             assert_eq!(offset_of!(NewStat, __unused5), 60);
         }
-        #[cfg(target_arch = "aarch64")]
-        {
-            assert_eq!(size_of::<NewStat>(), 120);
-            assert_eq!(align_of::<NewStat>(), 8);
-            assert_eq!(offset_of!(NewStat, st_ino), 8);
-            assert_eq!(offset_of!(NewStat, st_mode), 16);
-            assert_eq!(offset_of!(NewStat, st_nlink), 18);
-            assert_eq!(offset_of!(NewStat, st_uid), 20);
-            assert_eq!(offset_of!(NewStat, st_gid), 22);
-            assert_eq!(offset_of!(NewStat, st_rdev), 24);
-            assert_eq!(offset_of!(NewStat, st_size), 32);
-            assert_eq!(offset_of!(NewStat, st_blksize), 40);
-            assert_eq!(offset_of!(NewStat, st_blocks), 48);
-            assert_eq!(offset_of!(NewStat, st_atime), 56);
-            assert_eq!(offset_of!(NewStat, st_atime_nsec), 64);
-            assert_eq!(offset_of!(NewStat, st_mtime), 72);
-            assert_eq!(offset_of!(NewStat, st_mtime_nsec), 80);
-            assert_eq!(offset_of!(NewStat, st_ctime), 88);
-            assert_eq!(offset_of!(NewStat, st_ctime_nsec), 96);
-            assert_eq!(offset_of!(NewStat, __unused4), 104);
-            assert_eq!(offset_of!(NewStat, __unused5), 112);
-        }
+    }
+
+    #[test]
+    fn current_stat64_layout_matches_linux_v7_0_struct_stat() {
+        assert_eq!(size_of::<Stat64>(), 128);
+        assert_eq!(align_of::<Stat64>(), 8);
+        assert_eq!(offset_of!(Stat64, st_dev), 0);
+        assert_eq!(offset_of!(Stat64, st_ino), 8);
+        assert_eq!(offset_of!(Stat64, st_mode), 16);
+        assert_eq!(offset_of!(Stat64, st_nlink), 20);
+        assert_eq!(offset_of!(Stat64, st_uid), 24);
+        assert_eq!(offset_of!(Stat64, st_gid), 28);
+        assert_eq!(offset_of!(Stat64, st_rdev), 32);
+        assert_eq!(offset_of!(Stat64, __pad1), 40);
+        assert_eq!(offset_of!(Stat64, st_size), 48);
+        assert_eq!(offset_of!(Stat64, st_blksize), 56);
+        assert_eq!(offset_of!(Stat64, __pad2), 60);
+        assert_eq!(offset_of!(Stat64, st_blocks), 64);
+        assert_eq!(offset_of!(Stat64, st_atime), 72);
+        assert_eq!(offset_of!(Stat64, st_atime_nsec), 80);
+        assert_eq!(offset_of!(Stat64, st_mtime), 88);
+        assert_eq!(offset_of!(Stat64, st_mtime_nsec), 96);
+        assert_eq!(offset_of!(Stat64, st_ctime), 104);
+        assert_eq!(offset_of!(Stat64, st_ctime_nsec), 112);
+        assert_eq!(offset_of!(Stat64, __unused4), 120);
+        assert_eq!(offset_of!(Stat64, __unused5), 124);
     }
 
     #[cfg(target_arch = "x86")]

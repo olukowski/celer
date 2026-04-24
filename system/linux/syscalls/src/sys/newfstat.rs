@@ -1,6 +1,10 @@
 #[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::NewStat as NativeStat;
+#[cfg(target_arch = "aarch64")]
+use celer_system_linux_ctypes::Stat64 as NativeStat;
+#[cfg(target_arch = "x86")]
 use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
-use celer_system_linux_ctypes::{Long, NewStat, UnsignedInt};
+use celer_system_linux_ctypes::{Long, UnsignedInt};
 
 use crate::arch::current::{Sysno, syscall2};
 #[cfg(target_arch = "x86")]
@@ -16,7 +20,7 @@ use crate::arch::linux_1_0::{
 /// exposes syscall number `80` as `fstat`, also wired to `sys_newfstat`.
 ///
 /// # Safety
-/// - `statbuf` must point to writable memory for one [`NewStat`] value for
+/// - `statbuf` must point to writable memory for one native stat value for
 ///   the duration of the syscall, and the kernel write through `statbuf` must
 ///   not violate Rust aliasing or lifetime rules.
 ///
@@ -38,7 +42,7 @@ use crate::arch::linux_1_0::{
 ///   `cp_new_stat()`, including nanosecond timestamp fields.
 ///
 /// # Errors
-/// - `EFAULT`: `statbuf` is not writable for one [`NewStat`] value.
+/// - `EFAULT`: `statbuf` is not writable for one native stat value.
 /// - `EBADF`: `fd` does not refer to an open file descriptor.
 /// - `EOVERFLOW`: file metadata cannot be represented in the i386
 ///   `struct stat` layout.
@@ -54,7 +58,7 @@ use crate::arch::linux_1_0::{
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n546)
 /// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 /// - Linux 1.0 syscall number: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n117)
-pub unsafe fn newfstat(fd: UnsignedInt, statbuf: *mut NewStat) -> Long {
+pub unsafe fn newfstat(fd: UnsignedInt, statbuf: *mut NativeStat) -> Long {
     // SAFETY: guaranteed by caller.
     unsafe {
         syscall2(Sysno::Newfstat, fd as isize, statbuf.addr() as isize) as Long
@@ -65,7 +69,7 @@ pub unsafe fn newfstat(fd: UnsignedInt, statbuf: *mut NewStat) -> Long {
 ///
 /// This wrapper uses syscall slot `108` with the Linux 1.0
 /// [`Linux10NewStat`] layout. Current kernels use the same slot with the
-/// current i386 [`NewStat`] layout, exposed by [`newfstat`].
+/// current i386 stat layout, exposed by [`newfstat`].
 ///
 /// # Safety
 /// - `statbuf` must point to writable memory for one [`Linux10NewStat`] value
@@ -100,8 +104,12 @@ mod tests {
     };
 
     #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::NewStat as NativeStat;
+    #[cfg(target_arch = "aarch64")]
+    use celer_system_linux_ctypes::Stat64 as NativeStat;
+    use celer_system_linux_ctypes::UnsignedInt;
+    #[cfg(target_arch = "x86")]
     use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
-    use celer_system_linux_ctypes::{NewStat, UnsignedInt};
 
     use crate::arch::current::Sysno;
     #[cfg(target_arch = "x86")]
@@ -111,8 +119,8 @@ mod tests {
     #[cfg(target_arch = "x86")]
     use super::newfstat_1_0;
 
-    fn zeroed_newstat() -> NewStat {
-        NewStat {
+    fn zeroed_native_stat() -> NativeStat {
+        NativeStat {
             st_dev: 0,
             st_ino: 0,
             st_mode: 0,
@@ -120,8 +128,12 @@ mod tests {
             st_uid: 0,
             st_gid: 0,
             st_rdev: 0,
+            #[cfg(target_arch = "aarch64")]
+            __pad1: 0,
             st_size: 0,
             st_blksize: 0,
+            #[cfg(target_arch = "aarch64")]
+            __pad2: 0,
             st_blocks: 0,
             st_atime: 0,
             st_atime_nsec: 0,
@@ -162,7 +174,7 @@ mod tests {
 
     #[repr(C)]
     struct NewStatWithCanary {
-        stat: NewStat,
+        stat: NativeStat,
         canary: [u8; 64],
     }
 
@@ -175,30 +187,39 @@ mod tests {
         );
         #[cfg(target_arch = "aarch64")]
         let expected = (
-            120, 8, 8, 16, 24, 26, 28, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104,
-            112, 116,
+            128, 8, 8, 16, 20, 24, 28, 32, 48, 56, 64, 72, 80, 88, 96, 104,
+            112, 120, 124,
         );
 
-        assert_eq!(size_of::<NewStat>(), expected.0);
-        assert_eq!(core::mem::align_of::<NewStat>(), expected.1);
-        assert_eq!(core::mem::offset_of!(NewStat, st_dev), 0);
-        assert_eq!(core::mem::offset_of!(NewStat, st_ino), expected.2);
-        assert_eq!(core::mem::offset_of!(NewStat, st_mode), expected.3);
-        assert_eq!(core::mem::offset_of!(NewStat, st_nlink), expected.4);
-        assert_eq!(core::mem::offset_of!(NewStat, st_uid), expected.5);
-        assert_eq!(core::mem::offset_of!(NewStat, st_gid), expected.6);
-        assert_eq!(core::mem::offset_of!(NewStat, st_rdev), expected.7);
-        assert_eq!(core::mem::offset_of!(NewStat, st_size), expected.8);
-        assert_eq!(core::mem::offset_of!(NewStat, st_blksize), expected.9);
-        assert_eq!(core::mem::offset_of!(NewStat, st_blocks), expected.10);
-        assert_eq!(core::mem::offset_of!(NewStat, st_atime), expected.11);
-        assert_eq!(core::mem::offset_of!(NewStat, st_atime_nsec), expected.12);
-        assert_eq!(core::mem::offset_of!(NewStat, st_mtime), expected.13);
-        assert_eq!(core::mem::offset_of!(NewStat, st_mtime_nsec), expected.14);
-        assert_eq!(core::mem::offset_of!(NewStat, st_ctime), expected.15);
-        assert_eq!(core::mem::offset_of!(NewStat, st_ctime_nsec), expected.16);
-        assert_eq!(core::mem::offset_of!(NewStat, __unused4), expected.17);
-        assert_eq!(core::mem::offset_of!(NewStat, __unused5), expected.18);
+        assert_eq!(size_of::<NativeStat>(), expected.0);
+        assert_eq!(core::mem::align_of::<NativeStat>(), expected.1);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_dev), 0);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_ino), expected.2);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_mode), expected.3);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_nlink), expected.4);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_uid), expected.5);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_gid), expected.6);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_rdev), expected.7);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_size), expected.8);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_blksize), expected.9);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_blocks), expected.10);
+        assert_eq!(core::mem::offset_of!(NativeStat, st_atime), expected.11);
+        assert_eq!(
+            core::mem::offset_of!(NativeStat, st_atime_nsec),
+            expected.12
+        );
+        assert_eq!(core::mem::offset_of!(NativeStat, st_mtime), expected.13);
+        assert_eq!(
+            core::mem::offset_of!(NativeStat, st_mtime_nsec),
+            expected.14
+        );
+        assert_eq!(core::mem::offset_of!(NativeStat, st_ctime), expected.15);
+        assert_eq!(
+            core::mem::offset_of!(NativeStat, st_ctime_nsec),
+            expected.16
+        );
+        assert_eq!(core::mem::offset_of!(NativeStat, __unused4), expected.17);
+        assert_eq!(core::mem::offset_of!(NativeStat, __unused5), expected.18);
     }
 
     #[test]
@@ -218,9 +239,9 @@ mod tests {
         let file = File::open("/").unwrap();
         let metadata = file.metadata().unwrap();
         let fd = file.as_raw_fd() as UnsignedInt;
-        let mut statbuf = zeroed_newstat();
+        let mut statbuf = zeroed_native_stat();
 
-        // SAFETY: `statbuf` is writable for one `NewStat` and no mutable
+        // SAFETY: `statbuf` is writable for one native stat value and no mutable
         // aliases are used during the syscall.
         let ret = unsafe { newfstat(fd, &raw mut statbuf) };
 
@@ -229,12 +250,15 @@ mod tests {
         assert_eq!(u64::from(statbuf.st_ino), metadata.ino());
         #[cfg(target_arch = "aarch64")]
         assert_eq!(statbuf.st_ino, metadata.ino());
-        assert_eq!(statbuf.st_mode as u32, metadata.mode());
+        #[cfg(target_arch = "x86")]
+        assert_eq!(u32::from(statbuf.st_mode), metadata.mode());
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(statbuf.st_mode, metadata.mode());
         assert_eq!(u64::from(statbuf.st_nlink), metadata.nlink());
         #[cfg(target_arch = "x86")]
         assert_eq!(u64::from(statbuf.st_size), metadata.size());
         #[cfg(target_arch = "aarch64")]
-        assert_eq!(statbuf.st_size, metadata.size());
+        assert_eq!(u64::try_from(statbuf.st_size).unwrap(), metadata.size());
     }
 
     #[test]
@@ -252,9 +276,9 @@ mod tests {
 
     #[test]
     fn test_newfstat_invalid_fd_returns_ebadf() {
-        let mut statbuf = zeroed_newstat();
+        let mut statbuf = zeroed_native_stat();
 
-        // SAFETY: `statbuf` is writable for one `NewStat`.
+        // SAFETY: `statbuf` is writable for one native stat value.
         let ret = unsafe { newfstat(u32::MAX, &raw mut statbuf) };
 
         assert_eq!(ret, -9, "expected EBADF from invalid fd, got {ret}");
@@ -277,11 +301,11 @@ mod tests {
         let file = File::open("/").unwrap();
         let fd = file.as_raw_fd() as UnsignedInt;
         let mut statbuf = NewStatWithCanary {
-            stat: zeroed_newstat(),
+            stat: zeroed_native_stat(),
             canary: [0xA5; 64],
         };
 
-        // SAFETY: `statbuf.stat` is writable for one `NewStat` and the canary
+        // SAFETY: `statbuf.stat` is writable for one native stat value and the canary
         // is only observed after the syscall returns.
         let ret = unsafe { newfstat(fd, &raw mut statbuf.stat) };
 
