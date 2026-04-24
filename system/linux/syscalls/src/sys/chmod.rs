@@ -10,7 +10,9 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # Kernel Support
 /// - Introduced: Linux 0.10
-/// - Behavior changes: none known
+/// - Behavior changes: Linux 1.0 treated `mode == (mode_t)-1` as "preserve
+///   the current mode bits"; current kernels do not keep that special
+///   case.
 ///
 /// # Required Privileges
 /// - None
