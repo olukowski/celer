@@ -42,6 +42,7 @@ mod fcntl;
 mod fork;
 mod fstatfs;
 mod fsync;
+mod ftruncate;
 mod helpers;
 pub mod sys;
 
@@ -75,10 +76,14 @@ pub use fcntl::{FcntlError, fcntl};
 pub use fork::{ForkError, fork};
 pub use fstatfs::{FstatfsError, fstatfs};
 pub use fsync::{FsyncError, fsync};
+pub use ftruncate::{FtruncateError, ftruncate};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
     pub use super::create_module::{CreateModuleError, create_module};
     pub use super::fstatfs::{FstatfsError, fstatfs_1_0 as fstatfs};
+    pub use super::ftruncate::{
+        Ftruncate1_0Error as FtruncateError, ftruncate_1_0 as ftruncate,
+    };
 }

@@ -123,7 +123,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `fork` - x86
 - [x] `fstatfs`
 - [x] `fsync`
-- [ ] `ftruncate`
+- [x] `ftruncate`
 - [ ] `get_kernel_syms` - x86
 - [ ] `getegid16` - x86
 - [ ] `geteuid16` - x86
@@ -226,8 +226,8 @@ Shared conversion helpers should live in a private `helpers` module.
 These raw wrappers are currently exposed under `sys::linux_1_0` on x86. Decide
 whether the wrap layer mirrors them before checking them off.
 
-- [ ] `linux_1_0::fstatfs`
-- [ ] `linux_1_0::ftruncate`
+- [x] `linux_1_0::fstatfs`
+- [x] `linux_1_0::ftruncate`
 - [ ] `linux_1_0::init_module`
 - [ ] `linux_1_0::newfstat`
 - [ ] `linux_1_0::newlstat`
