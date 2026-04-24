@@ -6,7 +6,8 @@ use crate::arch::current::{Sysno, syscall3};
 /// state.
 ///
 /// This wrapper spans the original Linux 1.0 x86 `setitimer` entry point and
-/// the current native entrypoints exported by this crate on x86 and aarch64.
+/// the current native entrypoints exported by this crate on x86, x86_64, and
+/// aarch64.
 ///
 /// # Safety
 /// - `value`, when non-null, must be valid to read one [`Itimerval`] value
@@ -24,7 +25,8 @@ use crate::arch::current::{Sysno, syscall3};
 ///   non-null `value`, while current kernels reject noncanonical timeval
 ///   fields with `EINVAL` and report bad non-null input or output pointers
 ///   with `EFAULT`.
-/// - Availability: present on supported x86 and aarch64 Linux kernels
+/// - Availability: present on supported x86, x86_64, and aarch64 Linux
+///   kernels
 ///
 /// # Required Privileges
 /// - None
@@ -54,10 +56,12 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `man` [page](https://man7.org/linux/man-pages/man2/setitimer.2.html)
 /// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/time/itimer.c?h=v7.0#n351)
 /// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n119)
+/// - Stable x86_64 table: [v7.0 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n50)
 /// - Stable aarch64 syscall numbers:
 ///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n288)
 /// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/time/itimer.c?h=v6.18.18#n351)
 /// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n119)
+/// - LTS x86_64 table: [v6.18.18 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.18.18#n50)
 /// - LTS aarch64 syscall numbers:
 ///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n288)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/itimer.c?h=1.0#n110)
@@ -112,6 +116,8 @@ mod tests {
         let expected = 104;
         #[cfg(target_arch = "aarch64")]
         let expected = 103;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 38;
 
         assert_eq!(Sysno::Setitimer as isize, expected);
     }
@@ -120,7 +126,7 @@ mod tests {
     fn test_setitimer_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (16, 4, 8);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (32, 8, 16);
 
         assert_eq!(core::mem::size_of::<Itimerval>(), expected.0);

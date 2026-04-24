@@ -8,8 +8,16 @@ use crate::arch::linux_1_0::{
     Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
-/// Get filesystem status information for an open file descriptor through the
-/// current i386 `fstatfs` ABI.
+/// Get filesystem status information for an open file descriptor.
+///
+/// This wrapper uses the native `fstatfs(unsigned int fd, struct statfs __user
+/// *buf)` syscall for the target architecture. On x86, the syscall number
+/// differs by ABI:
+/// - x86_64 uses syscall slot `138` and copies out the native 64-bit
+///   `struct statfs`.
+/// - i386 uses syscall slot `100` and copies out the native 32-bit
+///   `struct statfs`; x86_64 compat tasks instead reach `compat_sys_fstatfs`
+///   and receive `struct compat_statfs`.
 ///
 /// # Safety
 /// - `buf` must point to writable memory for one [`Statfs`] value for the
@@ -20,11 +28,18 @@ use crate::arch::linux_1_0::{
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Behavior changes: Linux 1.0 checked `buf` for writability before
-///   validating `fd`, and its filesystem `statfs` callback returned `void`
-///   instead of an errno value; current kernels use a different internal path
-///   and a newer UAPI layout.
-/// - Availability: present on supported x86 Linux kernels
+/// - Behavior changes:
+///   - Linux 1.0 i386 checked `buf` for writability before validating `fd`,
+///     and its filesystem `statfs` callback returned `void` instead of an
+///     errno value.
+///   - Current kernels route native `fstatfs` through `fd_statfs()` and
+///     `do_statfs_native()`.
+///   - Current x86_64 native `fstatfs` uses the generic 64-bit
+///     `struct statfs` layout from `asm-generic/statfs.h`.
+///   - Current i386 native `fstatfs` and x86_64 compat `compat_sys_fstatfs`
+///     use 32-bit statfs words and can fail with `EOVERFLOW` when `kstatfs`
+///     values do not fit.
+/// - Availability: present on supported x86 and x86_64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -32,25 +47,41 @@ use crate::arch::linux_1_0::{
 /// # Behavior
 /// - On success, writes filesystem statistics for the open file referenced by
 ///   `fd` into `buf`.
-/// - Current kernels copy the i386 [`Statfs`] layout through
-///   `do_statfs_native()`, including `f_frsize`, `f_flags`, and `f_spare[4]`.
+/// - On x86_64, `do_statfs_native()` copies the native 64-bit
+///   [`Statfs`] layout.
+/// - On i386 native `fstatfs`, the current layout uses 32-bit statfs words,
+///   plus `f_frsize`, `f_flags`, and `f_spare[4]`.
+/// - On x86_64 compat `compat_sys_fstatfs`, the kernel converts `kstatfs`
+///   into `struct compat_statfs`, which also uses 32-bit statfs words and the
+///   same representability checks as current i386 native `fstatfs`.
 ///
 /// # Errors
 /// - `EFAULT`: `buf` is not writable for one [`Statfs`] value.
 /// - `EBADF`: `fd` does not refer to an open file descriptor.
 /// - `ENOSYS`: the backing superblock does not provide a `statfs` hook.
-/// - `EOVERFLOW`: filesystem statistics cannot be represented in the i386
-///   `struct statfs` layout.
+/// - `EOVERFLOW`: filesystem statistics cannot be represented in the current
+///   32-bit native or compat `struct statfs` layout. This error does not
+///   arise from the native x86_64 `do_statfs_native()` copy path.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/statfs.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v6.19#n211)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/statfs.c?h=v6.18.18#n211)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n49)
+/// - Current native implementation:
+///   [v7.0 fs/statfs.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n212)
+/// - Current native copy-out helper:
+///   [v7.0 fs/statfs.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n125)
+/// - Current compat implementation:
+///   [v7.0 fs/statfs.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n313)
+/// - Current x86 syscall tables:
+///   [v7.0 arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n115),
+///   [v7.0 arch/x86/entry/syscalls/syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n150)
+/// - Linux 1.0 i386 implementation:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n49)
 ///
 /// # Historical References
-/// - Current `struct statfs`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/statfs.h?h=v7.0#n23)
-/// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n212)
+/// - Current native `struct statfs`:
+///   [v7.0 include/uapi/asm-generic/statfs.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/statfs.h?h=v7.0#n23)
+/// - Current x86 compat packing override:
+///   [v7.0 arch/x86/include/uapi/asm/statfs.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/statfs.h?h=v7.0#n5)
 /// - Linux 1.0 `struct statfs`, preserved as [`celer_system_linux_ctypes::linux_1_0::Statfs`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/vfs.h?h=1.0#n8)
 pub unsafe fn fstatfs(fd: UnsignedInt, buf: *mut Statfs) -> Long {
     // SAFETY: guaranteed by caller.
@@ -127,6 +158,8 @@ mod tests {
         assert_eq!(Sysno::Fstatfs as isize, 100);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Fstatfs as isize, 44);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Fstatfs as isize, 138);
         #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Fstatfs as isize, 100);
     }
@@ -144,7 +177,7 @@ mod tests {
             assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
             assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(core::mem::size_of::<Statfs>(), 120);
             assert_eq!(core::mem::align_of::<Statfs>(), 8);
@@ -160,7 +193,7 @@ mod tests {
         let fd = file.as_raw_fd() as UnsignedInt;
         #[cfg(target_arch = "x86")]
         let sentinel = u32::MAX;
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let sentinel = i64::from(u32::MAX);
         let mut buf = Statfs {
             f_type: sentinel,

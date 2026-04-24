@@ -10,8 +10,9 @@ use crate::arch::linux_1_0::{
 
 /// Load a kernel module image from user memory.
 ///
-/// This wrapper exposes the current x86 `init_module(2)` ABI at syscall slot
-/// `128`. Linux 1.0 used a different four-argument ABI at the same slot:
+/// This wrapper exposes the current x86 and x86_64 `init_module(2)` ABI at
+/// syscall slots `128` and `175`. Linux 1.0 used a different four-argument
+/// ABI at the x86 slot `128`:
 /// `sys_init_module(char *module_name, char *code, unsigned codesize,
 /// struct mod_routines *routines)`.
 ///
@@ -25,13 +26,13 @@ use crate::arch::linux_1_0::{
 /// - Historical slot introduced: Linux 1.0
 /// - Behavior changes: Linux 1.0 loaded a named module into an existing
 ///   kernel-resident module slot and called its `init` routine through the
-///   supplied routine table; current x86 kernels instead copy a complete
-///   module image from user memory, validate it as a loadable module, and pass
-///   `uargs` to the module-parameter parser and init path.
-/// - Availability: this wrapper is ABI-correct for current supported x86 Linux
-///   kernels; it is not ABI-compatible with Linux 1.0. Current kernels built
-///   with `CONFIG_MODULES=n` keep the syscall number wired but route it to
-///   `sys_ni_syscall`, which returns `ENOSYS`
+///   supplied routine table; current x86 and x86_64 kernels instead copy a
+///   complete module image from user memory, validate it as a loadable
+///   module, and pass `uargs` to the module-parameter parser and init path.
+/// - Availability: this wrapper is ABI-correct for current supported x86 and
+///   x86_64 Linux kernels; it is not ABI-compatible with Linux 1.0. Current
+///   kernels built with `CONFIG_MODULES=n` keep the syscall number wired but
+///   route it to `sys_ni_syscall`, which returns `ENOSYS`
 ///
 /// # Required Privileges
 /// - Current kernels: the caller must have `CAP_SYS_MODULE`, and module
@@ -73,9 +74,12 @@ use crate::arch::linux_1_0::{
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/init_module.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v6.19#n3569)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/module/main.c?h=v6.18.18#n3563)
-/// - Current x86-32 syscall table: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n143)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v7.0#n3570)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n143)
+/// - Stable x86_64 table: [v7.0 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n187)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/module/main.c?h=v6.18.18#n3563)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n143)
+/// - LTS x86_64 table: [v6.18.18 syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.18.18#n187)
 ///
 /// # Historical References
 /// - Linux 1.0 implementation with the incompatible 4-argument ABI:
@@ -193,6 +197,8 @@ mod tests {
         assert_eq!(Sysno::InitModule as isize, 128);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::InitModule as isize, 105);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::InitModule as isize, 175);
     }
 
     #[cfg(target_arch = "x86")]
@@ -205,7 +211,7 @@ mod tests {
     fn test_mod_routines_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (8, 4, 4);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (16, 8, 8);
 
         assert_eq!(core::mem::size_of::<ModRoutines>(), expected.0);

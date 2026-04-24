@@ -8,11 +8,16 @@ use crate::arch::linux_1_0::{
     Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
-/// Return filesystem status for the filesystem containing `path` through the
-/// current i386 `statfs` ABI.
+/// Return filesystem status for the filesystem containing `path`.
 ///
-/// Current x86 exposes syscall number `99` as `statfs(const char __user *path,
-/// struct statfs __user *buf)`.
+/// This wrapper uses the native `statfs(const char __user *path, struct statfs
+/// __user *buf)` syscall for the target architecture. On x86, the syscall
+/// number differs by ABI:
+/// - x86_64 uses syscall slot `137` and copies out the native 64-bit
+///   `struct statfs`.
+/// - i386 uses syscall slot `99` and copies out the native 32-bit
+///   `struct statfs`; x86_64 compat tasks instead reach `compat_sys_statfs`
+///   and receive `struct compat_statfs`.
 ///
 /// # Safety
 /// - `path` must point to a readable NUL-terminated string for the duration
@@ -23,18 +28,33 @@ use crate::arch::linux_1_0::{
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Behavior changes: modern kernels still expose `statfs` on x86, but later
-///   kernels route through newer internal helpers and support more filesystems.
-/// - Availability: present on supported x86 Linux kernels
+/// - Behavior changes:
+///   - Linux 1.0 i386 used syscall slot `99` and copied a Linux 1.0
+///     `struct statfs` with `long` fields and `f_spare[6]`.
+///   - Current kernels route native `statfs` through `user_statfs()` and
+///     `do_statfs_native()`.
+///   - Current x86_64 native `statfs` uses the generic 64-bit
+///     `struct statfs` layout from `asm-generic/statfs.h`.
+///   - Current i386 native `statfs` and x86_64 compat `compat_sys_statfs`
+///     use 32-bit statfs words and can fail with `EOVERFLOW` when `kstatfs`
+///     values do not fit.
+/// - Availability: present on supported x86 and x86_64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - On success, fills `buf` with the current i386 Linux `struct statfs`
-///   result for the filesystem containing `path`.
-/// - The current i386 layout uses unsigned 32-bit statfs words, `f_frsize`,
-///   `f_flags`, and four spare words.
+/// - On success, fills `buf` with the native Linux `struct statfs` result for
+///   the filesystem containing `path`.
+/// - On x86_64, the native `struct statfs` layout uses `__kernel_long_t`
+///   statfs words, so the fields in this crate's [`Statfs`] are 64-bit and
+///   `do_statfs_native()` copies `sizeof(struct statfs)` bytes without the
+///   32-bit overflow check.
+/// - On i386 native `statfs`, the current layout uses 32-bit statfs words,
+///   plus `f_frsize`, `f_flags`, and `f_spare[4]`.
+/// - On x86_64 compat `compat_sys_statfs`, the kernel converts `kstatfs` into
+///   `struct compat_statfs`, which also uses 32-bit statfs words and the same
+///   representability checks as current i386 native `statfs`.
 ///
 /// # Errors
 /// - `EFAULT`: `buf` is not writable for one `Statfs`, or `path` points
@@ -49,8 +69,9 @@ use crate::arch::linux_1_0::{
 /// - `EACCES`: pathname traversal lacked search permission on a directory.
 /// - `ENOSYS`: the resolved filesystem does not implement a `statfs`
 ///   superblock operation.
-/// - `EOVERFLOW`: filesystem statistics cannot be represented in the i386
-///   `struct statfs` layout.
+/// - `EOVERFLOW`: filesystem statistics cannot be represented in the current
+///   32-bit native or compat `struct statfs` layout. This error does not
+///   arise from the native x86_64 `do_statfs_native()` copy path.
 ///
 /// Linux 1.0 may also propagate filesystem-dependent lookup failures before it
 /// reaches the superblock `statfs` method, including `ELOOP`, `EIO`, and some
@@ -58,13 +79,23 @@ use crate::arch::linux_1_0::{
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/statfs.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v6.19#n131)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/statfs.c?h=v6.18.18#n131)
-/// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n29)
+/// - Current native implementation:
+///   [v7.0 fs/statfs.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n191)
+/// - Current native copy-out helper:
+///   [v7.0 fs/statfs.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n125)
+/// - Current compat implementation:
+///   [v7.0 fs/statfs.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n304)
+/// - Current x86 syscall tables:
+///   [v7.0 arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n114),
+///   [v7.0 arch/x86/entry/syscalls/syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n149)
+/// - Linux 1.0 i386 implementation:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n29)
 ///
 /// # Historical References
-/// - Current `struct statfs`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/statfs.h?h=v7.0#n23)
-/// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/statfs.c?h=v7.0#n125)
+/// - Current native `struct statfs`:
+///   [v7.0 include/uapi/asm-generic/statfs.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/statfs.h?h=v7.0#n23)
+/// - Current x86 compat packing override:
+///   [v7.0 arch/x86/include/uapi/asm/statfs.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/statfs.h?h=v7.0#n5)
 /// - Linux 1.0 `struct statfs`, preserved as [`celer_system_linux_ctypes::linux_1_0::Statfs`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/vfs.h?h=1.0#n8)
 pub unsafe fn statfs(path: *const Char, buf: *mut Statfs) -> Long {
     // SAFETY: guaranteed by caller.
@@ -171,7 +202,7 @@ mod tests {
             assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
             assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(core::mem::size_of::<Statfs>(), 120);
             assert_eq!(core::mem::align_of::<Statfs>(), 8);
@@ -187,6 +218,8 @@ mod tests {
         assert_eq!(Sysno::Statfs as isize, 99);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Statfs as isize, 43);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Statfs as isize, 137);
         #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Statfs as isize, 99);
     }

@@ -1,6 +1,10 @@
 #![no_std]
 #![cfg(target_os = "linux")]
-#![cfg(any(target_arch = "x86", target_arch = "aarch64"))]
+#![cfg(any(
+    target_arch = "x86",
+    target_arch = "x86_64",
+    target_arch = "aarch64"
+))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use core::ffi::{
@@ -67,8 +71,8 @@ pub type UidT = UnsignedInt;
 #[cfg(target_arch = "x86")]
 pub type OldUidT = UnsignedShort;
 
-/// Equivalent to the native `uid_t` type on aarch64.
-#[cfg(target_arch = "aarch64")]
+/// Equivalent to the native `uid_t` type on 64-bit Linux ABIs.
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 pub type OldUidT = UidT;
 
 /// Equivalent to the `gid_t` type in the Linux kernel.
@@ -79,8 +83,8 @@ pub type GidT = UnsignedInt;
 #[cfg(target_arch = "x86")]
 pub type OldGidT = UnsignedShort;
 
-/// Equivalent to the native `gid_t` type on aarch64.
-#[cfg(target_arch = "aarch64")]
+/// Equivalent to the native `gid_t` type on 64-bit Linux ABIs.
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 pub type OldGidT = GidT;
 
 /// Equivalent to the legacy `old_sigset_t` type used by the i386
@@ -144,7 +148,9 @@ pub struct NewStat {
     pub __unused5: UnsignedLong,
 }
 
-/// Generic 64-bit Linux `struct stat` used by the aarch64 `fstat` syscall ABI.
+/// Generic 64-bit Linux `struct stat` used by the aarch64 `stat` and `fstat`
+/// syscall ABIs.
+#[cfg(target_arch = "aarch64")]
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Stat64 {
@@ -168,6 +174,32 @@ pub struct Stat64 {
     pub st_ctime_nsec: UnsignedLong,
     pub __unused4: UnsignedInt,
     pub __unused5: UnsignedInt,
+}
+
+/// x86_64 Linux `struct stat` used by the native `stat`, `lstat`, and `fstat`
+/// syscall ABIs.
+#[cfg(target_arch = "x86_64")]
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Stat64 {
+    pub st_dev: UnsignedLong,
+    pub st_ino: UnsignedLong,
+    pub st_nlink: UnsignedLong,
+    pub st_mode: UnsignedInt,
+    pub st_uid: UnsignedInt,
+    pub st_gid: UnsignedInt,
+    pub __pad0: UnsignedInt,
+    pub st_rdev: UnsignedLong,
+    pub st_size: Long,
+    pub st_blksize: Long,
+    pub st_blocks: Long,
+    pub st_atime: UnsignedLong,
+    pub st_atime_nsec: UnsignedLong,
+    pub st_mtime: UnsignedLong,
+    pub st_mtime_nsec: UnsignedLong,
+    pub st_ctime: UnsignedLong,
+    pub st_ctime_nsec: UnsignedLong,
+    pub __unused: [Long; 3],
 }
 
 /// Linux `struct utimbuf` used by the `utime` syscall ABI.
@@ -218,7 +250,7 @@ pub struct Itimerval {
 pub struct FdSet {
     #[cfg(target_arch = "x86")]
     pub fds_bits: [UnsignedLong; 32],
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     pub fds_bits: [UnsignedLong; 16],
 }
 
@@ -601,7 +633,7 @@ pub struct Sysinfo {
     pub mem_unit: UnsignedInt,
     #[cfg(target_arch = "x86")]
     pub _f: [Char; 8],
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     pub _f: [Char; 0],
 }
 
@@ -632,9 +664,9 @@ pub struct Statfs {
     pub f_spare: [UnsignedInt; 4],
 }
 
-/// Current aarch64 Linux `struct statfs` used by the `statfs` and `fstatfs`
-/// syscall ABIs.
-#[cfg(target_arch = "aarch64")]
+/// Current 64-bit Linux `struct statfs` used by the `statfs` and `fstatfs`
+/// syscall ABIs on supported 64-bit targets in this crate.
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Statfs {
@@ -679,11 +711,11 @@ pub struct OldLinuxDirent {
 mod tests {
     use core::mem::{align_of, offset_of, size_of};
 
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     use super::Stat64;
     #[cfg(target_arch = "x86")]
     use super::linux_1_0;
-    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo};
+    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo, Ustat};
 
     #[test]
     fn current_newstat_layout_matches_linux_v7_0_struct_stat() {
@@ -739,6 +771,31 @@ mod tests {
         assert_eq!(offset_of!(Stat64, __unused5), 124);
     }
 
+    #[cfg(target_arch = "x86_64")]
+    #[test]
+    fn current_stat64_layout_matches_linux_v7_0_x86_64_struct_stat() {
+        assert_eq!(size_of::<Stat64>(), 144);
+        assert_eq!(align_of::<Stat64>(), 8);
+        assert_eq!(offset_of!(Stat64, st_dev), 0);
+        assert_eq!(offset_of!(Stat64, st_ino), 8);
+        assert_eq!(offset_of!(Stat64, st_nlink), 16);
+        assert_eq!(offset_of!(Stat64, st_mode), 24);
+        assert_eq!(offset_of!(Stat64, st_uid), 28);
+        assert_eq!(offset_of!(Stat64, st_gid), 32);
+        assert_eq!(offset_of!(Stat64, __pad0), 36);
+        assert_eq!(offset_of!(Stat64, st_rdev), 40);
+        assert_eq!(offset_of!(Stat64, st_size), 48);
+        assert_eq!(offset_of!(Stat64, st_blksize), 56);
+        assert_eq!(offset_of!(Stat64, st_blocks), 64);
+        assert_eq!(offset_of!(Stat64, st_atime), 72);
+        assert_eq!(offset_of!(Stat64, st_atime_nsec), 80);
+        assert_eq!(offset_of!(Stat64, st_mtime), 88);
+        assert_eq!(offset_of!(Stat64, st_mtime_nsec), 96);
+        assert_eq!(offset_of!(Stat64, st_ctime), 104);
+        assert_eq!(offset_of!(Stat64, st_ctime_nsec), 112);
+        assert_eq!(offset_of!(Stat64, __unused), 120);
+    }
+
     #[cfg(target_arch = "x86")]
     #[test]
     fn linux_1_0_newstat_layout_is_preserved() {
@@ -787,7 +844,7 @@ mod tests {
             assert_eq!(offset_of!(Statfs, f_flags), 44);
             assert_eq!(offset_of!(Statfs, f_spare), 48);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(size_of::<Statfs>(), 120);
             assert_eq!(align_of::<Statfs>(), 8);
@@ -802,6 +859,27 @@ mod tests {
             assert_eq!(offset_of!(Statfs, f_frsize), 72);
             assert_eq!(offset_of!(Statfs, f_flags), 80);
             assert_eq!(offset_of!(Statfs, f_spare), 88);
+        }
+    }
+
+    #[test]
+    fn current_ustat_layout_matches_linux_v7_0_struct_ustat() {
+        assert_eq!(offset_of!(Ustat, f_tfree), 0);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<Ustat>(), 20);
+            assert_eq!(align_of::<Ustat>(), 4);
+            assert_eq!(offset_of!(Ustat, f_tinode), 4);
+            assert_eq!(offset_of!(Ustat, f_fname), 8);
+            assert_eq!(offset_of!(Ustat, f_fpack), 14);
+        }
+        #[cfg(target_arch = "x86_64")]
+        {
+            assert_eq!(size_of::<Ustat>(), 32);
+            assert_eq!(align_of::<Ustat>(), 8);
+            assert_eq!(offset_of!(Ustat, f_tinode), 8);
+            assert_eq!(offset_of!(Ustat, f_fname), 16);
+            assert_eq!(offset_of!(Ustat, f_fpack), 22);
         }
     }
 
@@ -845,7 +923,7 @@ mod tests {
             assert_eq!(offset_of!(Sysinfo, mem_unit), 52);
             assert_eq!(offset_of!(Sysinfo, _f), 56);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(size_of::<Sysinfo>(), 112);
             assert_eq!(align_of::<Sysinfo>(), 8);
@@ -888,7 +966,7 @@ mod tests {
             assert_eq!(offset_of!(OldLinuxDirent, d_namlen), 8);
             assert_eq!(offset_of!(OldLinuxDirent, d_name), 10);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(size_of::<OldLinuxDirent>(), 4120);
             assert_eq!(align_of::<OldLinuxDirent>(), 8);

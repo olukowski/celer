@@ -120,6 +120,8 @@ mod tests {
         let expected = 124;
         #[cfg(target_arch = "aarch64")]
         let expected = 171;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 159;
 
         assert_eq!(Sysno::Adjtimex as isize, expected);
     }
@@ -128,7 +130,7 @@ mod tests {
     fn test_adjtimex_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (128, 4, 36, 44, 48, 80, 84);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (208, 8, 72, 88, 96, 160, 164);
 
         assert_eq!(core::mem::size_of::<Timex>(), expected.0);
