@@ -34,6 +34,7 @@ mod errno;
 mod execve;
 mod exit;
 mod fchdir;
+mod fchmod;
 mod helpers;
 pub mod sys;
 
@@ -59,6 +60,7 @@ pub use errno::Errno;
 pub use execve::{ExecveError, execve};
 pub use exit::exit;
 pub use fchdir::{FchdirError, fchdir};
+pub use fchmod::{FchmodError, fchmod};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
