@@ -28,6 +28,8 @@ mod creat;
 mod create_module;
 mod delete_module;
 mod dup;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod dup2;
 mod errno;
 mod helpers;
 pub mod sys;
@@ -48,6 +50,8 @@ pub use close::{CloseError, close};
 pub use creat::{CreatError, creat};
 pub use delete_module::{DeleteModuleError, delete_module};
 pub use dup::{DupError, dup};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use dup2::{Dup2Error, dup2};
 pub use errno::Errno;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
