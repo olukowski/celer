@@ -84,7 +84,12 @@ mod tests {
 
     #[test]
     fn test_munmap_syscall_number() {
-        assert_eq!(Sysno::Munmap as isize, 91);
+        #[cfg(target_arch = "x86")]
+        let expected = 91;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 215;
+
+        assert_eq!(Sysno::Munmap as isize, expected);
     }
 
     #[test]

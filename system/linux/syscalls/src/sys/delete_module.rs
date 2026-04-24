@@ -100,7 +100,12 @@ mod tests {
 
     #[test]
     fn test_delete_module_syscall_number() {
-        assert_eq!(Sysno::DeleteModule as isize, 129);
+        #[cfg(target_arch = "x86")]
+        let expected = 129;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 106;
+
+        assert_eq!(Sysno::DeleteModule as isize, expected);
     }
 
     #[test]

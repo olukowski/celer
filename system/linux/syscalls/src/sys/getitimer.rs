@@ -80,18 +80,28 @@ mod tests {
 
     #[test]
     fn test_getitimer_layout() {
+        #[cfg(target_arch = "x86")]
+        let expected = (16, 4, 8);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (32, 8, 16);
+
         assert_eq!(ITIMER_REAL, 0);
         assert_eq!(ITIMER_VIRTUAL, 1);
         assert_eq!(ITIMER_PROF, 2);
-        assert_eq!(core::mem::size_of::<Itimerval>(), 16);
-        assert_eq!(core::mem::align_of::<Itimerval>(), 4);
+        assert_eq!(core::mem::size_of::<Itimerval>(), expected.0);
+        assert_eq!(core::mem::align_of::<Itimerval>(), expected.1);
         assert_eq!(core::mem::offset_of!(Itimerval, it_interval), 0);
-        assert_eq!(core::mem::offset_of!(Itimerval, it_value), 8);
+        assert_eq!(core::mem::offset_of!(Itimerval, it_value), expected.2);
     }
 
     #[test]
     fn test_getitimer_sysno() {
-        assert_eq!(Sysno::Getitimer as isize, 105);
+        #[cfg(target_arch = "x86")]
+        let expected = 105;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 102;
+
+        assert_eq!(Sysno::Getitimer as isize, expected);
     }
 
     #[test]

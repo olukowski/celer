@@ -92,7 +92,12 @@ mod tests {
 
     #[test]
     fn test_reboot_syscall_number() {
-        assert_eq!(Sysno::Reboot as isize, 88);
+        #[cfg(target_arch = "x86")]
+        let expected = 88;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 142;
+
+        assert_eq!(Sysno::Reboot as isize, expected);
     }
 
     #[test]

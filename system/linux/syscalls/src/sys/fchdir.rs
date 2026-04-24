@@ -91,7 +91,12 @@ mod tests {
 
     #[test]
     fn test_fchdir_sysno() {
-        assert_eq!(Sysno::Fchdir as isize, 133);
+        #[cfg(target_arch = "x86")]
+        let expected = 133;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 50;
+
+        assert_eq!(Sysno::Fchdir as isize, expected);
     }
 
     #[test]

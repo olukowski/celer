@@ -111,7 +111,12 @@ mod tests {
 
     #[test]
     fn test_swapon_sysno() {
-        assert_eq!(Sysno::Swapon as isize, 87);
+        #[cfg(target_arch = "x86")]
+        let expected = 87;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 224;
+
+        assert_eq!(Sysno::Swapon as isize, expected);
     }
 
     #[test]

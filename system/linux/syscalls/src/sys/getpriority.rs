@@ -59,7 +59,12 @@ mod tests {
 
     #[test]
     fn test_getpriority_sysno() {
-        assert_eq!(Sysno::Getpriority as isize, 96);
+        #[cfg(target_arch = "x86")]
+        let expected = 96;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 141;
+
+        assert_eq!(Sysno::Getpriority as isize, expected);
     }
 
     #[test]

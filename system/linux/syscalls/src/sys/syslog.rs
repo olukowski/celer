@@ -108,7 +108,12 @@ mod tests {
 
     #[test]
     fn test_syslog_sysno() {
-        assert_eq!(Sysno::Syslog as isize, 103);
+        #[cfg(target_arch = "x86")]
+        let expected = 103;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 116;
+
+        assert_eq!(Sysno::Syslog as isize, expected);
     }
 
     #[test]

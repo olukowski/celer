@@ -76,7 +76,12 @@ mod tests {
 
     #[test]
     fn test_fchmod_sysno() {
-        assert_eq!(Sysno::Fchmod as isize, 94);
+        #[cfg(target_arch = "x86")]
+        let expected = 94;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 52;
+
+        assert_eq!(Sysno::Fchmod as isize, expected);
     }
 
     #[test]

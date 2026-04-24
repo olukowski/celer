@@ -146,11 +146,16 @@ mod tests {
 
     #[test]
     fn test_sysinfo_layout() {
-        assert_eq!(core::mem::size_of::<Sysinfo>(), 64);
+        #[cfg(target_arch = "x86")]
+        let expected = (64, 4, 16, 40);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (112, 8, 32, 80);
+
+        assert_eq!(core::mem::size_of::<Sysinfo>(), expected.0);
         assert_eq!(core::mem::offset_of!(Sysinfo, uptime), 0);
-        assert_eq!(core::mem::offset_of!(Sysinfo, loads), 4);
-        assert_eq!(core::mem::offset_of!(Sysinfo, totalram), 16);
-        assert_eq!(core::mem::offset_of!(Sysinfo, procs), 40);
+        assert_eq!(core::mem::offset_of!(Sysinfo, loads), expected.1);
+        assert_eq!(core::mem::offset_of!(Sysinfo, totalram), expected.2);
+        assert_eq!(core::mem::offset_of!(Sysinfo, procs), expected.3);
     }
 
     #[cfg(target_arch = "x86")]

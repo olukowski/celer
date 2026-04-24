@@ -105,16 +105,21 @@ mod tests {
 
     #[test]
     fn test_getrusage_layout() {
-        assert_eq!(core::mem::size_of::<Timeval>(), 8);
-        assert_eq!(core::mem::align_of::<Timeval>(), 4);
-        assert_eq!(core::mem::size_of::<Rusage>(), 72);
-        assert_eq!(core::mem::align_of::<Rusage>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (8, 4, 72, 4, 8, 16, 32, 36, 68);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (16, 8, 144, 8, 16, 32, 64, 72, 136);
+
+        assert_eq!(core::mem::size_of::<Timeval>(), expected.0);
+        assert_eq!(core::mem::align_of::<Timeval>(), expected.1);
+        assert_eq!(core::mem::size_of::<Rusage>(), expected.2);
+        assert_eq!(core::mem::align_of::<Rusage>(), expected.3);
         assert_eq!(core::mem::offset_of!(Rusage, ru_utime), 0);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_stime), 8);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_maxrss), 16);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_minflt), 32);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_majflt), 36);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_nivcsw), 68);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_stime), expected.4);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_maxrss), expected.5);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_minflt), expected.6);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_majflt), expected.7);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_nivcsw), expected.8);
     }
 
     #[test]

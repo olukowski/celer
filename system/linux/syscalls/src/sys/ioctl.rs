@@ -89,7 +89,12 @@ mod tests {
 
     #[test]
     fn test_ioctl_sysno() {
-        assert_eq!(Sysno::Ioctl as isize, 54);
+        #[cfg(target_arch = "x86")]
+        let expected = 54;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 29;
+
+        assert_eq!(Sysno::Ioctl as isize, expected);
     }
 
     #[test]

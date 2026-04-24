@@ -66,7 +66,12 @@ mod tests {
 
     #[test]
     fn test_setdomainname_sysno() {
-        assert_eq!(Sysno::Setdomainname as isize, 121);
+        #[cfg(target_arch = "x86")]
+        let expected = 121;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 162;
+
+        assert_eq!(Sysno::Setdomainname as isize, expected);
     }
 
     #[test]

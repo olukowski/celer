@@ -101,15 +101,25 @@ mod tests {
 
     #[test]
     fn test_setitimer_sysno() {
-        assert_eq!(Sysno::Setitimer as isize, 104);
+        #[cfg(target_arch = "x86")]
+        let expected = 104;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 103;
+
+        assert_eq!(Sysno::Setitimer as isize, expected);
     }
 
     #[test]
     fn test_setitimer_layout() {
-        assert_eq!(core::mem::size_of::<Itimerval>(), 16);
-        assert_eq!(core::mem::align_of::<Itimerval>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (16, 4, 8);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (32, 8, 16);
+
+        assert_eq!(core::mem::size_of::<Itimerval>(), expected.0);
+        assert_eq!(core::mem::align_of::<Itimerval>(), expected.1);
         assert_eq!(core::mem::offset_of!(Itimerval, it_interval), 0);
-        assert_eq!(core::mem::offset_of!(Itimerval, it_value), 8);
+        assert_eq!(core::mem::offset_of!(Itimerval, it_value), expected.2);
     }
 
     #[test]

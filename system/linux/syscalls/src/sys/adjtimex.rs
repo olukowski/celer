@@ -129,7 +129,7 @@ mod tests {
         #[cfg(target_arch = "x86")]
         let expected = (128, 4, 36, 44, 48, 80, 84);
         #[cfg(target_arch = "aarch64")]
-        let expected = (208, 8, 72, 88, 96, 160, 168);
+        let expected = (208, 8, 72, 88, 96, 160, 164);
 
         assert_eq!(core::mem::size_of::<Timex>(), expected.0);
         assert_eq!(core::mem::align_of::<Timex>(), expected.1);

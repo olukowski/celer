@@ -95,7 +95,12 @@ mod tests {
 
     #[test]
     fn test_swapoff_sysno() {
-        assert_eq!(Sysno::Swapoff as isize, 115);
+        #[cfg(target_arch = "x86")]
+        let expected = 115;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 225;
+
+        assert_eq!(Sysno::Swapoff as isize, expected);
     }
 
     #[test]

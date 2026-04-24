@@ -104,7 +104,12 @@ mod tests {
 
     #[test]
     fn test_fchown16_sysno() {
-        assert_eq!(Sysno::Fchown as isize, 95);
+        #[cfg(target_arch = "x86")]
+        let expected = 95;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 55;
+
+        assert_eq!(Sysno::Fchown as isize, expected);
     }
 
     #[test]
