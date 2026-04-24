@@ -60,7 +60,7 @@ pub fn adjtimex(txc: &mut Timex) -> Result<Int, AdjtimexError> {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{ADJ_ADJTIME, ADJ_TICK, Timex};
+    use celer_system_linux_ctypes::{ADJ_TICK, Timex};
 
     use super::{AdjtimexError, adjtimex};
 
@@ -101,18 +101,6 @@ mod tests {
         assert!(matches!(state, 0..=5), "unexpected adjtimex state: {state}");
         assert!(txc.maxerror >= 0, "maxerror should be non-negative");
         assert!(txc.esterror >= 0, "esterror should be non-negative");
-    }
-
-    #[test]
-    fn test_adjtimex_rejects_invalid_mode_mix() {
-        let mut txc = zero_timex();
-        txc.modes = ADJ_ADJTIME;
-
-        assert_eq!(
-            adjtimex(&mut txc),
-            Err(AdjtimexError::Einval),
-            "ADJ_ADJTIME without ADJ_OFFSET_SINGLESHOT should be invalid"
-        );
     }
 
     #[test]

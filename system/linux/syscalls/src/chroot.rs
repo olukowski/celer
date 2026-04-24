@@ -88,9 +88,9 @@ mod tests {
     fn test_chroot_enotdir() {
         let path = temp_path("chroot_file");
         File::create(&path).unwrap();
-        let path = CString::new(path.as_os_str().as_encoded_bytes()).unwrap();
+        let path_c = CString::new(path.as_os_str().as_encoded_bytes()).unwrap();
 
-        assert_eq!(chroot(path.as_c_str()), Err(ChrootError::Enotdir));
+        assert_eq!(chroot(path_c.as_c_str()), Err(ChrootError::Enotdir));
 
         fs::remove_file(&path).unwrap();
     }
