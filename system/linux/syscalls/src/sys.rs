@@ -7,7 +7,7 @@
 //! - Errors
 //!
 //! Also, each system call has references to the "latest" source code of the
-//! system call in the Linux kernel. The exact definiton of "latest" here
+//! system call in the Linux kernel. The exact definition of "latest" here
 //! is: the latest version at the time of writing.
 //!
 //! The return value of a system call is the raw kernel return value.
