@@ -679,9 +679,11 @@ pub struct OldLinuxDirent {
 mod tests {
     use core::mem::{align_of, offset_of, size_of};
 
+    #[cfg(target_arch = "aarch64")]
+    use super::Stat64;
     #[cfg(target_arch = "x86")]
     use super::linux_1_0;
-    use super::{FsidT, NewStat, OldLinuxDirent, Stat64, Statfs, Sysinfo};
+    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo};
 
     #[test]
     fn current_newstat_layout_matches_linux_v7_0_struct_stat() {
@@ -710,6 +712,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "aarch64")]
     #[test]
     fn current_stat64_layout_matches_linux_v7_0_struct_stat() {
         assert_eq!(size_of::<Stat64>(), 128);

@@ -94,8 +94,6 @@ mod tests {
     use celer_system_linux_ctypes::{Int, Rusage, Timeval};
 
     use crate::arch::current::Sysno;
-    #[cfg(target_arch = "aarch64")]
-    use crate::sys::test_support::signal as c_signal;
     #[cfg(target_arch = "x86")]
     use crate::sys::{SigHandler, sig_handler, sig_handler_from_raw, signal};
     use crate::sys::{
@@ -115,21 +113,51 @@ mod tests {
     extern "C" fn handle_sigalrm(_: Int) {}
 
     #[cfg(target_arch = "aarch64")]
-    type SigHandler = libc::sighandler_t;
+    type SigHandler = libc::sigaction;
 
     #[cfg(target_arch = "aarch64")]
-    fn sig_handler(handler: extern "C" fn(Int)) -> SigHandler {
-        handler as usize
+    unsafe fn install_signal_handler(
+        sig: Int,
+        handler: extern "C" fn(Int),
+    ) -> SigHandler {
+        let mut action = unsafe { core::mem::zeroed::<libc::sigaction>() };
+        action.sa_sigaction = handler as libc::sighandler_t;
+        action.sa_flags = 0;
+        let empty_mask = unsafe { libc::sigemptyset(&raw mut action.sa_mask) };
+        assert_eq!(empty_mask, 0, "sigemptyset failed: {empty_mask}");
+
+        let mut old = core::mem::MaybeUninit::<libc::sigaction>::uninit();
+        let rc = unsafe {
+            libc::sigaction(sig, &raw const action, old.as_mut_ptr())
+        };
+        assert_eq!(rc, 0, "installing signal handler failed: {rc}");
+        unsafe { old.assume_init() }
+    }
+
+    #[cfg(target_arch = "x86")]
+    unsafe fn install_signal_handler(
+        sig: Int,
+        handler: extern "C" fn(Int),
+    ) -> SigHandler {
+        let old = unsafe { signal(sig, sig_handler(handler)) };
+        assert_ne!(old, -1, "installing signal handler failed");
+        sig_handler_from_raw(old)
     }
 
     #[cfg(target_arch = "aarch64")]
-    unsafe fn signal(sig: Int, handler: SigHandler) -> isize {
-        unsafe { c_signal(sig, handler) as isize }
+    unsafe fn restore_signal_handler(sig: Int, old: &SigHandler) {
+        let _ = unsafe {
+            libc::sigaction(
+                sig,
+                old as *const SigHandler,
+                core::ptr::null_mut(),
+            )
+        };
     }
 
-    #[cfg(target_arch = "aarch64")]
-    fn sig_handler_from_raw(raw: isize) -> SigHandler {
-        raw as usize
+    #[cfg(target_arch = "x86")]
+    unsafe fn restore_signal_handler(sig: Int, old: &SigHandler) {
+        let _ = unsafe { signal(sig, *old) };
     }
 
     struct RestoreHandler {
@@ -139,7 +167,7 @@ mod tests {
 
     impl Drop for RestoreHandler {
         fn drop(&mut self) {
-            let _ = unsafe { signal(self.sig, self.old) };
+            unsafe { restore_signal_handler(self.sig, &self.old) };
         }
     }
 
@@ -356,12 +384,9 @@ mod tests {
         let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
         if pid == 0 {
-            let old = unsafe { signal(SIGUSR1, sig_handler(handle_sigalrm)) };
-            assert_ne!(old, -1, "installing SIGUSR1 handler failed");
-            let _restore = RestoreHandler {
-                sig: SIGUSR1,
-                old: sig_handler_from_raw(old),
-            };
+            let old =
+                unsafe { install_signal_handler(SIGUSR1, handle_sigalrm) };
+            let _restore = RestoreHandler { sig: SIGUSR1, old };
 
             let child = unsafe { fork() };
             assert!(child >= 0, "fork failed: {child}");
