@@ -73,12 +73,23 @@ mod tests {
 
     #[test]
     fn test_ustat_layout() {
-        assert_eq!(core::mem::size_of::<Ustat>(), 20);
-        assert_eq!(core::mem::align_of::<Ustat>(), 4);
         assert_eq!(core::mem::offset_of!(Ustat, f_tfree), 0);
-        assert_eq!(core::mem::offset_of!(Ustat, f_tinode), 4);
-        assert_eq!(core::mem::offset_of!(Ustat, f_fname), 8);
-        assert_eq!(core::mem::offset_of!(Ustat, f_fpack), 14);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(core::mem::size_of::<Ustat>(), 20);
+            assert_eq!(core::mem::align_of::<Ustat>(), 4);
+            assert_eq!(core::mem::offset_of!(Ustat, f_tinode), 4);
+            assert_eq!(core::mem::offset_of!(Ustat, f_fname), 8);
+            assert_eq!(core::mem::offset_of!(Ustat, f_fpack), 14);
+        }
+        #[cfg(target_arch = "x86_64")]
+        {
+            assert_eq!(core::mem::size_of::<Ustat>(), 32);
+            assert_eq!(core::mem::align_of::<Ustat>(), 8);
+            assert_eq!(core::mem::offset_of!(Ustat, f_tinode), 8);
+            assert_eq!(core::mem::offset_of!(Ustat, f_fname), 16);
+            assert_eq!(core::mem::offset_of!(Ustat, f_fpack), 22);
+        }
     }
 
     #[test]

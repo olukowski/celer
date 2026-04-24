@@ -715,7 +715,7 @@ mod tests {
     use super::Stat64;
     #[cfg(target_arch = "x86")]
     use super::linux_1_0;
-    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo};
+    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo, Ustat};
 
     #[test]
     fn current_newstat_layout_matches_linux_v7_0_struct_stat() {
@@ -859,6 +859,27 @@ mod tests {
             assert_eq!(offset_of!(Statfs, f_frsize), 72);
             assert_eq!(offset_of!(Statfs, f_flags), 80);
             assert_eq!(offset_of!(Statfs, f_spare), 88);
+        }
+    }
+
+    #[test]
+    fn current_ustat_layout_matches_linux_v7_0_struct_ustat() {
+        assert_eq!(offset_of!(Ustat, f_tfree), 0);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<Ustat>(), 20);
+            assert_eq!(align_of::<Ustat>(), 4);
+            assert_eq!(offset_of!(Ustat, f_tinode), 4);
+            assert_eq!(offset_of!(Ustat, f_fname), 8);
+            assert_eq!(offset_of!(Ustat, f_fpack), 14);
+        }
+        #[cfg(target_arch = "x86_64")]
+        {
+            assert_eq!(size_of::<Ustat>(), 32);
+            assert_eq!(align_of::<Ustat>(), 8);
+            assert_eq!(offset_of!(Ustat, f_tinode), 8);
+            assert_eq!(offset_of!(Ustat, f_fname), 16);
+            assert_eq!(offset_of!(Ustat, f_fpack), 22);
         }
     }
 
