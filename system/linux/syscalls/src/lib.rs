@@ -41,6 +41,7 @@ mod fcntl;
 #[cfg(target_arch = "x86")]
 mod fork;
 mod fstatfs;
+mod fsync;
 mod helpers;
 pub mod sys;
 
@@ -73,6 +74,7 @@ pub use fcntl::{FcntlError, fcntl};
 #[cfg(target_arch = "x86")]
 pub use fork::{ForkError, fork};
 pub use fstatfs::{FstatfsError, fstatfs};
+pub use fsync::{FsyncError, fsync};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]

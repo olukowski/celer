@@ -11,6 +11,7 @@ pub enum Errno {
     Eexist,
     Einval,
     Eintr,
+    Eio,
     Eloop,
     Enodev,
     Enoent,
@@ -39,6 +40,7 @@ impl Errno {
             17 => Self::Eexist,
             22 => Self::Einval,
             4 => Self::Eintr,
+            5 => Self::Eio,
             40 => Self::Eloop,
             19 => Self::Enodev,
             2 => Self::Enoent,
@@ -85,6 +87,7 @@ mod tests {
         assert_eq!(Errno::from_raw(17), Errno::Eexist);
         assert_eq!(Errno::from_raw(22), Errno::Einval);
         assert_eq!(Errno::from_raw(4), Errno::Eintr);
+        assert_eq!(Errno::from_raw(5), Errno::Eio);
         assert_eq!(Errno::from_raw(40), Errno::Eloop);
         assert_eq!(Errno::from_raw(19), Errno::Enodev);
         assert_eq!(Errno::from_raw(2), Errno::Enoent);
