@@ -13,7 +13,7 @@ use crate::arch::linux_1_0::{
 /// This wrapper exposes the current native `setrlimit(2)` ABI. On x86 this is
 /// syscall slot `75`; Linux 1.0 used the same syscall slot with a signed
 /// 32-bit `struct rlimit` layout, exposed separately as
-/// [`crate::sys::linux_1_0::setrlimit`]. On aarch64 this is syscall slot
+/// `crate::sys::linux_1_0::setrlimit`. On aarch64 this is syscall slot
 /// `164` with the native `struct rlimit` layout.
 ///
 /// # Safety

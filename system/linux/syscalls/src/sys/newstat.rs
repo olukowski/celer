@@ -35,7 +35,8 @@ use crate::arch::linux_1_0::{
 /// - The final pathname component is followed if it is a symlink.
 /// - The result uses the target architecture's native `struct stat` layout
 ///   copied by `cp_new_stat()`, including nanosecond timestamp fields.
-/// - On i386, this is the 32-bit [`NewStat`] layout. On x86_64, this is the
+/// - On i386, this is the 32-bit
+///   [`NewStat`](celer_system_linux_ctypes::NewStat) layout. On x86_64, this is the
 ///   native 64-bit [`Stat64`](celer_system_linux_ctypes::Stat64) layout.
 ///
 /// # Errors
@@ -74,7 +75,7 @@ use crate::arch::linux_1_0::{
 /// - Current x86 `struct stat` layouts: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n466)
 /// - Current symlink traversal limit: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/namei.h?h=v7.0#n14)
-/// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+/// - Linux 1.0 `struct new_stat`, preserved as `celer_system_linux_ctypes::linux_1_0::NewStat`: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 pub unsafe fn stat(filename: *const Char, statbuf: *mut NativeStat) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {
@@ -90,8 +91,9 @@ pub unsafe fn stat(filename: *const Char, statbuf: *mut NativeStat) -> Long {
 ///
 /// This wrapper uses syscall slot `106` with the Linux 1.0
 /// [`Linux10NewStat`] layout from `/Volumes/External/linux/1.0/include/linux/stat.h`.
-/// Current kernels use the same slot with the current i386 [`NewStat`] layout,
-/// exposed by [`stat`].
+/// Current kernels use the same slot with the current i386
+/// [`NewStat`](celer_system_linux_ctypes::NewStat) layout, exposed by
+/// [`stat`].
 ///
 /// # Safety
 /// - `filename` must point to a NUL-terminated string that is readable for the

@@ -42,7 +42,8 @@ use crate::arch::linux_1_0::{
 ///   `fd`.
 /// - Current kernels copy the target architecture's native `struct stat`
 ///   layout through `cp_new_stat()`, including nanosecond timestamp fields.
-/// - On i386, this is the 32-bit [`NewStat`] layout. On x86_64, this is the
+/// - On i386, this is the 32-bit
+///   [`NewStat`](celer_system_linux_ctypes::NewStat) layout. On x86_64, this is the
 ///   native 64-bit [`Stat64`](celer_system_linux_ctypes::Stat64) layout. On
 ///   aarch64, this is the generic 64-bit
 ///   [`Stat64`](celer_system_linux_ctypes::Stat64) layout.
@@ -64,7 +65,7 @@ use crate::arch::linux_1_0::{
 /// # Historical References
 /// - Current x86 `struct stat` layouts: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n546)
-/// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+/// - Linux 1.0 `struct new_stat`, preserved as `celer_system_linux_ctypes::linux_1_0::NewStat`: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 /// - Linux 1.0 syscall number: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n117)
 pub unsafe fn newfstat(fd: UnsignedInt, statbuf: *mut NativeStat) -> Long {
     // SAFETY: guaranteed by caller.

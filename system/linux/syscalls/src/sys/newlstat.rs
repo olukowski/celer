@@ -37,7 +37,8 @@ use crate::arch::linux_1_0::{
 ///   resolution.
 /// - This wrapper uses the target architecture's native `struct stat` layout
 ///   copied by `cp_new_stat()`, including nanosecond timestamp fields.
-/// - On i386, this is the 32-bit [`NewStat`] layout. On x86_64, this is the
+/// - On i386, this is the 32-bit
+///   [`NewStat`](celer_system_linux_ctypes::NewStat) layout. On x86_64, this is the
 ///   native 64-bit [`Stat64`](celer_system_linux_ctypes::Stat64) layout.
 ///
 /// # Errors
@@ -69,7 +70,7 @@ use crate::arch::linux_1_0::{
 /// # Historical References
 /// - Current x86 `struct stat` layouts: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n518)
-/// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+/// - Linux 1.0 `struct new_stat`, preserved as `celer_system_linux_ctypes::linux_1_0::NewStat`: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 pub unsafe fn newlstat(
     filename: *const Char,
     statbuf: *mut NativeStat,
@@ -88,7 +89,8 @@ pub unsafe fn newlstat(
 ///
 /// This wrapper uses syscall slot `107` with the Linux 1.0
 /// [`Linux10NewStat`] layout. Current kernels use the same slot with the
-/// current i386 [`NewStat`] layout, exposed by [`newlstat`].
+/// current i386 [`NewStat`](celer_system_linux_ctypes::NewStat) layout,
+/// exposed by [`newlstat`].
 ///
 /// # Safety
 /// - `filename` must point to a NUL-terminated string that is readable for the

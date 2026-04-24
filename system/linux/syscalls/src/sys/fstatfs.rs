@@ -82,7 +82,7 @@ use crate::arch::linux_1_0::{
 ///   [v7.0 include/uapi/asm-generic/statfs.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/statfs.h?h=v7.0#n23)
 /// - Current x86 compat packing override:
 ///   [v7.0 arch/x86/include/uapi/asm/statfs.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/statfs.h?h=v7.0#n5)
-/// - Linux 1.0 `struct statfs`, preserved as [`celer_system_linux_ctypes::linux_1_0::Statfs`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/vfs.h?h=1.0#n8)
+/// - Linux 1.0 `struct statfs`, preserved as `celer_system_linux_ctypes::linux_1_0::Statfs`: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/vfs.h?h=1.0#n8)
 pub unsafe fn fstatfs(fd: UnsignedInt, buf: *mut Statfs) -> Long {
     // SAFETY: guaranteed by caller.
     unsafe {
