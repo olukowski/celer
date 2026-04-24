@@ -85,7 +85,7 @@ Shared conversion helpers should live in a private `helpers` module.
 
 ## Checklist
 
-- [ ] `access` - x86, x86_64
+- [x] `access` - x86, x86_64
 - [ ] `acct`
 - [ ] `adjtimex`
 - [ ] `alarm` - x86, x86_64
