@@ -26,6 +26,7 @@ mod close;
 mod creat;
 #[cfg(target_arch = "x86")]
 mod create_module;
+mod delete_module;
 mod errno;
 mod helpers;
 pub mod sys;
@@ -44,6 +45,7 @@ pub use chroot::{ChrootError, chroot};
 pub use close::{CloseError, close};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use creat::{CreatError, creat};
+pub use delete_module::{DeleteModuleError, delete_module};
 pub use errno::Errno;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.

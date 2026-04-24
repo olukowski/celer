@@ -4,6 +4,7 @@ pub enum Errno {
     Eacces,
     E2big,
     Ebadf,
+    Ebusy,
     Efault,
     Eexist,
     Einval,
@@ -15,6 +16,7 @@ pub enum Errno {
     Enotdir,
     Eperm,
     Erofs,
+    Ewouldblock,
     Raw(u16),
 }
 
@@ -25,6 +27,7 @@ impl Errno {
             13 => Self::Eacces,
             7 => Self::E2big,
             9 => Self::Ebadf,
+            16 => Self::Ebusy,
             14 => Self::Efault,
             17 => Self::Eexist,
             22 => Self::Einval,
@@ -36,6 +39,7 @@ impl Errno {
             20 => Self::Enotdir,
             1 => Self::Eperm,
             30 => Self::Erofs,
+            11 => Self::Ewouldblock,
             other => Self::Raw(other),
         }
     }
@@ -65,6 +69,7 @@ mod tests {
         assert_eq!(Errno::from_raw(13), Errno::Eacces);
         assert_eq!(Errno::from_raw(7), Errno::E2big);
         assert_eq!(Errno::from_raw(9), Errno::Ebadf);
+        assert_eq!(Errno::from_raw(16), Errno::Ebusy);
         assert_eq!(Errno::from_raw(14), Errno::Efault);
         assert_eq!(Errno::from_raw(17), Errno::Eexist);
         assert_eq!(Errno::from_raw(22), Errno::Einval);
@@ -76,6 +81,7 @@ mod tests {
         assert_eq!(Errno::from_raw(20), Errno::Enotdir);
         assert_eq!(Errno::from_raw(1), Errno::Eperm);
         assert_eq!(Errno::from_raw(30), Errno::Erofs);
+        assert_eq!(Errno::from_raw(11), Errno::Ewouldblock);
         assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));
     }
 
