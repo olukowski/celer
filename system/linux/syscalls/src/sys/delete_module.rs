@@ -9,8 +9,8 @@ use crate::arch::current::{Sysno, syscall2};
 /// number 129 as `delete_module` and add `flags`, which Linux 1.0 ignores.
 ///
 /// # Safety
-/// - The module-name pointer must be valid to read a NUL-terminated string for
-///   the duration of the syscall.
+/// - When non-null, `module_name` must be valid to read a NUL-terminated string
+///   for the duration of the syscall.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
@@ -37,6 +37,9 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Linux 1.0 ignores `flags`.
 /// - Current x86-32 kernels interpret `flags` according to the modern
 ///   `delete_module(2)` ABI.
+/// - Current kernels pass `module_name` to `strncpy_from_user`; a null
+///   `module_name` is rejected with `EFAULT` after the permission and global
+///   module-loading checks pass.
 ///
 /// # Errors
 /// - `EPERM`: the caller lacks permission to unload modules.
