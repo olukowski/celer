@@ -10,7 +10,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// accounting on that same slot.
 ///
 /// # Safety
-/// - The pathname pointer must be valid to read a NUL-terminated string for
+/// - When non-null, `name` must be valid to read a NUL-terminated string for
 ///   the duration of the syscall.
 ///
 /// # Kernel Support
