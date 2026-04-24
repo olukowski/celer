@@ -44,6 +44,7 @@ mod execve;
 mod exit;
 mod fchdir;
 mod fchmod;
+#[cfg(target_arch = "x86")]
 mod fchown;
 mod fcntl;
 #[cfg(target_arch = "x86")]
@@ -55,9 +56,13 @@ mod fsync;
 mod ftruncate;
 #[cfg(target_arch = "x86")]
 mod get_kernel_syms;
+#[cfg(target_arch = "x86")]
 mod getegid;
+#[cfg(target_arch = "x86")]
 mod geteuid;
+#[cfg(target_arch = "x86")]
 mod getgid;
+#[cfg(target_arch = "x86")]
 mod getgroups;
 mod getitimer;
 mod getpgid;
@@ -69,6 +74,7 @@ mod getpriority;
 mod getrlimit;
 mod getrusage;
 mod gettimeofday;
+#[cfg(target_arch = "x86")]
 mod getuid;
 #[cfg(target_arch = "x86")]
 mod idle;
@@ -124,17 +130,22 @@ mod rmdir;
 #[cfg(target_arch = "x86")]
 mod select;
 mod setdomainname;
+#[cfg(target_arch = "x86")]
 mod setgid;
+#[cfg(target_arch = "x86")]
 mod setgroups;
 mod sethostname;
 mod setitimer;
 mod setpgid;
 mod setpriority;
+#[cfg(target_arch = "x86")]
 mod setregid;
+#[cfg(target_arch = "x86")]
 mod setreuid;
 mod setrlimit;
 mod setsid;
 mod settimeofday;
+#[cfg(target_arch = "x86")]
 mod setuid;
 #[cfg(target_arch = "x86")]
 mod setup;
