@@ -22,6 +22,8 @@ mod chdir;
 mod chmod;
 mod chroot;
 mod close;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod creat;
 mod errno;
 mod helpers;
 pub mod sys;
@@ -38,4 +40,6 @@ pub use chdir::{ChdirError, chdir};
 pub use chmod::{ChmodError, chmod};
 pub use chroot::{ChrootError, chroot};
 pub use close::{CloseError, close};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use creat::{CreatError, creat};
 pub use errno::Errno;
