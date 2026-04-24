@@ -12,23 +12,49 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  lint:
-    name: Clippy + fmt
+  format:
+    name: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
-
-      - uses: Swatinem/rust-cache@v2
+          components: rustfmt
 
       - name: Check formatting
         run: cargo fmt --all -- --check
 
+  lint:
+    name: Clippy (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: i686-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
       - name: Clippy
-        run: cargo clippy --all --lib --tests --all-features -- -D warnings
+        run: |
+          cargo clippy \
+          --target ${{ matrix.target }} \
+          --all \
+          --lib \
+          --tests \
+          --all-features \
+          -- -D warnings
 
   test:
     name: Tests (${{ matrix.target }})
@@ -40,10 +66,6 @@ jobs:
         include:
           - runner: ubuntu-latest
             target: i686-unknown-linux-gnu
-          - runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - runner: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
 
     steps:
       - uses: actions/checkout@v6
@@ -84,12 +106,6 @@ jobs:
         include:
           - runner: ubuntu-latest
             target: i686-unknown-linux-gnu
-
-          - runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-
-          - runner: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
 
     steps:
       - uses: actions/checkout@v6
@@ -146,14 +162,22 @@ jobs:
           parallel-finished: true
 
   miri:
-    name: Miri
-    runs-on: ubuntu-latest
+    name: Miri (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: i686-unknown-linux-gnu
 
     steps:
       - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
+          targets: ${{ matrix.target }}
           components: miri
 
       - uses: Swatinem/rust-cache@v2
@@ -162,4 +186,9 @@ jobs:
         run: cargo +nightly miri setup
 
       - name: Run Miri tests
-        run: MIRIFLAGS="-Zmiri-strict-provenance" cargo +nightly miri test --workspace --lib --tests
+        run: |
+          MIRIFLAGS="-Zmiri-strict-provenance" cargo +nightly miri test \
+            --target ${{ matrix.target }} \
+            --workspace \
+            --lib \
+            --tests

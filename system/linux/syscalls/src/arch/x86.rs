@@ -1,0 +1,588 @@
+use core::arch::asm;
+
+pub mod linux_1_0 {
+    use core::arch::asm;
+
+    /// Linux 1.0 x86 syscall numbers used by this crate.
+    #[repr(isize)]
+    #[non_exhaustive]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    pub enum Sysno {
+        /// Historical Linux bootstrap syscall used only by init.
+        Setup = 0,
+        /// Historical Linux 1.0 signed-rlimit ABI.
+        Setrlimit = 75,
+        /// Linux 1.0 `statfs` ABI.
+        Statfs = 99,
+        /// Linux 1.0 `fstatfs` ABI.
+        Fstatfs = 100,
+        /// Linux 1.0 `sysinfo` ABI.
+        Sysinfo = 116,
+        /// Linux 1.0 unsigned-length `truncate` ABI.
+        Truncate = 92,
+        /// Linux 1.0 unsigned-length `ftruncate` ABI.
+        Ftruncate = 93,
+        /// Linux 1.0 `newstat` ABI using `struct new_stat`.
+        Newstat = 106,
+        /// Linux 1.0 `newlstat` ABI using `struct new_stat`.
+        Newlstat = 107,
+        /// Linux 1.0 `newfstat` ABI using `struct new_stat`.
+        Newfstat = 108,
+        /// Historical Linux 1.0 module initialization ABI.
+        InitModule = 128,
+    }
+
+    /// Invoke a Linux 1.0 x86 syscall with `1` argument.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `sysno` identifies a Linux 1.0 syscall that takes one argument.
+    /// - `arg1` is a valid argument for `sysno`. If it encodes a pointer, the
+    ///   pointed-to memory must be valid for the duration of the syscall; see
+    ///   [`core::ptr::read`] and [`core::ptr::write`] for what validity
+    ///   requires for read-only and write-only pointers respectively.
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
+        let mut ret: isize;
+
+        // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+        // All other safety requirements are enforced by the caller.
+        unsafe {
+            asm!(
+                "int 0x80",
+                inlateout("eax") sysno as usize => ret,
+                in("ebx") arg1,
+                options(nostack),
+            );
+        }
+
+        ret
+    }
+
+    /// Invoke a Linux 1.0 x86 syscall with `2` arguments.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `sysno` identifies a Linux 1.0 syscall that takes two arguments.
+    /// - `arg1` and `arg2` are valid arguments for `sysno`. If either encodes
+    ///   a pointer, the pointed-to memory must be valid for the duration of
+    ///   the syscall; see [`core::ptr::read`] and [`core::ptr::write`] for
+    ///   what validity requires for read-only and write-only pointers
+    ///   respectively.
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
+        let mut ret: isize;
+
+        // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+        // All other safety requirements are enforced by the caller.
+        unsafe {
+            asm!(
+                "int 0x80",
+                inlateout("eax") sysno as usize => ret,
+                in("ebx") arg1,
+                in("ecx") arg2,
+                options(nostack),
+            );
+        }
+
+        ret
+    }
+
+    /// Invoke a Linux 1.0 x86 syscall with `4` arguments.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `sysno` identifies a Linux 1.0 syscall that takes four arguments.
+    /// - `arg1` through `arg4` are valid arguments for `sysno`. If any encode
+    ///   a pointer, the pointed-to memory must be valid for the duration of
+    ///   the syscall; see [`core::ptr::read`] and [`core::ptr::write`] for
+    ///   what validity requires for read-only and write-only pointers
+    ///   respectively.
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    pub unsafe fn syscall4(
+        sysno: Sysno,
+        arg1: isize,
+        arg2: isize,
+        arg3: isize,
+        arg4: isize,
+    ) -> isize {
+        let mut ret: isize;
+
+        // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+        // The `esi` register is preserved across the syscall by
+        // saving/restoring it because Rust's inline asm does not allow a
+        // direct operand constraint for this legacy ABI in the way we need
+        // here. All other safety requirements are enforced by the caller.
+        unsafe {
+            asm!(
+                "push esi",
+                "mov esi, {arg4_reg}",
+                "int 0x80",
+                "pop esi",
+                inlateout("eax") sysno as usize => ret,
+                in("ebx") arg1,
+                in("ecx") arg2,
+                in("edx") arg3,
+                arg4_reg = in(reg) arg4,
+            );
+        }
+
+        ret
+    }
+}
+
+/// Syscall numbers.
+#[repr(isize)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Sysno {
+    /// <https://man7.org/linux/man-pages/man2/exit.2.html>
+    Exit = 1,
+    /// <https://man7.org/linux/man-pages/man2/fork.2.html>
+    Fork = 2,
+    /// <https://man7.org/linux/man-pages/man2/execve.2.html>
+    Execve = 11,
+    /// <https://man7.org/linux/man-pages/man2/read.2.html>
+    Read = 3,
+    /// <https://man7.org/linux/man-pages/man2/write.2.html>
+    Write = 4,
+    /// <https://man7.org/linux/man-pages/man2/open.2.html>
+    Open = 5,
+    /// <https://man7.org/linux/man-pages/man2/lseek.2.html>
+    Lseek = 19,
+    /// <https://man7.org/linux/man-pages/man2/mount.2.html>
+    Mount = 21,
+    /// <https://man7.org/linux/man-pages/man2/chmod.2.html>
+    Chmod = 15,
+    /// <https://man7.org/linux/man-pages/man2/stat.2.html>
+    Stat = 18,
+    /// <https://man7.org/linux/man-pages/man2/chdir.2.html>
+    Chdir = 12,
+    /// <https://man7.org/linux/man-pages/man2/umount.2.html>
+    Umount = 22,
+    /// <https://man7.org/linux/man-pages/man2/time.2.html>
+    Time = 13,
+    /// <https://man7.org/linux/man-pages/man2/stime.2.html>
+    Stime = 25,
+    /// <https://man7.org/linux/man-pages/man2/unlink.2.html>
+    Unlink = 10,
+    /// <https://man7.org/linux/man-pages/man2/close.2.html>
+    Close = 6,
+    /// <https://man7.org/linux/man-pages/man2/ioctl.2.html>
+    Ioctl = 54,
+    /// <https://man7.org/linux/man-pages/man2/fcntl.2.html>
+    Fcntl = 55,
+    /// <https://man7.org/linux/man-pages/man2/brk.2.html>
+    Brk = 45,
+    /// <https://man7.org/linux/man-pages/man2/dup.2.html>
+    Dup = 41,
+    /// <https://man7.org/linux/man-pages/man2/pipe.2.html>
+    Pipe = 42,
+    /// <https://man7.org/linux/man-pages/man2/times.2.html>
+    Times = 43,
+    /// <https://man7.org/linux/man-pages/man2/waitpid.2.html>
+    Waitpid = 7,
+    /// <https://man7.org/linux/man-pages/man2/creat.2.html>
+    Creat = 8,
+    /// <https://man7.org/linux/man-pages/man2/link.2.html>
+    Link = 9,
+    /// <https://man7.org/linux/man-pages/man2/setuid.2.html>
+    Setuid = 23,
+    /// <https://man7.org/linux/man-pages/man2/setpgid.2.html>
+    Setpgid = 57,
+    /// <https://man7.org/linux/man-pages/man2/mknod.2.html>
+    Mknod = 14,
+    /// <https://man7.org/linux/man-pages/man2/lchown.2.html>
+    Lchown = 16,
+    /// <https://man7.org/linux/man-pages/man2/getpid.2.html>
+    Getpid = 20,
+    /// <https://man7.org/linux/man-pages/man2/gettimeofday.2.html>
+    Gettimeofday = 78,
+    /// <https://man7.org/linux/man-pages/man2/getuid.2.html>
+    Getuid = 24,
+    /// <https://man7.org/linux/man-pages/man2/getgroups.2.html>
+    Getgroups = 80,
+    /// <https://man7.org/linux/man-pages/man2/setgroups.2.html>
+    Setgroups = 81,
+    /// <https://man7.org/linux/man-pages/man2/getgid.2.html>
+    Getgid = 47,
+    /// <https://man7.org/linux/man-pages/man2/geteuid.2.html>
+    Geteuid = 49,
+    /// <https://man7.org/linux/man-pages/man2/getegid.2.html>
+    Getegid = 50,
+    /// <https://man7.org/linux/man-pages/man2/acct.2.html>
+    Acct = 51,
+    /// <https://man7.org/linux/man-pages/man2/ptrace.2.html>
+    Ptrace = 26,
+    /// <https://man7.org/linux/man-pages/man2/alarm.2.html>
+    Alarm = 27,
+    /// <https://man7.org/linux/man-pages/man2/fstat.2.html>
+    Fstat = 28,
+    /// <https://man7.org/linux/man-pages/man2/pause.2.html>
+    Pause = 29,
+    /// <https://man7.org/linux/man-pages/man2/utime.2.html>
+    Utime = 30,
+    /// <https://man7.org/linux/man-pages/man2/access.2.html>
+    Access = 33,
+    /// <https://man7.org/linux/man-pages/man2/nice.2.html>
+    Nice = 34,
+    /// <https://man7.org/linux/man-pages/man2/sync.2.html>
+    Sync = 36,
+    /// <https://man7.org/linux/man-pages/man2/kill.2.html>
+    Kill = 37,
+    /// <https://man7.org/linux/man-pages/man2/signal.2.html>
+    Signal = 48,
+    /// <https://man7.org/linux/man-pages/man2/rename.2.html>
+    Rename = 38,
+    /// <https://man7.org/linux/man-pages/man2/mkdir.2.html>
+    Mkdir = 39,
+    /// <https://man7.org/linux/man-pages/man2/rmdir.2.html>
+    Rmdir = 40,
+    /// <https://man7.org/linux/man-pages/man2/setgid.2.html>
+    Setgid = 46,
+    /// <https://man7.org/linux/man-pages/man2/uname.2.html>
+    Oldolduname = 59,
+    /// <https://man7.org/linux/man-pages/man2/umask.2.html>
+    Umask = 60,
+    /// <https://man7.org/linux/man-pages/man2/chroot.2.html>
+    Chroot = 61,
+    /// <https://man7.org/linux/man-pages/man2/ustat.2.html>
+    Ustat = 62,
+    /// <https://man7.org/linux/man-pages/man2/dup.2.html>
+    Dup2 = 63,
+    /// <https://man7.org/linux/man-pages/man2/getppid.2.html>
+    Getppid = 64,
+    /// <https://man7.org/linux/man-pages/man2/getpgrp.2.html>
+    Getpgrp = 65,
+    /// <https://man7.org/linux/man-pages/man2/setsid.2.html>
+    Setsid = 66,
+    /// <https://man7.org/linux/man-pages/man2/sigaction.2.html>
+    Sigaction = 67,
+    /// <https://man7.org/linux/man-pages/man2/sigprocmask.2.html>
+    Sgetmask = 68,
+    /// <https://man7.org/linux/man-pages/man2/sigprocmask.2.html>
+    Ssetmask = 69,
+    /// <https://man7.org/linux/man-pages/man2/setreuid.2.html>
+    Setreuid = 70,
+    /// <https://man7.org/linux/man-pages/man2/setregid.2.html>
+    Setregid = 71,
+    /// <https://man7.org/linux/man-pages/man2/sigsuspend.2.html>
+    Sigsuspend = 72,
+    /// <https://man7.org/linux/man-pages/man2/sigpending.2.html>
+    Sigpending = 73,
+    /// <https://man7.org/linux/man-pages/man2/sethostname.2.html>
+    Sethostname = 74,
+    /// <https://man7.org/linux/man-pages/man2/setrlimit.2.html>
+    Setrlimit = 75,
+    /// <https://man7.org/linux/man-pages/man2/getrlimit.2.html>
+    Getrlimit = 76,
+    /// <https://man7.org/linux/man-pages/man2/getrusage.2.html>
+    Getrusage = 77,
+    /// <https://man7.org/linux/man-pages/man2/settimeofday.2.html>
+    Settimeofday = 79,
+    /// <https://man7.org/linux/man-pages/man2/select.2.html>
+    Select = 82,
+    /// <https://man7.org/linux/man-pages/man2/symlink.2.html>
+    Symlink = 83,
+    /// Historical i386 `lstat` ABI; Linux 1.0 later added a newer `lstat`
+    /// entry at syscall number `107`.
+    Oldlstat = 84,
+    /// <https://man7.org/linux/man-pages/man2/readlink.2.html>
+    Readlink = 85,
+    /// Historical i386 `uselib` ABI.
+    Uselib = 86,
+    /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
+    Swapon = 87,
+    /// <https://man7.org/linux/man-pages/man2/reboot.2.html>
+    Reboot = 88,
+    /// <https://man7.org/linux/man-pages/man2/readdir.2.html>
+    Readdir = 89,
+    /// Historical i386 `mmap` ABI that takes a pointer to six packed words.
+    Mmap = 90,
+    /// <https://man7.org/linux/man-pages/man2/munmap.2.html>
+    Munmap = 91,
+    /// <https://man7.org/linux/man-pages/man2/truncate.2.html>
+    Truncate = 92,
+    /// <https://man7.org/linux/man-pages/man2/truncate.2.html>
+    Ftruncate = 93,
+    /// <https://man7.org/linux/man-pages/man2/fchmod.2.html>
+    Fchmod = 94,
+    /// Historical i386 `fchown16` ABI.
+    Fchown = 95,
+    /// <https://man7.org/linux/man-pages/man2/fchdir.2.html>
+    Fchdir = 133,
+    /// <https://man7.org/linux/man-pages/man2/getpriority.2.html>
+    Getpriority = 96,
+    /// <https://man7.org/linux/man-pages/man2/setpriority.2.html>
+    Setpriority = 97,
+    /// Current i386 `statfs` ABI.
+    Statfs = 99,
+    /// <https://man7.org/linux/man-pages/man2/statfs.2.html>
+    Fstatfs = 100,
+    /// <https://man7.org/linux/man-pages/man2/ioperm.2.html>
+    Ioperm = 101,
+    /// Historical i386 socket-operation multiplexor ABI.
+    Socketcall = 102,
+    /// <https://man7.org/linux/man-pages/man3/klogctl.3.html>
+    Syslog = 103,
+    /// Historical `setitimer` ABI using `struct itimerval`.
+    Setitimer = 104,
+    /// <https://man7.org/linux/man-pages/man2/getitimer.2.html>
+    Getitimer = 105,
+    /// Historical i386 `sigprocmask` ABI using one legacy signal-mask word.
+    Sigprocmask = 126,
+    /// Current i386 `newstat` ABI using `struct stat`.
+    Newstat = 106,
+    /// Current i386 `newlstat` ABI using `struct stat`.
+    Newlstat = 107,
+    /// Current i386 `newfstat` ABI using `struct stat`.
+    Newfstat = 108,
+    /// <https://man7.org/linux/man-pages/man2/uname.2.html>
+    Olduname = 109,
+    /// <https://man7.org/linux/man-pages/man2/iopl.2.html>
+    Iopl = 110,
+    /// <https://man7.org/linux/man-pages/man2/vhangup.2.html>
+    Vhangup = 111,
+    /// Historical i386 `idle` syscall.
+    Idle = 112,
+    /// Historical x86 `vm86old` / Linux 1.0 `vm86` ABI.
+    Vm86 = 113,
+    /// <https://man7.org/linux/man-pages/man2/wait4.2.html>
+    Wait4 = 114,
+    /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
+    Swapoff = 115,
+    /// <https://man7.org/linux/man-pages/man2/sysinfo.2.html>
+    Sysinfo = 116,
+    /// Historical i386 SYSVIPC multiplexor ABI.
+    Ipc = 117,
+    /// <https://man7.org/linux/man-pages/man2/fsync.2.html>
+    Fsync = 118,
+    /// Historical i386 signal-frame return ABI.
+    Sigreturn = 119,
+    /// <https://man7.org/linux/man-pages/man2/setdomainname.2.html>
+    Setdomainname = 121,
+    /// <https://man7.org/linux/man-pages/man2/uname.2.html>
+    Newuname = 122,
+    /// Historical x86 `modify_ldt` ABI.
+    ModifyLdt = 123,
+    /// <https://man7.org/linux/man-pages/man2/adjtimex.2.html>
+    Adjtimex = 124,
+    /// Historical Linux 1.0 `create_module` ABI.
+    CreateModule = 127,
+    /// <https://man7.org/linux/man-pages/man2/init_module.2.html>
+    InitModule = 128,
+    /// Historical x86 `delete_module` ABI.
+    DeleteModule = 129,
+    /// Historical Linux 1.0 kernel symbol table export ABI.
+    GetKernelSyms = 130,
+    /// <https://man7.org/linux/man-pages/man2/getpgid.2.html>
+    Getpgid = 132,
+}
+
+/// Invoke a syscall with `0` arguments.
+///
+/// # Safety
+///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes no arguments.
+/// - The selected syscall does not rely on additional caller-held invariants
+///   beyond the empty register ABI. Some historical zero-argument syscalls,
+///   such as signal-frame return paths, still depend on external kernel-
+///   managed process state.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub unsafe fn syscall0(sysno: Sysno) -> isize {
+    let mut ret: isize;
+
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+    // All other safety requirements are enforced by the caller.
+    unsafe {
+        asm!(
+            "int 0x80",
+            inlateout("eax") sysno as usize => ret,
+            options(nostack),
+        );
+    }
+
+    ret
+}
+
+/// Invoke a syscall with `1` argument.
+///
+/// # Safety
+///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes one argument.
+/// - `arg1` is a valid argument for `sysno`. If it encodes a pointer, the
+///   pointed-to memory must be valid for the duration of the syscall; see
+///   [`core::ptr::read`] and [`core::ptr::write`] for what validity requires
+///   for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub unsafe fn syscall1(sysno: Sysno, arg1: isize) -> isize {
+    let mut ret: isize;
+
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+    // All other safety requirements are enforced by the caller.
+    unsafe {
+        asm!(
+            "int 0x80",
+            inlateout("eax") sysno as usize => ret,
+            in("ebx") arg1,
+            options(nostack),
+        );
+    }
+
+    ret
+}
+
+/// Invoke a syscall with `2` arguments.
+///
+/// # Safety
+///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes two arguments.
+/// - `arg1` and `arg2` are valid arguments for `sysno`. If either encodes a
+///   pointer, the pointed-to memory must be valid for the duration of the
+///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
+///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub unsafe fn syscall2(sysno: Sysno, arg1: isize, arg2: isize) -> isize {
+    let mut ret: isize;
+
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+    // All other safety requirements are enforced by the caller.
+    unsafe {
+        asm!(
+            "int 0x80",
+            inlateout("eax") sysno as usize => ret,
+            in("ebx") arg1,
+            in("ecx") arg2,
+            options(nostack),
+        );
+    }
+
+    ret
+}
+
+/// Invoke a syscall with `3` arguments.
+///
+/// # Safety
+///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes three arguments.
+/// - `arg1` through `arg3` are valid arguments for `sysno`. If any encode a
+///   pointer, the pointed-to memory must be valid for the duration of the
+///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
+///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub unsafe fn syscall3(
+    sysno: Sysno,
+    arg1: isize,
+    arg2: isize,
+    arg3: isize,
+) -> isize {
+    let mut ret: isize;
+
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+    // All other safety requirements are enforced by the caller.
+    unsafe {
+        asm!(
+            "int 0x80",
+            inlateout("eax") sysno as usize => ret,
+            in("ebx") arg1,
+            in("ecx") arg2,
+            in("edx") arg3,
+            options(nostack),
+        );
+    }
+
+    ret
+}
+
+/// Invoke a syscall with `4` arguments.
+///
+/// # Safety
+///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes four arguments.
+/// - `arg1` through `arg4` are valid arguments for `sysno`. If any encode a
+///   pointer, the pointed-to memory must be valid for the duration of the
+///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
+///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub unsafe fn syscall4(
+    sysno: Sysno,
+    arg1: isize,
+    arg2: isize,
+    arg3: isize,
+    arg4: isize,
+) -> isize {
+    let mut ret: isize;
+
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+    // The `esi` register is preserved across the syscall by saving/restoring
+    // it because Rust's inline asm does not allow a direct operand constraint
+    // for this legacy ABI in the way we need here.
+    // All other safety requirements are enforced by the caller.
+    unsafe {
+        asm!(
+            "push esi",
+            "mov esi, {arg4_reg}",
+            "int 0x80",
+            "pop esi",
+            inlateout("eax") sysno as usize => ret,
+            in("ebx") arg1,
+            in("ecx") arg2,
+            in("edx") arg3,
+            arg4_reg = in(reg) arg4,
+        );
+    }
+
+    ret
+}
+
+/// Invoke a syscall with `5` arguments.
+///
+/// # Safety
+///
+/// The caller must ensure:
+/// - `sysno` identifies a syscall that takes five arguments.
+/// - `arg1` through `arg5` are valid arguments for `sysno`. If any encode a
+///   pointer, the pointed-to memory must be valid for the duration of the
+///   syscall; see [`core::ptr::read`] and [`core::ptr::write`] for what
+///   validity requires for read-only and write-only pointers respectively.
+#[cfg_attr(coverage_nightly, coverage(off))]
+pub unsafe fn syscall5(
+    sysno: Sysno,
+    arg1: isize,
+    arg2: isize,
+    arg3: isize,
+    arg4: isize,
+    arg5: isize,
+) -> isize {
+    let mut ret: isize;
+
+    // SAFETY: `int 0x80` is the correct x86 Linux syscall instruction.
+    // The `esi` register is preserved across the syscall by saving/restoring
+    // it because Rust's inline asm does not allow a direct operand constraint
+    // for this legacy ABI in the way we need here.
+    // All other safety requirements are enforced by the caller.
+    unsafe {
+        asm!(
+            "push esi",
+            "mov esi, {arg4_reg}",
+            "int 0x80",
+            "pop esi",
+            inlateout("eax") sysno as usize => ret,
+            in("ebx") arg1,
+            in("ecx") arg2,
+            in("edx") arg3,
+            arg4_reg = in(reg) arg4,
+            in("edi") arg5,
+        );
+    }
+
+    ret
+}
