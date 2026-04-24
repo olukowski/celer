@@ -5,6 +5,7 @@ pub enum Errno {
     E2big,
     Ebadf,
     Ebusy,
+    Emfile,
     Efault,
     Eexist,
     Einval,
@@ -28,6 +29,7 @@ impl Errno {
             7 => Self::E2big,
             9 => Self::Ebadf,
             16 => Self::Ebusy,
+            24 => Self::Emfile,
             14 => Self::Efault,
             17 => Self::Eexist,
             22 => Self::Einval,
@@ -70,6 +72,7 @@ mod tests {
         assert_eq!(Errno::from_raw(7), Errno::E2big);
         assert_eq!(Errno::from_raw(9), Errno::Ebadf);
         assert_eq!(Errno::from_raw(16), Errno::Ebusy);
+        assert_eq!(Errno::from_raw(24), Errno::Emfile);
         assert_eq!(Errno::from_raw(14), Errno::Efault);
         assert_eq!(Errno::from_raw(17), Errno::Eexist);
         assert_eq!(Errno::from_raw(22), Errno::Einval);

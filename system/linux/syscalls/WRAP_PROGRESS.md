@@ -112,7 +112,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `creat` - x86, x86_64
 - [x] `create_module` - x86
 - [x] `delete_module`
-- [ ] `dup`
+- [x] `dup`
 - [ ] `dup2` - x86, x86_64
 - [ ] `execve`
 - [ ] `exit`
