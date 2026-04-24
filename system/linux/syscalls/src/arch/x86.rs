@@ -20,6 +20,8 @@ pub mod linux_1_0 {
         Sysinfo = 116,
         /// Linux 1.0 unsigned-length `truncate` ABI.
         Truncate = 92,
+        /// Linux 1.0 unsigned-length `ftruncate` ABI.
+        Ftruncate = 93,
         /// Linux 1.0 `newstat` ABI using `struct new_stat`.
         Newstat = 106,
         /// Linux 1.0 `newlstat` ABI using `struct new_stat`.
