@@ -15,9 +15,10 @@ use crate::arch::linux_1_0::{
 /// Get file status information for an open file descriptor through the
 /// current native `fstat`/`newfstat` ABI.
 ///
-/// Linux 1.0 exposes syscall number `108` as `fstat`, but wires that slot to
-/// `sys_newfstat(unsigned int fd, struct new_stat *statbuf)`. Current aarch64
-/// exposes syscall number `80` as `fstat`, also wired to `sys_newfstat`.
+/// Linux 1.0 exposes i386 syscall number `108` as `fstat`, but wires that slot
+/// to `sys_newfstat(unsigned int fd, struct new_stat *statbuf)`. Current
+/// x86_64 exposes syscall number `5` as `fstat`, and current aarch64 exposes
+/// syscall number `80` as `fstat`; both are also wired to `sys_newfstat`.
 ///
 /// # Safety
 /// - `statbuf` must point to writable memory for one native stat value for
@@ -25,12 +26,13 @@ use crate::arch::linux_1_0::{
 ///   not violate Rust aliasing or lifetime rules.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0 on i386; present from the initial aarch64 syscall
-///   table
-/// - Behavior changes: modern x86 kernels still expose this syscall number,
-///   but later kernels route through `vfs_fstat()` and newer compat-copy
-///   helpers with representability checks that Linux 1.0 did not perform.
-/// - Availability: present on supported x86 and aarch64 Linux kernels
+/// - Introduced: Linux 1.0 on i386; present from the initial x86_64 and
+///   aarch64 syscall tables
+/// - Behavior changes: modern kernels route through `vfs_fstat()` and
+///   `cp_new_stat()` with representability checks that Linux 1.0 did not
+///   perform.
+/// - Availability: present on supported x86, x86_64, and aarch64 Linux
+///   kernels
 ///
 /// # Required Privileges
 /// - None
@@ -38,14 +40,20 @@ use crate::arch::linux_1_0::{
 /// # Behavior
 /// - On success, fills `statbuf` with metadata for the open file referenced by
 ///   `fd`.
-/// - Current kernels copy the i386 `struct stat` layout through
-///   `cp_new_stat()`, including nanosecond timestamp fields.
+/// - Current kernels copy the target architecture's native `struct stat`
+///   layout through `cp_new_stat()`, including nanosecond timestamp fields.
+/// - On i386, this is the 32-bit [`NewStat`] layout. On x86_64, this is the
+///   native 64-bit [`Stat64`](celer_system_linux_ctypes::Stat64) layout. On
+///   aarch64, this is the generic 64-bit
+///   [`Stat64`](celer_system_linux_ctypes::Stat64) layout.
 ///
 /// # Errors
 /// - `EFAULT`: `statbuf` is not writable for one native stat value.
 /// - `EBADF`: `fd` does not refer to an open file descriptor.
-/// - `EOVERFLOW`: file metadata cannot be represented in the i386
-///   `struct stat` layout.
+/// - `EOVERFLOW`: file metadata cannot be represented in the target
+///   architecture's native `struct stat` layout. Current 64-bit native
+///   layouts are wider than the i386 layout, but `cp_new_stat()` still
+///   contains generic representability checks before copying to user memory.
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/fstat.2.html)
@@ -54,7 +62,7 @@ use crate::arch::linux_1_0::{
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n168)
 ///
 /// # Historical References
-/// - Current i386 `struct stat`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
+/// - Current x86 `struct stat` layouts: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n546)
 /// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 /// - Linux 1.0 syscall number: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n117)

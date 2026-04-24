@@ -13,18 +13,18 @@ use crate::arch::linux_1_0::{
 };
 
 /// Get file status information for the path named by `filename` through the
-/// i386 `newlstat` ABI introduced alongside syscall slot `107`.
+/// current native x86 `newlstat` ABI.
 ///
 /// # Safety
 /// - `filename` must point to a NUL-terminated string that is readable for the
 ///   duration of the syscall.
-/// - `statbuf` must point to writable memory large enough for a `NewStat`
-///   value, and no other pointer or reference may alias that output for
-///   mutable access for the duration of the syscall.
+/// - `statbuf` must point to writable memory large enough for one native stat
+///   value for the target architecture, and no other pointer or reference may
+///   alias that output for mutable access for the duration of the syscall.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Availability: always present on supported x86 Linux kernels
+/// - Availability: always present on supported x86 and x86_64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -35,11 +35,13 @@ use crate::arch::linux_1_0::{
 /// - The final pathname component is not followed if it is a symlink.
 /// - Intermediate pathname components may still traverse symlinks during
 ///   resolution.
-/// - This wrapper uses the current i386 `struct stat` output layout copied by
-///   `cp_new_stat()`, including nanosecond timestamp fields.
+/// - This wrapper uses the target architecture's native `struct stat` layout
+///   copied by `cp_new_stat()`, including nanosecond timestamp fields.
+/// - On i386, this is the 32-bit [`NewStat`] layout. On x86_64, this is the
+///   native 64-bit [`Stat64`](celer_system_linux_ctypes::Stat64) layout.
 ///
 /// # Errors
-/// - `EFAULT`: `statbuf` is not writable for a full `NewStat` value, or
+/// - `EFAULT`: `statbuf` is not writable for one native stat value, or
 ///   `filename` lies outside the task address space.
 /// - `ENAMETOOLONG`: `filename` does not fit in the single-page kernel buffer
 ///   used by `getname()`.
@@ -50,8 +52,10 @@ use crate::arch::linux_1_0::{
 /// - `ENOTDIR`: a non-directory component was used where pathname traversal
 ///   required a directory.
 /// - `EACCES`: pathname traversal lacked search permission on a directory.
-/// - `EOVERFLOW`: file metadata cannot be represented in the i386
-///   `struct stat` layout.
+/// - `EOVERFLOW`: file metadata cannot be represented in the target
+///   architecture's native `struct stat` layout. Current x86_64 fields are
+///   wider than i386 fields, but `cp_new_stat()` still contains generic
+///   representability checks before copying to user memory.
 ///
 /// Linux 1.0 also propagates filesystem-specific errors returned by the
 /// directory inode's `lookup` or `follow_link` operations.
@@ -63,7 +67,7 @@ use crate::arch::linux_1_0::{
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n137)
 ///
 /// # Historical References
-/// - Current i386 `struct stat`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
+/// - Current x86 `struct stat` layouts: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n518)
 /// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 pub unsafe fn newlstat(
