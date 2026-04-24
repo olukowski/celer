@@ -91,4 +91,12 @@ mod tests {
             Err(ChdirError::Other(Errno::Enoent))
         );
     }
+
+    #[test]
+    fn test_chdir_error_mapping() {
+        assert_eq!(
+            ChdirError::from_errno(Errno::Enoent),
+            ChdirError::Other(Errno::Enoent)
+        );
+    }
 }

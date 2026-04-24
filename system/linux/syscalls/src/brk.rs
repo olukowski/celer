@@ -66,7 +66,7 @@ pub unsafe fn brk(addr: UnsignedLong) -> Result<UnsignedLong, BrkError> {
 mod tests {
     use celer_system_linux_ctypes::UnsignedLong;
 
-    use crate::sys::test_support::process_global_state_guard;
+    use crate::{Errno, sys::test_support::process_global_state_guard};
 
     use super::{BrkError, brk};
 
@@ -87,5 +87,14 @@ mod tests {
 
         let same = unsafe { brk(current) };
         assert_eq!(same, Ok(current));
+    }
+
+    #[test]
+    fn test_brk_error_mapping() {
+        assert_eq!(BrkError::from_errno(Errno::Eintr), BrkError::Eintr);
+        assert_eq!(
+            BrkError::from_errno(Errno::Enomem),
+            BrkError::Other(Errno::Enomem)
+        );
     }
 }

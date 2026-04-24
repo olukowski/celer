@@ -72,19 +72,27 @@ pub fn create_module(
     // duration of the syscall.
     let ret = unsafe { sys::create_module(module_name.as_ptr(), size) };
 
+    create_module_from_ret(ret)
+}
+
+fn create_module_from_ret(
+    ret: UnsignedLong,
+) -> Result<NonNull<Void>, CreateModuleError> {
     result_from_ret(
         ret as isize,
-        |ret| {
-            // SAFETY: a successful Linux 1.0 `create_module` return is the
-            // base address of the allocated module image.
-            unsafe {
-                NonNull::new_unchecked(ptr::without_provenance_mut::<Void>(
-                    ret as usize,
-                ))
-            }
-        },
+        create_module_success,
         CreateModuleError::from_errno,
     )
+}
+
+fn create_module_success(ret: isize) -> NonNull<Void> {
+    // SAFETY: a successful Linux 1.0 `create_module` return is the base
+    // address of the allocated module image.
+    unsafe {
+        NonNull::new_unchecked(ptr::without_provenance_mut::<Void>(
+            ret as usize,
+        ))
+    }
 }
 
 #[cfg(test)]
@@ -94,7 +102,9 @@ mod tests {
 
     use celer_system_linux_ctypes::UnsignedLong;
 
-    use super::{CreateModuleError, create_module};
+    use crate::Errno;
+
+    use super::{CreateModuleError, create_module, create_module_from_ret};
 
     #[test]
     fn test_create_module_zero_size() {
@@ -115,5 +125,44 @@ mod tests {
                 "current x86 kernels should route create_module to ENOSYS",
             );
         assert_eq!(err, CreateModuleError::Enosys);
+    }
+
+    #[test]
+    fn test_create_module_success_mapping() {
+        let ptr = create_module_from_ret(4096 as UnsignedLong).unwrap();
+
+        assert_eq!(ptr.addr().get(), 4096);
+    }
+
+    #[test]
+    fn test_create_module_error_mapping() {
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::Eperm),
+            CreateModuleError::Eperm
+        );
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::Einval),
+            CreateModuleError::Einval
+        );
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::E2big),
+            CreateModuleError::E2big
+        );
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::Eexist),
+            CreateModuleError::Eexist
+        );
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::Enomem),
+            CreateModuleError::Enomem
+        );
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::Enosys),
+            CreateModuleError::Enosys
+        );
+        assert_eq!(
+            CreateModuleError::from_errno(Errno::Enoent),
+            CreateModuleError::Other(Errno::Enoent)
+        );
     }
 }

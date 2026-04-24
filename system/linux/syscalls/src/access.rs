@@ -55,8 +55,10 @@ pub fn access(pathname: &CStr, mode: Int) -> Result<(), AccessError> {
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::ffi::CString;
-    use std::fs::File;
+    use std::fs::{self, File};
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    use crate::Errno;
 
     use super::{AccessError, access};
 
@@ -74,9 +76,11 @@ mod tests {
     fn test_access_ok() {
         let path = temp_path();
         File::create(&path).unwrap();
-        let path = CString::new(path.as_os_str().as_encoded_bytes()).unwrap();
+        let path_c = CString::new(path.as_os_str().as_encoded_bytes()).unwrap();
 
-        assert_eq!(access(path.as_c_str(), 0), Ok(()));
+        assert_eq!(access(path_c.as_c_str(), 0), Ok(()));
+
+        fs::remove_file(&path).unwrap();
     }
 
     #[test]
@@ -84,5 +88,15 @@ mod tests {
         let path = CString::new("/tmp").unwrap();
 
         assert_eq!(access(path.as_c_str(), 0x8000), Err(AccessError::Einval));
+    }
+
+    #[test]
+    fn test_access_error_mapping() {
+        assert_eq!(AccessError::from_errno(Errno::Einval), AccessError::Einval);
+        assert_eq!(AccessError::from_errno(Errno::Enomem), AccessError::Enomem);
+        assert_eq!(
+            AccessError::from_errno(Errno::Enoent),
+            AccessError::Other(Errno::Enoent)
+        );
     }
 }

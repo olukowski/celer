@@ -52,6 +52,8 @@ pub fn acct(name: Option<&CStr>) -> Result<(), AcctError> {
 mod tests {
     use std::ffi::CString;
 
+    use crate::Errno;
+
     use super::{AcctError, acct};
 
     #[test]
@@ -72,5 +74,14 @@ mod tests {
             Err(AcctError::Other(_)) => {}
             Ok(()) => panic!("acct(Some(...)) unexpectedly succeeded"),
         }
+    }
+
+    #[test]
+    fn test_acct_error_mapping() {
+        assert_eq!(AcctError::from_errno(Errno::Eperm), AcctError::Eperm);
+        assert_eq!(
+            AcctError::from_errno(Errno::Enoent),
+            AcctError::Other(Errno::Enoent)
+        );
     }
 }

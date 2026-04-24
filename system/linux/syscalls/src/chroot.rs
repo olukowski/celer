@@ -64,6 +64,8 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
+    use crate::Errno;
+
     use super::{ChrootError, chroot};
 
     fn temp_path(stem: &str) -> std::path::PathBuf {
@@ -93,5 +95,19 @@ mod tests {
         assert_eq!(chroot(path_c.as_c_str()), Err(ChrootError::Enotdir));
 
         fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
+    fn test_chroot_error_mapping() {
+        assert_eq!(ChrootError::from_errno(Errno::Enoent), ChrootError::Enoent);
+        assert_eq!(
+            ChrootError::from_errno(Errno::Enotdir),
+            ChrootError::Enotdir
+        );
+        assert_eq!(ChrootError::from_errno(Errno::Eperm), ChrootError::Eperm);
+        assert_eq!(
+            ChrootError::from_errno(Errno::Eacces),
+            ChrootError::Other(Errno::Eacces)
+        );
     }
 }

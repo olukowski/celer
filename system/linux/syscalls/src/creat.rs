@@ -99,4 +99,12 @@ mod tests {
             Err(CreatError::Other(Errno::Enoent))
         );
     }
+
+    #[test]
+    fn test_creat_error_mapping() {
+        assert_eq!(
+            CreatError::from_errno(Errno::Enoent),
+            CreatError::Other(Errno::Enoent)
+        );
+    }
 }

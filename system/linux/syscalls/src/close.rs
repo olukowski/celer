@@ -55,6 +55,8 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
+    use crate::Errno;
+
     use super::{CloseError, close};
 
     #[test]
@@ -81,5 +83,15 @@ mod tests {
     #[test]
     fn test_close_ebadf() {
         assert_eq!(close(-1), Err(CloseError::Ebadf));
+    }
+
+    #[test]
+    fn test_close_error_mapping() {
+        assert_eq!(CloseError::from_errno(Errno::Ebadf), CloseError::Ebadf);
+        assert_eq!(CloseError::from_errno(Errno::Eintr), CloseError::Eintr);
+        assert_eq!(
+            CloseError::from_errno(Errno::Enomem),
+            CloseError::Other(Errno::Enomem)
+        );
     }
 }

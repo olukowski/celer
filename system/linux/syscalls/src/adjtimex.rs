@@ -62,6 +62,8 @@ pub fn adjtimex(txc: &mut Timex) -> Result<Int, AdjtimexError> {
 mod tests {
     use celer_system_linux_ctypes::{ADJ_TICK, Timex};
 
+    use crate::Errno;
+
     use super::{AdjtimexError, adjtimex};
 
     fn zero_timex() -> Timex {
@@ -113,6 +115,30 @@ mod tests {
             adjtimex(&mut txc),
             Err(AdjtimexError::Eperm),
             "unprivileged tick changes should be rejected"
+        );
+    }
+
+    #[test]
+    fn test_adjtimex_error_mapping() {
+        assert_eq!(
+            AdjtimexError::from_errno(Errno::Efault),
+            AdjtimexError::Efault
+        );
+        assert_eq!(
+            AdjtimexError::from_errno(Errno::Einval),
+            AdjtimexError::Einval
+        );
+        assert_eq!(
+            AdjtimexError::from_errno(Errno::Enodev),
+            AdjtimexError::Enodev
+        );
+        assert_eq!(
+            AdjtimexError::from_errno(Errno::Eperm),
+            AdjtimexError::Eperm
+        );
+        assert_eq!(
+            AdjtimexError::from_errno(Errno::Enoent),
+            AdjtimexError::Other(Errno::Enoent)
         );
     }
 }

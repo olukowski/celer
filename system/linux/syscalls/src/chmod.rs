@@ -105,4 +105,15 @@ mod tests {
             Err(ChmodError::Other(Errno::Enoent))
         );
     }
+
+    #[test]
+    fn test_chmod_error_mapping() {
+        assert_eq!(ChmodError::from_errno(Errno::Eintr), ChmodError::Eintr);
+        assert_eq!(ChmodError::from_errno(Errno::Eperm), ChmodError::Eperm);
+        assert_eq!(ChmodError::from_errno(Errno::Erofs), ChmodError::Erofs);
+        assert_eq!(
+            ChmodError::from_errno(Errno::Enoent),
+            ChmodError::Other(Errno::Enoent)
+        );
+    }
 }
