@@ -4,10 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Copy the current process resource limits for one historical Linux resource.
 ///
-/// This wrapper exposes the original i386 syscall number 76 ABI from Linux
-/// 1.0, which on current x86 kernels is implemented by the legacy
-/// `old_getrlimit` entrypoint and uses the historical signed 32-bit
-/// `struct rlimit` layout in [`Rlimit`].
+/// This wrapper exposes i386 syscall number 76. Linux 1.0 used a signed
+/// 32-bit `struct rlimit` layout for this slot; current x86 kernels implement
+/// the same slot as the legacy `old_getrlimit` entrypoint, whose unsigned
+/// 32-bit output fields are clamped to the historical signed range.
 ///
 /// # Safety
 /// - `rlim` must point to writable memory for one [`Rlimit`] value for the
@@ -33,8 +33,7 @@ use crate::arch::current::{Sysno, syscall2};
 /// - On current kernels, this legacy entrypoint accepts the current
 ///   `RLIM_NLIMITS` range instead of the six Linux 1.0 slots.
 /// - On success, the kernel writes the current soft limit to `rlim_cur` and
-///   the hard limit to `rlim_max`, using the historical signed 32-bit field
-///   layout in [`Rlimit`].
+///   the hard limit to `rlim_max`.
 /// - Linux 1.0 validates `resource` before touching `rlim`.
 /// - This wrapper targets the historical syscall entrypoint, not the later
 ///   `ugetrlimit` or `prlimit64` interfaces.
