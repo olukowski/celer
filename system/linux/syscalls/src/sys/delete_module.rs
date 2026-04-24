@@ -110,6 +110,8 @@ mod tests {
         let expected = 129;
         #[cfg(target_arch = "aarch64")]
         let expected = 106;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 176;
 
         assert_eq!(Sysno::DeleteModule as isize, expected);
     }

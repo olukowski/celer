@@ -88,7 +88,7 @@ mod tests {
     fn test_getitimer_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (16, 4, 8);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (32, 8, 16);
 
         assert_eq!(ITIMER_REAL, 0);
@@ -106,6 +106,8 @@ mod tests {
         let expected = 105;
         #[cfg(target_arch = "aarch64")]
         let expected = 102;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 36;
 
         assert_eq!(Sysno::Getitimer as isize, expected);
     }

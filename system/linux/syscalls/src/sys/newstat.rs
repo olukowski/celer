@@ -1,10 +1,15 @@
-use celer_system_linux_ctypes::{
-    Char, Long, NewStat, linux_1_0::NewStat as Linux10NewStat,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::NewStat as NativeStat;
+#[cfg(target_arch = "x86_64")]
+use celer_system_linux_ctypes::Stat64 as NativeStat;
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
+use celer_system_linux_ctypes::{Char, Long};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Get file status information for the path named by `filename` through the
@@ -66,7 +71,7 @@ use crate::arch::{
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n466)
 /// - Current symlink traversal limit: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/namei.h?h=v7.0#n14)
 /// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
-pub unsafe fn stat(filename: *const Char, statbuf: *mut NewStat) -> Long {
+pub unsafe fn stat(filename: *const Char, statbuf: *mut NativeStat) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(
@@ -98,6 +103,7 @@ pub unsafe fn stat(filename: *const Char, statbuf: *mut NewStat) -> Long {
 /// - Linux 1.0 filesystem symlink following rejected more than five nested
 ///   links, for example:
 ///   [Linux 1.0 ext2](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/ext2/symlink.c?h=1.0#n71)
+#[cfg(target_arch = "x86")]
 pub unsafe fn stat_1_0(
     filename: *const Char,
     statbuf: *mut Linux10NewStat,
@@ -124,13 +130,21 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
+    #[cfg(target_arch = "x86_64")]
+    use celer_system_linux_ctypes::Stat64 as NativeStat;
+    use celer_system_linux_ctypes::{Char, Long};
+    #[cfg(target_arch = "x86")]
     use celer_system_linux_ctypes::{
-        Char, Long, NewStat, linux_1_0::NewStat as Linux10NewStat,
+        NewStat as NativeStat, linux_1_0::NewStat as Linux10NewStat,
     };
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{stat, stat_1_0};
+    use super::stat;
+    #[cfg(target_arch = "x86")]
+    use super::stat_1_0;
 
     fn create_temp_path(prefix: &str) -> PathBuf {
         let mut path = env::temp_dir();
@@ -144,14 +158,19 @@ mod tests {
         path
     }
 
-    fn zeroed_new_stat() -> NewStat {
-        NewStat {
+    fn zeroed_new_stat() -> NativeStat {
+        NativeStat {
             st_dev: 0,
             st_ino: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_nlink: 0,
             st_mode: 0,
+            #[cfg(target_arch = "x86")]
             st_nlink: 0,
             st_uid: 0,
             st_gid: 0,
+            #[cfg(target_arch = "x86_64")]
+            __pad0: 0,
             st_rdev: 0,
             st_size: 0,
             st_blksize: 0,
@@ -162,11 +181,16 @@ mod tests {
             st_mtime_nsec: 0,
             st_ctime: 0,
             st_ctime_nsec: 0,
+            #[cfg(target_arch = "x86")]
             __unused4: 0,
+            #[cfg(target_arch = "x86")]
             __unused5: 0,
+            #[cfg(target_arch = "x86_64")]
+            __unused: [0; 3],
         }
     }
 
+    #[cfg(target_arch = "x86")]
     fn zeroed_linux_1_0_new_stat() -> Linux10NewStat {
         Linux10NewStat {
             st_dev: 0,
@@ -194,15 +218,19 @@ mod tests {
 
     #[repr(C)]
     struct NewStatWithCanary {
-        stat: NewStat,
+        stat: NativeStat,
         canary: [u8; 32],
     }
 
     #[test]
     fn test_stat_syscall_number() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Newstat as isize, 106);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Newstat as isize, 4);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_stat_syscall_number_and_layout() {
         assert_eq!(Linux10Sysno::Newstat as isize, 106);
@@ -217,26 +245,52 @@ mod tests {
 
     #[test]
     fn test_new_stat_layout() {
-        assert_eq!(size_of::<NewStat>(), 64);
-        assert_eq!(align_of::<NewStat>(), 4);
-        assert_eq!(offset_of!(NewStat, st_dev), 0);
-        assert_eq!(offset_of!(NewStat, st_ino), 4);
-        assert_eq!(offset_of!(NewStat, st_mode), 8);
-        assert_eq!(offset_of!(NewStat, st_nlink), 10);
-        assert_eq!(offset_of!(NewStat, st_uid), 12);
-        assert_eq!(offset_of!(NewStat, st_gid), 14);
-        assert_eq!(offset_of!(NewStat, st_rdev), 16);
-        assert_eq!(offset_of!(NewStat, st_size), 20);
-        assert_eq!(offset_of!(NewStat, st_blksize), 24);
-        assert_eq!(offset_of!(NewStat, st_blocks), 28);
-        assert_eq!(offset_of!(NewStat, st_atime), 32);
-        assert_eq!(offset_of!(NewStat, st_atime_nsec), 36);
-        assert_eq!(offset_of!(NewStat, st_mtime), 40);
-        assert_eq!(offset_of!(NewStat, st_mtime_nsec), 44);
-        assert_eq!(offset_of!(NewStat, st_ctime), 48);
-        assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
-        assert_eq!(offset_of!(NewStat, __unused4), 56);
-        assert_eq!(offset_of!(NewStat, __unused5), 60);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<NewStat>(), 64);
+            assert_eq!(align_of::<NewStat>(), 4);
+            assert_eq!(offset_of!(NewStat, st_dev), 0);
+            assert_eq!(offset_of!(NewStat, st_ino), 4);
+            assert_eq!(offset_of!(NewStat, st_mode), 8);
+            assert_eq!(offset_of!(NewStat, st_nlink), 10);
+            assert_eq!(offset_of!(NewStat, st_uid), 12);
+            assert_eq!(offset_of!(NewStat, st_gid), 14);
+            assert_eq!(offset_of!(NewStat, st_rdev), 16);
+            assert_eq!(offset_of!(NewStat, st_size), 20);
+            assert_eq!(offset_of!(NewStat, st_blksize), 24);
+            assert_eq!(offset_of!(NewStat, st_blocks), 28);
+            assert_eq!(offset_of!(NewStat, st_atime), 32);
+            assert_eq!(offset_of!(NewStat, st_atime_nsec), 36);
+            assert_eq!(offset_of!(NewStat, st_mtime), 40);
+            assert_eq!(offset_of!(NewStat, st_mtime_nsec), 44);
+            assert_eq!(offset_of!(NewStat, st_ctime), 48);
+            assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
+            assert_eq!(offset_of!(NewStat, __unused4), 56);
+            assert_eq!(offset_of!(NewStat, __unused5), 60);
+        }
+        #[cfg(target_arch = "x86_64")]
+        {
+            assert_eq!(size_of::<NativeStat>(), 144);
+            assert_eq!(align_of::<NativeStat>(), 8);
+            assert_eq!(offset_of!(NativeStat, st_dev), 0);
+            assert_eq!(offset_of!(NativeStat, st_ino), 8);
+            assert_eq!(offset_of!(NativeStat, st_nlink), 16);
+            assert_eq!(offset_of!(NativeStat, st_mode), 24);
+            assert_eq!(offset_of!(NativeStat, st_uid), 28);
+            assert_eq!(offset_of!(NativeStat, st_gid), 32);
+            assert_eq!(offset_of!(NativeStat, __pad0), 36);
+            assert_eq!(offset_of!(NativeStat, st_rdev), 40);
+            assert_eq!(offset_of!(NativeStat, st_size), 48);
+            assert_eq!(offset_of!(NativeStat, st_blksize), 56);
+            assert_eq!(offset_of!(NativeStat, st_blocks), 64);
+            assert_eq!(offset_of!(NativeStat, st_atime), 72);
+            assert_eq!(offset_of!(NativeStat, st_atime_nsec), 80);
+            assert_eq!(offset_of!(NativeStat, st_mtime), 88);
+            assert_eq!(offset_of!(NativeStat, st_mtime_nsec), 96);
+            assert_eq!(offset_of!(NativeStat, st_ctime), 104);
+            assert_eq!(offset_of!(NativeStat, st_ctime_nsec), 112);
+            assert_eq!(offset_of!(NativeStat, __unused), 120);
+        }
     }
 
     #[test]
@@ -259,8 +313,14 @@ mod tests {
         };
 
         assert_eq!(ret, 0, "stat failed: {ret}");
+        #[cfg(target_arch = "x86")]
         assert_eq!(statbuf.st_ino as u64, metadata.ino());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_eq!(statbuf.st_ino, metadata.ino());
+        #[cfg(target_arch = "x86")]
         assert_eq!(statbuf.st_mode as u32, metadata.mode());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_eq!(statbuf.st_mode, metadata.mode());
         assert_eq!(statbuf.st_size as u64, metadata.size());
         assert_eq!(statbuf.st_blocks as u64, metadata.blocks());
         assert_eq!(statbuf.st_blksize as u64, metadata.blksize());
@@ -292,9 +352,15 @@ mod tests {
         };
 
         assert_eq!(ret, 0, "stat failed on symlink: {ret}");
+        #[cfg(target_arch = "x86")]
         assert_eq!(statbuf.st_mode as u32, target_metadata.mode());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_eq!(statbuf.st_mode, target_metadata.mode());
         assert_eq!(statbuf.st_size as u64, target_metadata.size());
+        #[cfg(target_arch = "x86")]
         assert_ne!(statbuf.st_mode as u32, link_metadata.mode());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_ne!(statbuf.st_mode, link_metadata.mode());
 
         fs::remove_file(&link).unwrap();
         fs::remove_file(&target).unwrap();
@@ -380,6 +446,7 @@ mod tests {
         fs::remove_file(&path).unwrap();
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_stat_wrapper_success() {
         let path = create_temp_path("celer_sys_linux_1_0_stat");

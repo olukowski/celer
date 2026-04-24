@@ -88,6 +88,8 @@ mod tests {
         let expected = 91;
         #[cfg(target_arch = "aarch64")]
         let expected = 215;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 11;
 
         assert_eq!(Sysno::Munmap as isize, expected);
     }

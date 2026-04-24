@@ -193,6 +193,8 @@ mod tests {
         assert_eq!(Sysno::InitModule as isize, 128);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::InitModule as isize, 105);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::InitModule as isize, 175);
     }
 
     #[cfg(target_arch = "x86")]
@@ -205,7 +207,7 @@ mod tests {
     fn test_mod_routines_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (8, 4, 4);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (16, 8, 8);
 
         assert_eq!(core::mem::size_of::<ModRoutines>(), expected.0);

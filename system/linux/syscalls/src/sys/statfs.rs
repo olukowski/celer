@@ -171,7 +171,7 @@ mod tests {
             assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
             assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(core::mem::size_of::<Statfs>(), 120);
             assert_eq!(core::mem::align_of::<Statfs>(), 8);
@@ -187,6 +187,8 @@ mod tests {
         assert_eq!(Sysno::Statfs as isize, 99);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Statfs as isize, 43);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Statfs as isize, 137);
         #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Statfs as isize, 99);
     }

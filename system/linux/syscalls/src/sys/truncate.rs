@@ -133,6 +133,8 @@ mod tests {
         assert_eq!(Sysno::Truncate as isize, 92);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Truncate as isize, 45);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Truncate as isize, 76);
     }
 
     #[test]

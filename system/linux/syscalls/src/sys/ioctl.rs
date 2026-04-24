@@ -93,6 +93,8 @@ mod tests {
         let expected = 54;
         #[cfg(target_arch = "aarch64")]
         let expected = 29;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 16;
 
         assert_eq!(Sysno::Ioctl as isize, expected);
     }

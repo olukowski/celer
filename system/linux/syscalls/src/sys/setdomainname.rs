@@ -70,6 +70,8 @@ mod tests {
         let expected = 121;
         #[cfg(target_arch = "aarch64")]
         let expected = 162;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 171;
 
         assert_eq!(Sysno::Setdomainname as isize, expected);
     }

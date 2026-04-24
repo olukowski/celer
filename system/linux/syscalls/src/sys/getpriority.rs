@@ -69,6 +69,8 @@ mod tests {
         let expected = 96;
         #[cfg(target_arch = "aarch64")]
         let expected = 141;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 140;
 
         assert_eq!(Sysno::Getpriority as isize, expected);
     }

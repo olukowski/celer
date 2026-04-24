@@ -198,6 +198,8 @@ mod tests {
         assert_eq!(Sysno::Newuname as isize, 122);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Newuname as isize, 160);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Newuname as isize, 63);
     }
 
     #[cfg(target_arch = "x86")]

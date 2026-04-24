@@ -136,6 +136,8 @@ mod tests {
         assert_eq!(Sysno::Sysinfo as isize, 116);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Sysinfo as isize, 179);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Sysinfo as isize, 99);
     }
 
     #[cfg(target_arch = "x86")]
@@ -148,7 +150,7 @@ mod tests {
     fn test_sysinfo_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (64, 4, 16, 40);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (112, 8, 32, 80);
 
         assert_eq!(core::mem::size_of::<Sysinfo>(), expected.0);
@@ -187,7 +189,7 @@ mod tests {
             mem_unit: 0,
             #[cfg(target_arch = "x86")]
             _f: [1; 8],
-            #[cfg(target_arch = "aarch64")]
+            #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
             _f: [],
         };
 

@@ -119,10 +119,10 @@ mod tests {
 
     extern "C" fn handle_sigalrm(_: Int) {}
 
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     type SigHandler = libc::sigaction;
 
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     unsafe fn install_signal_handler(
         sig: Int,
         handler: extern "C" fn(Int),
@@ -151,7 +151,7 @@ mod tests {
         sig_handler_from_raw(old)
     }
 
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     unsafe fn restore_signal_handler(sig: Int, old: &SigHandler) {
         let _ = unsafe {
             libc::sigaction(
@@ -266,6 +266,8 @@ mod tests {
         assert_eq!(Sysno::Wait4 as isize, 114);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Wait4 as isize, 260);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Wait4 as isize, 61);
     }
 
     #[test]

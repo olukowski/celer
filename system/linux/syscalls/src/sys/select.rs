@@ -1,7 +1,14 @@
-use celer_system_linux_ctypes::{FdSet, Int, Timeval, UnsignedLong};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::UnsignedLong;
+use celer_system_linux_ctypes::{FdSet, Int, Timeval};
 
-use crate::arch::current::{Sysno, syscall1};
+use crate::arch::current::Sysno;
+#[cfg(target_arch = "x86")]
+use crate::arch::current::syscall1;
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+use crate::arch::current::syscall5;
 
+#[cfg(target_arch = "x86")]
 #[repr(C)]
 struct SelectArgs {
     nfds: UnsignedLong,
@@ -120,19 +127,39 @@ pub unsafe fn select(
     exceptfds: *mut FdSet,
     timeout: *mut Timeval,
 ) -> Int {
-    let args = SelectArgs {
-        nfds: nfds as isize as UnsignedLong,
-        readfds: readfds.addr() as UnsignedLong,
-        writefds: writefds.addr() as UnsignedLong,
-        exceptfds: exceptfds.addr() as UnsignedLong,
-        timeout: timeout.addr() as UnsignedLong,
-    };
+    #[cfg(target_arch = "x86")]
+    {
+        let args = SelectArgs {
+            nfds: nfds as isize as UnsignedLong,
+            readfds: readfds.addr() as UnsignedLong,
+            writefds: writefds.addr() as UnsignedLong,
+            exceptfds: exceptfds.addr() as UnsignedLong,
+            timeout: timeout.addr() as UnsignedLong,
+        };
 
-    // SAFETY: guaranteed by caller.
-    unsafe { syscall1(Sysno::Select, (&raw const args).addr() as isize) as Int }
+        // SAFETY: guaranteed by caller.
+        unsafe {
+            syscall1(Sysno::Select, (&raw const args).addr() as isize) as Int
+        }
+    }
+
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+    {
+        // SAFETY: guaranteed by caller.
+        unsafe {
+            syscall5(
+                Sysno::Select,
+                nfds as isize,
+                readfds.addr() as isize,
+                writefds.addr() as isize,
+                exceptfds.addr() as isize,
+                timeout.addr() as isize,
+            ) as Int
+        }
+    }
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_arch = "x86"))]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::sync::Mutex;

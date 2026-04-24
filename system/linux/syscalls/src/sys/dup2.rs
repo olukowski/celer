@@ -52,7 +52,11 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use celer_system_linux_ctypes::{Stat, UnsignedInt};
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::Stat as NativeStat;
+    #[cfg(target_arch = "x86_64")]
+    use celer_system_linux_ctypes::Stat64 as NativeStat;
+    use celer_system_linux_ctypes::UnsignedInt;
 
     use super::dup2;
 
@@ -90,18 +94,35 @@ mod tests {
         let fd = old_file.into_raw_fd();
         let newfd = new_file.into_raw_fd();
 
-        let mut old_stat = Stat {
+        let mut old_stat = NativeStat {
             st_dev: 0,
             st_ino: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_nlink: 0,
             st_mode: 0,
+            #[cfg(target_arch = "x86")]
             st_nlink: 0,
             st_uid: 0,
             st_gid: 0,
+            #[cfg(target_arch = "x86_64")]
+            __pad0: 0,
             st_rdev: 0,
             st_size: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_blksize: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_blocks: 0,
             st_atime: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_atime_nsec: 0,
             st_mtime: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_mtime_nsec: 0,
             st_ctime: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_ctime_nsec: 0,
+            #[cfg(target_arch = "x86_64")]
+            __unused: [0; 3],
         };
         let mut new_stat = old_stat;
 
@@ -110,10 +131,10 @@ mod tests {
         assert_ne!(old_metadata.ino(), new_metadata.ino());
 
         let old_stat_ret = unsafe {
-            crate::sys::oldfstat(fd as UnsignedInt, &raw mut old_stat)
+            crate::sys::newfstat(fd as UnsignedInt, &raw mut old_stat)
         };
         let new_stat_ret = unsafe {
-            crate::sys::oldfstat(newfd as UnsignedInt, &raw mut new_stat)
+            crate::sys::newfstat(newfd as UnsignedInt, &raw mut new_stat)
         };
         assert_eq!(
             old_stat_ret, 0,
@@ -123,20 +144,29 @@ mod tests {
             new_stat_ret, 0,
             "oldfstat failed for new fd: {new_stat_ret}"
         );
+        #[cfg(target_arch = "x86")]
         assert_eq!(old_stat.st_ino as u64, old_metadata.ino());
+        #[cfg(target_arch = "x86")]
         assert_eq!(new_stat.st_ino as u64, new_metadata.ino());
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(old_stat.st_ino, old_metadata.ino());
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(new_stat.st_ino, new_metadata.ino());
 
         let ret = dup2(fd as UnsignedInt, newfd as UnsignedInt);
         assert_eq!(ret, newfd, "dup2 failed: {ret}");
 
         let replaced_stat = unsafe {
-            crate::sys::oldfstat(newfd as UnsignedInt, &raw mut new_stat)
+            crate::sys::newfstat(newfd as UnsignedInt, &raw mut new_stat)
         };
         assert_eq!(
             replaced_stat, 0,
             "oldfstat failed after dup2: {replaced_stat}"
         );
+        #[cfg(target_arch = "x86")]
         assert_eq!(new_stat.st_ino as u64, old_metadata.ino());
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(new_stat.st_ino, old_metadata.ino());
 
         assert_eq!(crate::sys::close(newfd), 0);
         assert_eq!(crate::sys::close(fd), 0);

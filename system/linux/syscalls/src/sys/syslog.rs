@@ -120,6 +120,8 @@ mod tests {
         let expected = 103;
         #[cfg(target_arch = "aarch64")]
         let expected = 116;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 103;
 
         assert_eq!(Sysno::Syslog as isize, expected);
     }

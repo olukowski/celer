@@ -113,7 +113,7 @@ mod tests {
     fn test_getrusage_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (8, 4, 72, 4, 8, 16, 32, 36, 68);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (16, 8, 144, 8, 16, 32, 64, 72, 136);
 
         assert_eq!(core::mem::size_of::<Timeval>(), expected.0);

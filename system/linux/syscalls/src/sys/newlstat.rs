@@ -1,10 +1,15 @@
-use celer_system_linux_ctypes::{
-    Char, Long, NewStat, linux_1_0::NewStat as Linux10NewStat,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::NewStat as NativeStat;
+#[cfg(target_arch = "x86_64")]
+use celer_system_linux_ctypes::Stat64 as NativeStat;
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
+use celer_system_linux_ctypes::{Char, Long};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Get file status information for the path named by `filename` through the
@@ -61,7 +66,10 @@ use crate::arch::{
 /// - Current i386 `struct stat`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n518)
 /// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
-pub unsafe fn newlstat(filename: *const Char, statbuf: *mut NewStat) -> Long {
+pub unsafe fn newlstat(
+    filename: *const Char,
+    statbuf: *mut NativeStat,
+) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {
         syscall2(
@@ -89,6 +97,7 @@ pub unsafe fn newlstat(filename: *const Char, statbuf: *mut NewStat) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n137)
 /// - Linux 1.0 `struct new_stat`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+#[cfg(target_arch = "x86")]
 pub unsafe fn newlstat_1_0(
     filename: *const Char,
     statbuf: *mut Linux10NewStat,
@@ -115,13 +124,21 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
+    #[cfg(target_arch = "x86_64")]
+    use celer_system_linux_ctypes::Stat64 as NativeStat;
+    use celer_system_linux_ctypes::{Char, Stat};
+    #[cfg(target_arch = "x86")]
     use celer_system_linux_ctypes::{
-        Char, NewStat, Stat, linux_1_0::NewStat as Linux10NewStat,
+        NewStat as NativeStat, linux_1_0::NewStat as Linux10NewStat,
     };
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{newlstat, newlstat_1_0};
+    use super::newlstat;
+    #[cfg(target_arch = "x86")]
+    use super::newlstat_1_0;
 
     fn create_temp_path(prefix: &str) -> PathBuf {
         let mut path = env::temp_dir();
@@ -135,14 +152,19 @@ mod tests {
         path
     }
 
-    fn zeroed_new_stat() -> NewStat {
-        NewStat {
+    fn zeroed_new_stat() -> NativeStat {
+        NativeStat {
             st_dev: 0,
             st_ino: 0,
+            #[cfg(target_arch = "x86_64")]
+            st_nlink: 0,
             st_mode: 0,
+            #[cfg(target_arch = "x86")]
             st_nlink: 0,
             st_uid: 0,
             st_gid: 0,
+            #[cfg(target_arch = "x86_64")]
+            __pad0: 0,
             st_rdev: 0,
             st_size: 0,
             st_blksize: 0,
@@ -153,11 +175,16 @@ mod tests {
             st_mtime_nsec: 0,
             st_ctime: 0,
             st_ctime_nsec: 0,
+            #[cfg(target_arch = "x86")]
             __unused4: 0,
+            #[cfg(target_arch = "x86")]
             __unused5: 0,
+            #[cfg(target_arch = "x86_64")]
+            __unused: [0; 3],
         }
     }
 
+    #[cfg(target_arch = "x86")]
     fn zeroed_linux_1_0_new_stat() -> Linux10NewStat {
         Linux10NewStat {
             st_dev: 0,
@@ -185,7 +212,7 @@ mod tests {
 
     #[repr(C)]
     struct NewStatWithCanary {
-        stat: NewStat,
+        stat: NativeStat,
         canary: [u8; 32],
     }
 
@@ -213,15 +240,25 @@ mod tests {
         };
 
         assert_eq!(ret, 0, "newlstat failed: {ret}");
+        #[cfg(target_arch = "x86")]
         assert_eq!(statbuf.st_ino as u64, link_metadata.ino());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_eq!(statbuf.st_ino, link_metadata.ino());
+        #[cfg(target_arch = "x86")]
         assert_eq!(statbuf.st_mode as u32, link_metadata.mode());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_eq!(statbuf.st_mode, link_metadata.mode());
         assert_eq!(statbuf.st_size as u64, link_metadata.size());
+        #[cfg(target_arch = "x86")]
         assert_ne!(statbuf.st_mode as u32, target_metadata.mode());
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+        assert_ne!(statbuf.st_mode, target_metadata.mode());
 
         fs::remove_file(&link).unwrap();
         fs::remove_file(&target).unwrap();
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_newlstat_wrapper_success() {
         let path = create_temp_path("celer_sys_linux_1_0_newlstat");
@@ -299,7 +336,7 @@ mod tests {
         };
 
         assert_eq!(ret, 0, "newlstat failed: {ret}");
-        assert!(size_of::<NewStat>() > size_of::<Stat>());
+        assert!(size_of::<NativeStat>() > size_of::<Stat>());
         assert_eq!(statbuf.canary, [0xA5; 32], "newlstat overwrote canary");
 
         fs::remove_file(&path).unwrap();
@@ -307,15 +344,30 @@ mod tests {
 
     #[test]
     fn test_newlstat_abi_layout() {
-        assert_eq!(Sysno::Newlstat as isize, 107);
-        assert_eq!(Linux10Sysno::Newlstat as isize, 107);
-        assert_eq!(size_of::<NewStat>(), 64);
-        assert_eq!(align_of::<NewStat>(), 4);
-        assert_eq!(offset_of!(NewStat, st_ino), 4);
-        assert_eq!(offset_of!(NewStat, st_size), 20);
-        assert_eq!(offset_of!(NewStat, st_blksize), 24);
-        assert_eq!(offset_of!(NewStat, st_blocks), 28);
-        assert_eq!(offset_of!(NewStat, st_ctime), 48);
-        assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(Sysno::Newlstat as isize, 107);
+            assert_eq!(Linux10Sysno::Newlstat as isize, 107);
+            assert_eq!(size_of::<NativeStat>(), 64);
+            assert_eq!(align_of::<NativeStat>(), 4);
+            assert_eq!(offset_of!(NativeStat, st_ino), 4);
+            assert_eq!(offset_of!(NativeStat, st_size), 20);
+            assert_eq!(offset_of!(NativeStat, st_blksize), 24);
+            assert_eq!(offset_of!(NativeStat, st_blocks), 28);
+            assert_eq!(offset_of!(NativeStat, st_ctime), 48);
+            assert_eq!(offset_of!(NativeStat, st_ctime_nsec), 52);
+        }
+        #[cfg(target_arch = "x86_64")]
+        {
+            assert_eq!(Sysno::Newlstat as isize, 6);
+            assert_eq!(size_of::<NativeStat>(), 144);
+            assert_eq!(align_of::<NativeStat>(), 8);
+            assert_eq!(offset_of!(NativeStat, st_ino), 8);
+            assert_eq!(offset_of!(NativeStat, st_size), 48);
+            assert_eq!(offset_of!(NativeStat, st_blksize), 56);
+            assert_eq!(offset_of!(NativeStat, st_blocks), 64);
+            assert_eq!(offset_of!(NativeStat, st_ctime), 104);
+            assert_eq!(offset_of!(NativeStat, st_ctime_nsec), 112);
+        }
     }
 }

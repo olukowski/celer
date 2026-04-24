@@ -127,6 +127,8 @@ mod tests {
         assert_eq!(Sysno::Fstatfs as isize, 100);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Fstatfs as isize, 44);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Fstatfs as isize, 138);
         #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Fstatfs as isize, 100);
     }
@@ -144,7 +146,7 @@ mod tests {
             assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
             assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(core::mem::size_of::<Statfs>(), 120);
             assert_eq!(core::mem::align_of::<Statfs>(), 8);
@@ -160,7 +162,7 @@ mod tests {
         let fd = file.as_raw_fd() as UnsignedInt;
         #[cfg(target_arch = "x86")]
         let sentinel = u32::MAX;
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let sentinel = i64::from(u32::MAX);
         let mut buf = Statfs {
             f_type: sentinel,

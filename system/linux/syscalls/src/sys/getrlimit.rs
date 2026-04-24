@@ -88,6 +88,8 @@ mod tests {
         assert_eq!(Sysno::Getrlimit as isize, 76);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Getrlimit as isize, 163);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Getrlimit as isize, 97);
     }
 
     #[test]
@@ -99,7 +101,7 @@ mod tests {
             assert_eq!(core::mem::align_of::<Rlimit>(), 4);
             assert_eq!(core::mem::offset_of!(Rlimit, rlim_max), 4);
         }
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         {
             assert_eq!(core::mem::size_of::<Rlimit>(), 16);
             assert_eq!(core::mem::align_of::<Rlimit>(), 8);

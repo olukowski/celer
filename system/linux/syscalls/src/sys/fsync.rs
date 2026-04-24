@@ -81,6 +81,8 @@ mod tests {
         assert_eq!(Sysno::Fsync as isize, 118);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Fsync as isize, 82);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Fsync as isize, 74);
     }
 
     #[test]

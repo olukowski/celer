@@ -121,6 +121,8 @@ mod tests {
         let expected = 87;
         #[cfg(target_arch = "aarch64")]
         let expected = 224;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 167;
 
         assert_eq!(Sysno::Swapon as isize, expected);
     }

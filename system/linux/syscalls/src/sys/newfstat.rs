@@ -1,6 +1,6 @@
 #[cfg(target_arch = "x86")]
 use celer_system_linux_ctypes::NewStat as NativeStat;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 use celer_system_linux_ctypes::Stat64 as NativeStat;
 #[cfg(target_arch = "x86")]
 use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
@@ -105,7 +105,7 @@ mod tests {
 
     #[cfg(target_arch = "x86")]
     use celer_system_linux_ctypes::NewStat as NativeStat;
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     use celer_system_linux_ctypes::Stat64 as NativeStat;
     use celer_system_linux_ctypes::UnsignedInt;
     #[cfg(target_arch = "x86")]
@@ -130,6 +130,8 @@ mod tests {
             st_rdev: 0,
             #[cfg(target_arch = "aarch64")]
             __pad1: 0,
+            #[cfg(target_arch = "x86_64")]
+            __pad0: 0,
             st_size: 0,
             st_blksize: 0,
             #[cfg(target_arch = "aarch64")]
@@ -141,8 +143,12 @@ mod tests {
             st_mtime_nsec: 0,
             st_ctime: 0,
             st_ctime_nsec: 0,
+            #[cfg(any(target_arch = "x86", target_arch = "aarch64"))]
             __unused4: 0,
+            #[cfg(any(target_arch = "x86", target_arch = "aarch64"))]
             __unused5: 0,
+            #[cfg(target_arch = "x86_64")]
+            __unused: [0; 3],
         }
     }
 
@@ -190,6 +196,11 @@ mod tests {
             128, 8, 8, 16, 20, 24, 28, 32, 48, 56, 64, 72, 80, 88, 96, 104,
             112, 120, 124,
         );
+        #[cfg(target_arch = "x86_64")]
+        let expected = (
+            144, 8, 8, 24, 16, 28, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104,
+            112, 120, 0,
+        );
 
         assert_eq!(size_of::<NativeStat>(), expected.0);
         assert_eq!(core::mem::align_of::<NativeStat>(), expected.1);
@@ -218,8 +229,19 @@ mod tests {
             core::mem::offset_of!(NativeStat, st_ctime_nsec),
             expected.16
         );
-        assert_eq!(core::mem::offset_of!(NativeStat, __unused4), expected.17);
-        assert_eq!(core::mem::offset_of!(NativeStat, __unused5), expected.18);
+        #[cfg(any(target_arch = "x86", target_arch = "aarch64"))]
+        {
+            assert_eq!(
+                core::mem::offset_of!(NativeStat, __unused4),
+                expected.17
+            );
+            assert_eq!(
+                core::mem::offset_of!(NativeStat, __unused5),
+                expected.18
+            );
+        }
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(core::mem::offset_of!(NativeStat, __unused), expected.17);
     }
 
     #[test]
@@ -228,6 +250,8 @@ mod tests {
         let expected = 108;
         #[cfg(target_arch = "aarch64")]
         let expected = 80;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 5;
 
         assert_eq!(Sysno::Newfstat as isize, expected);
         #[cfg(target_arch = "x86")]
@@ -248,16 +272,19 @@ mod tests {
         assert_eq!(ret, 0, "newfstat failed for /: {ret}");
         #[cfg(target_arch = "x86")]
         assert_eq!(u64::from(statbuf.st_ino), metadata.ino());
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         assert_eq!(statbuf.st_ino, metadata.ino());
         #[cfg(target_arch = "x86")]
         assert_eq!(u32::from(statbuf.st_mode), metadata.mode());
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(statbuf.st_nlink, metadata.nlink());
         #[cfg(target_arch = "aarch64")]
         assert_eq!(statbuf.st_mode, metadata.mode());
+        #[cfg(target_arch = "aarch64")]
         assert_eq!(u64::from(statbuf.st_nlink), metadata.nlink());
         #[cfg(target_arch = "x86")]
         assert_eq!(u64::from(statbuf.st_size), metadata.size());
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         assert_eq!(u64::try_from(statbuf.st_size).unwrap(), metadata.size());
     }
 

@@ -3,7 +3,7 @@ use celer_system_linux_ctypes::{Char, Int};
 use crate::arch::current::Sysno;
 #[cfg(target_arch = "x86")]
 use crate::arch::current::syscall1;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 use crate::arch::current::syscall2;
 
 /// Unmount a filesystem or mount point.
@@ -69,7 +69,7 @@ pub unsafe fn umount(name: *const Char) -> Int {
 
     // SAFETY: guaranteed by caller. The public wrapper is flagless, matching
     // the legacy `oldumount` behavior by passing flags as zero.
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     unsafe {
         syscall2(Sysno::Umount, name.addr() as isize, 0) as Int
     }
@@ -90,6 +90,8 @@ mod tests {
         let expected = 22;
         #[cfg(target_arch = "aarch64")]
         let expected = 39;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 166;
 
         assert_eq!(Sysno::Umount as isize, expected);
     }

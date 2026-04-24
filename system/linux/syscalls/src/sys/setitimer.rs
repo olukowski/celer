@@ -112,6 +112,8 @@ mod tests {
         let expected = 104;
         #[cfg(target_arch = "aarch64")]
         let expected = 103;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 38;
 
         assert_eq!(Sysno::Setitimer as isize, expected);
     }
@@ -120,7 +122,7 @@ mod tests {
     fn test_setitimer_layout() {
         #[cfg(target_arch = "x86")]
         let expected = (16, 4, 8);
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
         let expected = (32, 8, 16);
 
         assert_eq!(core::mem::size_of::<Itimerval>(), expected.0);

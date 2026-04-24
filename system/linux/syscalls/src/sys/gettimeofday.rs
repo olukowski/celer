@@ -71,6 +71,8 @@ mod tests {
         let expected = 78;
         #[cfg(target_arch = "aarch64")]
         let expected = 169;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 96;
 
         assert_eq!(Sysno::Gettimeofday as isize, expected);
     }

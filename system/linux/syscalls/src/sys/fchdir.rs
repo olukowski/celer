@@ -100,6 +100,8 @@ mod tests {
         let expected = 133;
         #[cfg(target_arch = "aarch64")]
         let expected = 50;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 81;
 
         assert_eq!(Sysno::Fchdir as isize, expected);
     }

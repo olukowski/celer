@@ -3,7 +3,7 @@ use celer_system_linux_ctypes::{SizeT, UnsignedInt, UnsignedLong, Void};
 use crate::arch::current::Sysno;
 #[cfg(target_arch = "x86")]
 use crate::arch::current::syscall1;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 use crate::arch::current::syscall6;
 
 #[cfg(target_arch = "x86")]
@@ -100,7 +100,7 @@ pub unsafe fn mmap(
     fd: UnsignedInt,
     offset: UnsignedLong,
 ) -> UnsignedLong {
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
     {
         // SAFETY: the caller upholds the process-memory invariants required
         // by this mapping operation.

@@ -96,6 +96,8 @@ mod tests {
         let expected = 88;
         #[cfg(target_arch = "aarch64")]
         let expected = 142;
+        #[cfg(target_arch = "x86_64")]
+        let expected = 169;
 
         assert_eq!(Sysno::Reboot as isize, expected);
     }

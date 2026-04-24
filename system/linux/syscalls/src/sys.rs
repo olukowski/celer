@@ -20,25 +20,25 @@
 #[cfg(test)]
 pub(crate) mod test_support;
 
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod access;
 mod acct;
 mod adjtimex;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod alarm;
 mod brk;
 mod chdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod chmod;
 mod chroot;
 mod close;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod creat;
 #[cfg(target_arch = "x86")]
 mod create_module;
 mod delete_module;
 mod dup;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod dup2;
 mod execve;
 mod exit;
@@ -66,7 +66,7 @@ mod getgid;
 mod getgroups;
 mod getitimer;
 mod getpgid;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod getpgrp;
 mod getpid;
 mod getppid;
@@ -89,14 +89,14 @@ mod ipc;
 mod kill;
 #[cfg(target_arch = "x86")]
 mod lchown;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod link;
 mod lseek;
 #[cfg(target_arch = "x86")]
 mod lstat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod mkdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod mknod;
 mod mmap;
 #[cfg(target_arch = "x86")]
@@ -104,30 +104,30 @@ mod modify_ldt;
 mod mount;
 mod munmap;
 mod newfstat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod newlstat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod newstat;
 #[cfg(target_arch = "x86")]
 mod nice;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod open;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod pause;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod pipe;
 mod ptrace;
 mod read;
 #[cfg(target_arch = "x86")]
 mod readdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod readlink;
 mod reboot;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod rename;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod rmdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod select;
 mod setdomainname;
 #[cfg(target_arch = "x86")]
@@ -174,25 +174,25 @@ mod statfs;
 mod stime;
 mod swapoff;
 mod swapon;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod symlink;
 mod sync;
 mod sysinfo;
 mod syslog;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod time;
 mod times;
 mod truncate;
 mod umask;
 mod umount;
 mod uname;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod unlink;
 #[cfg(target_arch = "x86")]
 mod uselib;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod ustat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod utime;
 mod vhangup;
 #[cfg(target_arch = "x86")]
@@ -221,25 +221,25 @@ pub mod linux_1_0 {
     pub use super::truncate::truncate_1_0 as truncate;
 }
 
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::access;
 pub use acct::acct;
 pub use adjtimex::adjtimex;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use alarm::alarm;
 pub use brk::brk;
 pub use chdir::chdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use chmod::chmod;
 pub use chroot::chroot;
 pub use close::close;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use creat::creat;
 #[cfg(target_arch = "x86")]
 pub use create_module::create_module;
 pub use delete_module::delete_module;
 pub use dup::dup;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use dup2::dup2;
 pub use execve::execve;
 pub use exit::exit;
@@ -267,7 +267,7 @@ pub use getgid::getgid16;
 pub use getgroups::getgroups16;
 pub use getitimer::getitimer;
 pub use getpgid::getpgid;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use getpgrp::getpgrp;
 pub use getpid::getpid;
 pub use getppid::getppid;
@@ -293,14 +293,14 @@ pub use ipc::{
 pub use kill::kill;
 #[cfg(target_arch = "x86")]
 pub use lchown::lchown16;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use link::link;
 pub use lseek::lseek;
 #[cfg(target_arch = "x86")]
 pub use lstat::oldlstat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use mkdir::mkdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use mknod::mknod;
 pub use mmap::mmap;
 #[cfg(target_arch = "x86")]
@@ -308,30 +308,30 @@ pub use modify_ldt::modify_ldt;
 pub use mount::mount;
 pub use munmap::munmap;
 pub use newfstat::newfstat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use newlstat::newlstat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use newstat::stat;
 #[cfg(target_arch = "x86")]
 pub use nice::nice;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use open::open;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use pause::pause;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use pipe::pipe;
 pub use ptrace::ptrace;
 pub use read::read;
 #[cfg(target_arch = "x86")]
 pub use readdir::readdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use readlink::readlink;
 pub use reboot::reboot;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use rename::rename;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use rmdir::rmdir;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use select::select;
 pub use setdomainname::setdomainname;
 #[cfg(target_arch = "x86")]
@@ -382,28 +382,28 @@ pub use statfs::statfs;
 pub use stime::stime;
 pub use swapoff::swapoff;
 pub use swapon::swapon;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use symlink::symlink;
 pub use sync::sync;
 pub use sysinfo::sysinfo;
 pub use syslog::syslog;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use time::time;
 pub use times::times;
 pub use truncate::truncate;
 pub use umask::umask;
 pub use umount::umount;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 pub use uname::newuname;
 #[cfg(target_arch = "x86")]
 pub use uname::{newuname, oldolduname, olduname};
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use unlink::unlink;
 #[cfg(target_arch = "x86")]
 pub use uselib::uselib;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use ustat::ustat;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use utime::utime;
 pub use vhangup::vhangup;
 #[cfg(target_arch = "x86")]

@@ -94,6 +94,8 @@ mod tests {
         assert_eq!(Sysno::Fcntl as isize, 55);
         #[cfg(target_arch = "aarch64")]
         assert_eq!(Sysno::Fcntl as isize, 25);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Fcntl as isize, 72);
     }
 
     #[test]
