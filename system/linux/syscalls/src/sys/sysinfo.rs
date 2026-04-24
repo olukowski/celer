@@ -1,6 +1,11 @@
-use celer_system_linux_ctypes::{Int, Sysinfo};
+use celer_system_linux_ctypes::{
+    Int, Sysinfo, linux_1_0::Sysinfo as Linux10Sysinfo,
+};
 
-use crate::arch::current::{Sysno, syscall1};
+use crate::arch::{
+    current::{Sysno, syscall1},
+    linux_1_0::{Sysno as Linux10Sysno, syscall1 as linux_1_0_syscall1},
+};
 
 /// Copy system load, memory, swap, and task summary information into the
 /// caller-provided buffer.
@@ -52,18 +57,78 @@ pub unsafe fn sysinfo(info: *mut Sysinfo) -> Int {
     unsafe { syscall1(Sysno::Sysinfo, info.addr() as isize) as Int }
 }
 
+/// Copy Linux 1.0 system load, memory, swap, and task-table summary
+/// information into the caller-provided buffer.
+///
+/// This wrapper uses syscall slot `116` with the Linux 1.0
+/// [`Linux10Sysinfo`] layout. Current kernels use the same slot with the
+/// current i386 [`Sysinfo`] layout, exposed by [`sysinfo`].
+///
+/// # Safety
+/// - `info`, when non-null, must be valid to write one [`Linux10Sysinfo`] value
+///   for the duration of the syscall.
+/// - `info`, when non-null, must not alias live Rust references or other memory
+///   that would violate Rust's aliasing rules while the kernel may write
+///   through that pointer.
+///
+/// # Kernel Support
+/// - Introduced: Linux 1.0
+/// - Behavior changes: current kernels still use syscall number `116` on i386,
+///   but write the later 64-byte ABI tail with `totalhigh`, `freehigh`, and
+///   `mem_unit` after `procs`.
+/// - Availability: correct only for Linux 1.0 x86 kernels
+///
+/// # Required Privileges
+/// - None
+///
+/// # Behavior
+/// - On Linux 1.0, success writes one 64-byte `struct sysinfo` record to
+///   `info`.
+/// - `uptime` reports seconds since boot.
+/// - `loads` reports the 1-, 5-, and 15-minute load averages as fixed-point
+///   values shifted left by 16 bits.
+/// - RAM and swap fields report byte counts.
+/// - `procs` counts occupied task slots in the kernel task table.
+///
+/// # Errors
+/// - `EFAULT`: `info` is null or does not point to writable memory for one
+///   Linux 1.0 `struct sysinfo` record.
+///
+/// # References
+/// - Linux 1.0 syscall number table:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n125)
+/// - Linux 1.0 implementation:
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=1.0#n17)
+/// - Linux 1.0 ABI layout:
+///   [include/linux/kernel.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/kernel.h?h=1.0#n65)
+pub unsafe fn sysinfo_1_0(info: *mut Linux10Sysinfo) -> Int {
+    // SAFETY: `info` is forwarded to the kernel exactly as provided by the
+    // caller, which must uphold the pointer validity and aliasing
+    // requirements documented above.
+    unsafe {
+        linux_1_0_syscall1(Linux10Sysno::Sysinfo, info.addr() as isize) as Int
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::Sysinfo;
+    use celer_system_linux_ctypes::{
+        Sysinfo, linux_1_0::Sysinfo as Linux10Sysinfo,
+    };
 
-    use crate::arch::current::Sysno;
+    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
 
-    use super::sysinfo;
+    use super::{sysinfo, sysinfo_1_0};
 
     #[test]
     fn test_sysinfo_sysno() {
         assert_eq!(Sysno::Sysinfo as isize, 116);
+    }
+
+    #[test]
+    fn test_linux_1_0_sysinfo_sysno() {
+        assert_eq!(Linux10Sysno::Sysinfo as isize, 116);
     }
 
     #[test]
@@ -73,6 +138,16 @@ mod tests {
         assert_eq!(core::mem::offset_of!(Sysinfo, loads), 4);
         assert_eq!(core::mem::offset_of!(Sysinfo, totalram), 16);
         assert_eq!(core::mem::offset_of!(Sysinfo, procs), 40);
+    }
+
+    #[test]
+    fn test_linux_1_0_sysinfo_layout() {
+        assert_eq!(core::mem::size_of::<Linux10Sysinfo>(), 64);
+        assert_eq!(core::mem::offset_of!(Linux10Sysinfo, uptime), 0);
+        assert_eq!(core::mem::offset_of!(Linux10Sysinfo, loads), 4);
+        assert_eq!(core::mem::offset_of!(Linux10Sysinfo, totalram), 16);
+        assert_eq!(core::mem::offset_of!(Linux10Sysinfo, procs), 40);
+        assert_eq!(core::mem::offset_of!(Linux10Sysinfo, _f), 42);
     }
 
     #[test]
@@ -112,6 +187,15 @@ mod tests {
         // SAFETY: a null pointer is permitted and the kernel reports invalid
         // output pointers as `EFAULT`.
         let ret = unsafe { sysinfo(core::ptr::null_mut()) };
+
+        assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
+    }
+
+    #[test]
+    fn test_linux_1_0_sysinfo_null_pointer() {
+        // SAFETY: a null pointer is permitted and the kernel reports invalid
+        // output pointers as `EFAULT`.
+        let ret = unsafe { sysinfo_1_0(core::ptr::null_mut()) };
 
         assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }

@@ -153,7 +153,7 @@ pub mod linux_1_0 {
     pub use super::setrlimit::setrlimit_1_0 as setrlimit;
     pub use super::setup::setup;
     pub use super::statfs::statfs_1_0 as statfs;
-    pub use super::sysinfo::sysinfo;
+    pub use super::sysinfo::sysinfo_1_0 as sysinfo;
     pub use super::truncate::truncate_1_0 as truncate;
 }
 
@@ -267,6 +267,7 @@ pub use swapoff::swapoff;
 pub use swapon::swapon;
 pub use symlink::symlink;
 pub use sync::sync;
+pub use sysinfo::sysinfo;
 pub use syslog::syslog;
 pub use time::time;
 pub use times::times;
