@@ -20,18 +20,21 @@ struct SelectArgs {
 
 /// Wait for readiness changes on up to `nfds` file descriptors.
 ///
-/// This wrapper targets the original Linux 1.0 x86 syscall slot 82 ABI.
-/// The kernel entry takes a single pointer to a packed five-word argument
-/// block; this wrapper builds that block internally and exposes the logical
-/// `select(nfds, readfds, writefds, exceptfds, timeout)` interface.
+/// This wrapper exposes the logical `select(nfds, readfds, writefds,
+/// exceptfds, timeout)` interface, but the actual syscall entry depends on
+/// the target architecture:
+/// - On x86_64, syscall slot `23` is native `sys_select`, which takes five
+///   direct syscall arguments and forwards them to `kern_select()`.
+/// - On i386, syscall slot `82` is `old_select`, which reads a packed
+///   five-word argument block from user memory and then forwards those fields
+///   to `kern_select()`.
 ///
-/// The packed argument block is still the current i386 ABI at syscall slot 82,
-/// but the pointed-to descriptor-set layout is not frozen to the Linux 1.0
-/// shape. Linux 1.0 used a 256-bit `fd_set`; current x86 kernels use the
-/// current kernel `fd_set` definition, whose first 1024 bits match [`FdSet`].
-/// The kernel sizes descriptor-set copies from the clipped `nfds` value, so
-/// callers may need to provide trailing bitmap storage beyond one [`FdSet`]
-/// when monitoring descriptors above `1023`.
+/// The pointed-to descriptor-set layout is also architecture-dependent.
+/// Linux 1.0 i386 used a 256-bit `fd_set`; current kernels use the current
+/// kernel `fd_set` definition, whose first 1024 bits match [`FdSet`].
+/// Current kernels size descriptor-set copies from the clipped `nfds` value,
+/// so callers may need trailing bitmap storage beyond one [`FdSet`] when
+/// monitoring descriptors above `1023`.
 ///
 /// # Safety
 /// - Each non-null descriptor-set pointer must point to the start of a
@@ -51,12 +54,14 @@ struct SelectArgs {
 /// # Kernel Support
 /// - Introduced: Linux 0.12
 /// - Behavior changes:
-///   - Linux 1.0 clipped `nfds` to `NR_OPEN` (`256`) and used a 256-bit
+///   - Linux 1.0 i386 clipped `nfds` to `NR_OPEN` (`256`) and used a 256-bit
 ///     `fd_set`.
-///   - Current i386 kernels still expose syscall slot 82 through the packed
-///     `old_select` ABI, but they clip `nfds` to the calling task's current
-///     `max_fds` and use the current 1024-bit kernel `fd_set`.
-/// - Availability: present on supported x86 Linux kernels
+///   - Current x86_64 kernels expose native syscall slot `23` as `sys_select`
+///     with five direct arguments.
+///   - Current i386 kernels keep syscall slot `82` as packed `old_select`.
+///   - Current kernels clip positive `nfds` to the calling task's `max_fds`
+///     snapshot and use the current 1024-bit kernel `fd_set`.
+/// - Availability: present on supported x86 and x86_64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -64,12 +69,17 @@ struct SelectArgs {
 /// # Behavior
 /// - `readfds`, `writefds`, `exceptfds`, and `timeout` may each be null
 ///   independently.
+/// - On x86_64, the syscall ABI passes `nfds`, `readfds`, `writefds`,
+///   `exceptfds`, and `timeout` directly as five arguments.
+/// - On i386, Linux 1.0 and current `old_select` read those same five logical
+///   arguments from a packed user block.
 /// - On success, returns the total number of ready descriptor bits across all
 ///   three result sets.
 /// - On success, each non-null descriptor set is overwritten so that the words
 ///   covered by `nfds` keep only the ready bits requested for that set.
-/// - On Linux 1.0, `nfds < 0` fails with `EINVAL`.
-/// - On Linux 1.0, `nfds > 256` is clipped to `256` instead of being rejected.
+/// - On Linux 1.0 i386, `nfds < 0` fails with `EINVAL`.
+/// - On Linux 1.0 i386, `nfds > 256` is clipped to `256` instead of being
+///   rejected.
 /// - On current kernels, positive `nfds` values larger than the current
 ///   `max_fds` snapshot are clipped to that snapshot instead of being
 ///   rejected.
@@ -96,15 +106,17 @@ struct SelectArgs {
 ///   to user space or restarts the syscall when no handler runs.
 ///
 /// # References
-/// - Stable entry:
+/// - Current native entry:
+///   [v7.0 sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/select.c?h=v7.0#n722)
+/// - Current x86_64 syscall table:
+///   [v7.0 arch/x86/entry/syscalls/syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n35)
+/// - Current i386 entry:
 ///   [v7.0 old_select](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/select.c?h=v7.0#n824)
-/// - Stable helper:
+/// - Current helper:
 ///   [v7.0 core_sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/select.c?h=v7.0#n621)
-/// - LTS entry:
-///   [v6.18.18 old_select](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/select.c?h=v6.18.18#n828)
-/// - LTS helper:
-///   [v6.18.18 core_sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/select.c?h=v6.18.18#n621)
-/// - First stable:
+/// - Current i386 syscall table:
+///   [v7.0 arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n97)
+/// - Linux 1.0 i386 implementation:
 ///   [Linux 1.0 sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/select.c?h=1.0#n195)
 ///
 /// # Historical References
@@ -118,8 +130,6 @@ struct SelectArgs {
 ///   [include/linux/types.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/types.h?h=1.0#n84)
 /// - Current x86 `fd_set` layout:
 ///   [include/uapi/linux/posix_types.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/posix_types.h?h=v7.0#n22)
-/// - Current i386 syscall table:
-///   [arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n97)
 pub unsafe fn select(
     nfds: Int,
     readfds: *mut FdSet,

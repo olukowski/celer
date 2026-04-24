@@ -19,19 +19,26 @@ struct MmapArgs {
 
 /// Create a memory mapping.
 ///
-/// This wrapper targets the original Linux 1.0 i386 syscall slot 90 ABI.
-/// That historical entry takes a single pointer to six packed words; this
-/// wrapper builds the packed block internally and exposes the logical
-/// `mmap(addr, len, prot, flags, fd, offset)` interface.
+/// This wrapper exposes the logical `mmap(addr, len, prot, flags, fd,
+/// offset)` interface, but the actual syscall entry depends on the target
+/// architecture:
+/// - On x86_64, syscall slot `9` is `sys_mmap`, a native six-argument entry
+///   that rejects byte offsets with nonzero low page bits before calling
+///   `ksys_mmap_pgoff()`.
+/// - On i386, syscall slot `90` is the legacy packed-argument `old_mmap`
+///   entry. The kernel reads six words from user memory and then calls
+///   `ksys_mmap_pgoff()` after validating the packed `offset`.
 ///
 /// # Kernel Support
 /// - Introduced: Linux 1.0
-/// - Behavior changes: Linux 1.0 forwards `offset` unchanged from the syscall
-///   entry to the selected mapper and returns `addr` unchanged when `len`
-///   rounds down to zero; current x86 kernels keep syscall slot 90 as the
-///   legacy `old_mmap` ABI, but they reject non-page-aligned `offset` values
-///   at the syscall entry and reject zero effective length
-/// - Availability: present on supported x86 Linux kernels
+/// - Behavior changes:
+///   - Linux 1.0 i386 `sys_mmap` reads a six-word argument block and forwards
+///     `offset` unchanged to `do_mmap()`.
+///   - Current x86_64 kernels expose native syscall slot `9` as `sys_mmap`
+///     and current i386 kernels keep slot `90` as `old_mmap`; both current
+///     paths reject non-page-aligned byte offsets before shifting to page
+///     units for `ksys_mmap_pgoff()`.
+/// - Availability: present on supported x86 and x86_64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -46,16 +53,20 @@ struct MmapArgs {
 ///
 /// # Behavior
 /// - `addr` is a hint unless `flags` includes `MAP_FIXED`.
-/// - Linux 1.0 reads the six arguments from a temporary packed block in this
+/// - On x86_64, the kernel receives six direct syscall arguments in this
+///   order: `addr`, `len`, `prot`, `flags`, `fd`, `offset`.
+/// - On i386, Linux 1.0 and current `old_mmap` read six packed words in this
 ///   order: `addr`, `len`, `prot`, `flags`, `fd`, `offset`.
 /// - If `flags` includes `MAP_ANONYMOUS`, Linux 1.0 ignores `fd`.
-/// - On Linux 1.0, if `len` rounds up to zero pages, the syscall succeeds and
-///   returns `addr` unchanged.
-/// - On Linux 1.0, non-fixed mappings search only the
+/// - On current x86_64 and i386 kernels, the syscall entry rejects offsets
+///   whose low bits are not page-aligned.
+/// - On Linux 1.0 i386, if `len` rounds up to zero pages, the syscall
+///   succeeds and returns `addr` unchanged.
+/// - On Linux 1.0 i386, non-fixed mappings search only the
 ///   `0x40000000..0x60000000` shared-memory window.
-/// - On Linux 1.0, the kernel removes any existing mappings in the chosen
-///   range before attempting the new mapping and does not roll them back if
-///   the mapper then fails.
+/// - On Linux 1.0 i386, the kernel removes any existing mappings in the
+///   chosen range before attempting the new mapping and does not roll them
+///   back if the mapper then fails.
 /// - The raw return value is address-valued. Callers that want to interpret
 ///   errors should cast the return value to
 ///   [`Long`](celer_system_linux_ctypes::Long) or `isize` before checking for
@@ -80,15 +91,19 @@ struct MmapArgs {
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/mmap.2.html)
-/// - Stable i386 entry:
+/// - Current x86_64 entry:
+///   [v7.0 arch/x86/kernel/sys_x86_64.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/kernel/sys_x86_64.c?h=v7.0#n82)
+/// - Current x86_64 syscall table:
+///   [v7.0 arch/x86/entry/syscalls/syscall_64.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_64.tbl?h=v7.0#n21)
+/// - Current i386 entry:
 ///   [v7.0 ia32_mmap](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/kernel/sys_ia32.c?h=v7.0#n223)
-/// - Stable shared implementation:
-///   [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/mmap.c?h=v6.19#n621)
-/// - LTS i386 entry:
-///   [v6.18.18 ia32_mmap](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/kernel/sys_ia32.c?h=v6.18.18#n223)
-/// - LTS shared implementation:
-///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/mmap.c?h=v6.18.18#n621)
-/// - First stable:
+/// - Current i386 syscall table:
+///   [v7.0 arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n97)
+/// - Shared `old_mmap` implementation:
+///   [v7.0 mm/mmap.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/mmap.c?h=v7.0#n619)
+/// - Shared mapping helper:
+///   [v7.0 mm/mmap.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/mmap.c?h=v7.0#n567)
+/// - Linux 1.0 i386 implementation:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/mmap.c?h=1.0#n137)
 /// - Linux 1.0 syscall table:
 ///   [include/linux/unistd.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n99)
