@@ -61,6 +61,25 @@ mod tests {
     use super::Errno;
 
     #[test]
+    fn test_from_raw_named_values() {
+        assert_eq!(Errno::from_raw(13), Errno::Eacces);
+        assert_eq!(Errno::from_raw(7), Errno::E2big);
+        assert_eq!(Errno::from_raw(9), Errno::Ebadf);
+        assert_eq!(Errno::from_raw(14), Errno::Efault);
+        assert_eq!(Errno::from_raw(17), Errno::Eexist);
+        assert_eq!(Errno::from_raw(22), Errno::Einval);
+        assert_eq!(Errno::from_raw(4), Errno::Eintr);
+        assert_eq!(Errno::from_raw(19), Errno::Enodev);
+        assert_eq!(Errno::from_raw(2), Errno::Enoent);
+        assert_eq!(Errno::from_raw(12), Errno::Enomem);
+        assert_eq!(Errno::from_raw(38), Errno::Enosys);
+        assert_eq!(Errno::from_raw(20), Errno::Enotdir);
+        assert_eq!(Errno::from_raw(1), Errno::Eperm);
+        assert_eq!(Errno::from_raw(30), Errno::Erofs);
+        assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));
+    }
+
+    #[test]
     fn test_is_errno_range() {
         assert!(!Errno::is_errno(0));
         assert!(Errno::is_errno(-1));
