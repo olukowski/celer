@@ -15,6 +15,7 @@ mod acct;
 mod adjtimex;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod alarm;
+mod brk;
 mod errno;
 pub mod sys;
 
@@ -24,4 +25,5 @@ pub use acct::{AcctError, acct};
 pub use adjtimex::{AdjtimexError, AdjtimexState, adjtimex};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use alarm::alarm;
+pub use brk::{BrkError, brk};
 pub use errno::Errno;

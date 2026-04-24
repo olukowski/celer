@@ -89,7 +89,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `acct`
 - [x] `adjtimex`
 - [x] `alarm` - x86, x86_64
-- [ ] `brk`
+- [x] `brk`
 - [ ] `chdir`
 - [ ] `chmod` - x86, x86_64
 - [ ] `chroot`
