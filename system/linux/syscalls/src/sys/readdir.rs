@@ -1,24 +1,16 @@
-use celer_system_linux_ctypes::{Dirent, Long, UnsignedInt};
+use celer_system_linux_ctypes::{Long, OldLinuxDirent, UnsignedInt};
 
 use crate::arch::current::{Sysno, syscall3};
 
 /// Read one entry from the directory referred to by `fd` into the historical
-/// Linux 1.0 `struct dirent` buffer at `dirent`.
+/// `old_readdir` buffer at `dirent`.
 ///
 /// This wrapper targets syscall slot `89` from Linux 1.0 rather than the
 /// newer multi-entry `getdents` family.
 ///
 /// # Safety
-/// - On Linux 1.0, `dirent` must point to writable memory large enough for one
-///   [`Dirent`] value for the duration of the syscall.
-/// - On current x86 kernels, syscall slot `89` is still exposed as legacy
-///   `old_readdir`, but that ABI writes a variable-length record whose
-///   `d_name` field is effectively flexible. The caller must therefore ensure
-///   that `dirent` points to writable memory large enough for the fixed header
-///   plus the returned filename and its trailing NUL byte.
-/// - Current x86 kernels reject names with `namlen >= PATH_MAX`, so a buffer
-///   intended to be large enough for any successful current-kernel result
-///   needs `10 + PATH_MAX` writable bytes on 32-bit x86.
+/// - `dirent` must point to one writable [`OldLinuxDirent`] value for the
+///   duration of the syscall.
 /// - `dirent` must not alias live Rust references or other memory that would
 ///   violate Rust's aliasing rules while the kernel may write through that
 ///   pointer.
@@ -36,6 +28,9 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # Behavior
 /// - On success, reads at most one directory entry into `dirent`.
+/// - On current x86 kernels, `dirent.d_namlen` receives the copied filename
+///   length, and the filename bytes plus trailing NUL are written immediately
+///   after the fixed prefix.
 /// - On Linux 1.0, success returns the copied filename length.
 /// - On Linux 1.0, `dirent.d_reclen` receives the copied filename length, not
 ///   the size of the whole record.
@@ -54,7 +49,7 @@ use crate::arch::current::{Sysno, syscall3};
 /// - `EBADF`: the target object's filesystem `readdir` implementation rejects
 ///   the descriptor or inode state.
 /// - `ENOTDIR`: the opened object has no `readdir` operation.
-/// - `EFAULT`: `dirent` is not writable for one [`Dirent`] value.
+/// - `EFAULT`: `dirent` is not writable for one Linux 1.0 fixed-size dirent.
 /// - `ENOENT`: reachable from the msdos filesystem when the directory
 ///   position is misaligned.
 /// - `EIO`: reachable through NFS `readdir` failures.
@@ -64,6 +59,8 @@ use crate::arch::current::{Sysno, syscall3};
 ///   server error.
 ///
 /// Current x86 `old_readdir` adds further reachable errors, including:
+/// - `EFAULT`: `dirent` is not writable for the fixed prefix plus the returned
+///   name and trailing NUL.
 /// - `EOVERFLOW`: the returned inode number does not fit in `unsigned long`.
 /// - `EIO`: the filesystem emits an invalid directory entry name.
 ///
@@ -82,9 +79,11 @@ use crate::arch::current::{Sysno, syscall3};
 ///   [kernel/sched.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n137)
 /// - Current x86 syscall table:
 ///   [arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n104)
+/// - Current x86 ABI shape:
+///   [fs/readdir.c](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/readdir.c?h=v6.19#n168)
 pub unsafe fn readdir(
     fd: UnsignedInt,
-    dirent: *mut Dirent,
+    dirent: *mut OldLinuxDirent,
     count: UnsignedInt,
 ) -> Long {
     // SAFETY: this wrapper forwards the raw output pointer without
@@ -110,18 +109,13 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use celer_system_linux_ctypes::{Char, Dirent, UnsignedInt};
+    use celer_system_linux_ctypes::{
+        Char, OLD_LINUX_DIRENT_NAME_CAP, OldLinuxDirent, UnsignedInt,
+    };
 
     use crate::arch::current::Sysno;
 
     use super::readdir;
-
-    const READDIR_BUFFER_SIZE: usize = 10 + 4096;
-
-    #[repr(C, align(4))]
-    struct ReaddirBuffer {
-        bytes: [u8; READDIR_BUFFER_SIZE],
-    }
 
     fn create_temp_dir() -> PathBuf {
         let mut path = env::temp_dir();
@@ -136,29 +130,20 @@ mod tests {
         path
     }
 
-    fn zeroed_dirent() -> Dirent {
-        Dirent {
+    fn zeroed_dirent() -> OldLinuxDirent {
+        OldLinuxDirent {
             d_ino: 0,
-            d_off: 0,
-            d_reclen: 0,
-            d_name: [0; 256],
+            d_offset: 0,
+            d_namlen: 0,
+            d_name: [0; OLD_LINUX_DIRENT_NAME_CAP],
         }
     }
 
-    fn dirent_name(dirent: &Dirent) -> Vec<u8> {
-        let nul = dirent.d_name.iter().position(|&ch| ch == 0).unwrap();
-
-        dirent.d_name[..nul].iter().map(|&ch| ch as u8).collect()
-    }
-
-    fn zeroed_readdir_buffer() -> ReaddirBuffer {
-        ReaddirBuffer {
-            bytes: [0; READDIR_BUFFER_SIZE],
-        }
-    }
-
-    fn buffer_dirent(buffer: &mut ReaddirBuffer) -> *mut Dirent {
-        buffer.bytes.as_mut_ptr().cast()
+    fn dirent_name(dirent: &OldLinuxDirent) -> Vec<u8> {
+        dirent.d_name[..dirent.d_namlen as usize]
+            .iter()
+            .map(|&ch| ch as u8)
+            .collect()
     }
 
     fn touch(path: &Path) {
@@ -166,20 +151,19 @@ mod tests {
     }
     fn directory_contains_entry(fd: UnsignedInt, target_name: &[u8]) -> bool {
         for _ in 0..16 {
-            let mut buffer = zeroed_readdir_buffer();
-            let dirent = buffer_dirent(&mut buffer);
-            let ret = unsafe { readdir(fd, dirent, 1) };
+            let mut dirent = zeroed_dirent();
+            let ret = unsafe { readdir(fd, &raw mut dirent, 1) };
 
             assert!(ret >= 0, "readdir failed: {ret}");
             if ret == 0 {
                 return false;
             }
 
-            let entry = unsafe { &*dirent };
-            let name = dirent_name(entry);
-            assert!(entry.d_reclen > 0);
-            assert_ne!(entry.d_ino, 0);
-            assert_eq!(entry.d_name[entry.d_reclen as usize], 0 as Char);
+            let name = dirent_name(&dirent);
+            assert!(dirent.d_namlen > 0);
+            assert_ne!(dirent.d_ino, 0);
+            let nul = dirent.d_name[dirent.d_namlen as usize];
+            assert_eq!(nul, 0 as Char);
 
             if name == target_name {
                 return true;
@@ -196,12 +180,12 @@ mod tests {
 
     #[test]
     fn test_readdir_dirent_layout() {
-        assert_eq!(core::mem::size_of::<Dirent>(), 268);
-        assert_eq!(core::mem::align_of::<Dirent>(), 4);
-        assert_eq!(core::mem::offset_of!(Dirent, d_ino), 0);
-        assert_eq!(core::mem::offset_of!(Dirent, d_off), 4);
-        assert_eq!(core::mem::offset_of!(Dirent, d_reclen), 8);
-        assert_eq!(core::mem::offset_of!(Dirent, d_name), 10);
+        assert_eq!(core::mem::size_of::<OldLinuxDirent>(), 4108);
+        assert_eq!(core::mem::align_of::<OldLinuxDirent>(), 4);
+        assert_eq!(core::mem::offset_of!(OldLinuxDirent, d_ino), 0);
+        assert_eq!(core::mem::offset_of!(OldLinuxDirent, d_offset), 4);
+        assert_eq!(core::mem::offset_of!(OldLinuxDirent, d_namlen), 8);
+        assert_eq!(core::mem::offset_of!(OldLinuxDirent, d_name), 10);
     }
 
     #[test]
@@ -223,11 +207,10 @@ mod tests {
         let dir = create_temp_dir();
         let dir_file = File::open(&dir).unwrap();
         let fd = dir_file.as_raw_fd() as UnsignedInt;
-        let mut buffer = zeroed_readdir_buffer();
-        let dirent = buffer_dirent(&mut buffer);
+        let mut dirent = zeroed_dirent();
 
         loop {
-            let ret = unsafe { readdir(fd, dirent, 1) };
+            let ret = unsafe { readdir(fd, &raw mut dirent, 1) };
             assert!(ret >= 0, "readdir failed: {ret}");
 
             if ret == 0 {
@@ -269,7 +252,7 @@ mod tests {
 
         let dir_file = File::open(&dir).unwrap();
         let bad_dirent =
-            core::ptr::without_provenance_mut::<Dirent>(usize::MAX);
+            core::ptr::without_provenance_mut::<OldLinuxDirent>(usize::MAX);
         let ret = unsafe {
             readdir(dir_file.as_raw_fd() as UnsignedInt, bad_dirent, 1)
         };
@@ -285,15 +268,14 @@ mod tests {
 
         let dir_file = File::open(&dir).unwrap();
         let fd = dir_file.as_raw_fd() as UnsignedInt;
-        let mut buffer = zeroed_readdir_buffer();
-        let dirent = buffer_dirent(&mut buffer);
-        let ret = unsafe { readdir(fd, dirent, 32) };
+        let mut dirent = zeroed_dirent();
+        let ret = unsafe { readdir(fd, &raw mut dirent, 32) };
 
         assert!(ret >= 0, "readdir failed: {ret}");
         if ret > 0 {
-            let entry = unsafe { &*dirent };
-            assert!(entry.d_reclen > 0);
-            assert_eq!(entry.d_name[entry.d_reclen as usize], 0 as Char);
+            assert!(dirent.d_namlen > 0);
+            let nul = dirent.d_name[dirent.d_namlen as usize];
+            assert_eq!(nul, 0 as Char);
         }
 
         fs::remove_dir_all(&dir).unwrap();

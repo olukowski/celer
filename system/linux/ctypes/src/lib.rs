@@ -415,7 +415,7 @@ pub struct Tms {
 }
 
 pub mod linux_1_0 {
-    use super::{Int, Long, UnsignedLong, UnsignedShort};
+    use super::{Char, Int, Long, OffT, UnsignedLong, UnsignedShort};
 
     /// Linux 1.0 `struct rlimit` used by the historical `getrlimit` and
     /// `setrlimit` syscall ABIs on x86.
@@ -474,6 +474,32 @@ pub mod linux_1_0 {
         pub f_namelen: Long,
         pub f_spare: [Long; 6],
     }
+
+    /// Linux 1.0 `struct sysinfo`.
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct Sysinfo {
+        pub uptime: Long,
+        pub loads: [UnsignedLong; 3],
+        pub totalram: UnsignedLong,
+        pub freeram: UnsignedLong,
+        pub sharedram: UnsignedLong,
+        pub bufferram: UnsignedLong,
+        pub totalswap: UnsignedLong,
+        pub freeswap: UnsignedLong,
+        pub procs: UnsignedShort,
+        pub _f: [Char; 22],
+    }
+
+    /// Linux 1.0 `struct dirent` used by the historical `readdir` syscall ABI.
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct Dirent {
+        pub d_ino: Long,
+        pub d_off: OffT,
+        pub d_reclen: UnsignedShort,
+        pub d_name: [Char; 256],
+    }
 }
 
 /// Current Linux i386 `struct rlimit` used by the `setrlimit` syscall ABI.
@@ -516,7 +542,7 @@ pub struct Ustat {
     pub f_fpack: [Char; 6],
 }
 
-/// Linux 1.0 `struct sysinfo` used by the historical `sysinfo` syscall ABI.
+/// Current i386 Linux `struct sysinfo` used by the `sysinfo` syscall ABI.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Sysinfo {
@@ -529,7 +555,11 @@ pub struct Sysinfo {
     pub totalswap: UnsignedLong,
     pub freeswap: UnsignedLong,
     pub procs: UnsignedShort,
-    pub _f: [Char; 22],
+    pub pad: UnsignedShort,
+    pub totalhigh: UnsignedLong,
+    pub freehigh: UnsignedLong,
+    pub mem_unit: UnsignedInt,
+    pub _f: [Char; 8],
 }
 
 /// Linux `__kernel_fsid_t` used by current i386 filesystem status ABIs.
@@ -558,14 +588,26 @@ pub struct Statfs {
     pub f_spare: [UnsignedInt; 4],
 }
 
-/// Linux `struct dirent` used by the historical `readdir` syscall ABI.
+/// Maximum current-kernel filename payload for the legacy `old_readdir` ABI.
+///
+/// Current kernels reject names with `namlen >= PATH_MAX`; `PATH_MAX` is
+/// `4096`, so this storage is large enough for any successful name plus the
+/// trailing NUL byte.
+pub const OLD_LINUX_DIRENT_NAME_CAP: usize = 4096;
+
+/// Current i386 Linux `struct old_linux_dirent` buffer used by the historical
+/// `old_readdir` syscall ABI.
+///
+/// The C ABI has a flexible `d_name[]` member at byte offset `10`. This Rust
+/// type gives that payload fixed backing storage large enough for any
+/// successful current-kernel result.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Dirent {
+pub struct OldLinuxDirent {
     pub d_ino: Long,
-    pub d_off: OffT,
-    pub d_reclen: UnsignedShort,
-    pub d_name: [Char; 256],
+    pub d_offset: OffT,
+    pub d_namlen: UnsignedShort,
+    pub d_name: [Char; OLD_LINUX_DIRENT_NAME_CAP],
 }
 
 #[cfg(test)]
@@ -573,7 +615,7 @@ pub struct Dirent {
 mod tests {
     use core::mem::{align_of, offset_of, size_of};
 
-    use super::{FsidT, NewStat, Statfs, linux_1_0};
+    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo, linux_1_0};
 
     #[test]
     fn current_i386_newstat_layout_matches_linux_v7_0_struct_stat() {
@@ -661,5 +703,56 @@ mod tests {
         assert_eq!(offset_of!(linux_1_0::Statfs, f_fsid), 28);
         assert_eq!(offset_of!(linux_1_0::Statfs, f_namelen), 36);
         assert_eq!(offset_of!(linux_1_0::Statfs, f_spare), 40);
+    }
+
+    #[test]
+    fn current_i386_sysinfo_layout_matches_linux_v7_0_struct_sysinfo() {
+        assert_eq!(size_of::<Sysinfo>(), 64);
+        assert_eq!(align_of::<Sysinfo>(), 4);
+        assert_eq!(offset_of!(Sysinfo, uptime), 0);
+        assert_eq!(offset_of!(Sysinfo, loads), 4);
+        assert_eq!(offset_of!(Sysinfo, totalram), 16);
+        assert_eq!(offset_of!(Sysinfo, freeram), 20);
+        assert_eq!(offset_of!(Sysinfo, sharedram), 24);
+        assert_eq!(offset_of!(Sysinfo, bufferram), 28);
+        assert_eq!(offset_of!(Sysinfo, totalswap), 32);
+        assert_eq!(offset_of!(Sysinfo, freeswap), 36);
+        assert_eq!(offset_of!(Sysinfo, procs), 40);
+        assert_eq!(offset_of!(Sysinfo, pad), 42);
+        assert_eq!(offset_of!(Sysinfo, totalhigh), 44);
+        assert_eq!(offset_of!(Sysinfo, freehigh), 48);
+        assert_eq!(offset_of!(Sysinfo, mem_unit), 52);
+        assert_eq!(offset_of!(Sysinfo, _f), 56);
+    }
+
+    #[test]
+    fn linux_1_0_sysinfo_layout_is_preserved() {
+        assert_eq!(size_of::<linux_1_0::Sysinfo>(), 64);
+        assert_eq!(align_of::<linux_1_0::Sysinfo>(), 4);
+        assert_eq!(offset_of!(linux_1_0::Sysinfo, uptime), 0);
+        assert_eq!(offset_of!(linux_1_0::Sysinfo, loads), 4);
+        assert_eq!(offset_of!(linux_1_0::Sysinfo, totalram), 16);
+        assert_eq!(offset_of!(linux_1_0::Sysinfo, procs), 40);
+        assert_eq!(offset_of!(linux_1_0::Sysinfo, _f), 42);
+    }
+
+    #[test]
+    fn current_i386_old_linux_dirent_prefix_layout_matches_linux_v7_0() {
+        assert_eq!(size_of::<OldLinuxDirent>(), 4108);
+        assert_eq!(align_of::<OldLinuxDirent>(), 4);
+        assert_eq!(offset_of!(OldLinuxDirent, d_ino), 0);
+        assert_eq!(offset_of!(OldLinuxDirent, d_offset), 4);
+        assert_eq!(offset_of!(OldLinuxDirent, d_namlen), 8);
+        assert_eq!(offset_of!(OldLinuxDirent, d_name), 10);
+    }
+
+    #[test]
+    fn linux_1_0_dirent_layout_is_preserved() {
+        assert_eq!(size_of::<linux_1_0::Dirent>(), 268);
+        assert_eq!(align_of::<linux_1_0::Dirent>(), 4);
+        assert_eq!(offset_of!(linux_1_0::Dirent, d_ino), 0);
+        assert_eq!(offset_of!(linux_1_0::Dirent, d_off), 4);
+        assert_eq!(offset_of!(linux_1_0::Dirent, d_reclen), 8);
+        assert_eq!(offset_of!(linux_1_0::Dirent, d_name), 10);
     }
 }

@@ -2,8 +2,8 @@ use celer_system_linux_ctypes::{Int, Sysinfo};
 
 use crate::arch::current::{Sysno, syscall1};
 
-/// Copy Linux 1.0 system load, memory, swap, and task-table summary
-/// information into the caller-provided buffer.
+/// Copy system load, memory, swap, and task summary information into the
+/// caller-provided buffer.
 ///
 /// # Safety
 /// - `info`, when non-null, must be valid to write one `Sysinfo` value for
@@ -17,23 +17,20 @@ use crate::arch::current::{Sysno, syscall1};
 ///   `struct sysinfo` layout; current kernels still use syscall number `116`
 ///   on i386, but write the later 64-byte ABI tail with `totalhigh`,
 ///   `freehigh`, and `mem_unit` after `procs`.
-/// - Availability: present on supported i386 Linux kernels, but this wrapper's
-///   type models the original Linux 1.0 layout only
+/// - Availability: present on supported i386 Linux kernels
 ///
 /// # Required Privileges
 /// - None
 ///
 /// # Behavior
-/// - On Linux 1.0, success writes one 64-byte `Sysinfo` record to `info`.
-/// - In the Linux 1.0 ABI, `uptime` reports seconds since boot.
-/// - In the Linux 1.0 ABI, `loads` reports the 1-, 5-, and 15-minute load
-///   averages as fixed-point values shifted left by 16 bits.
-/// - In the Linux 1.0 ABI, the RAM and swap fields report byte counts.
-/// - In the Linux 1.0 ABI, `procs` counts occupied task slots in the kernel
-///   task table.
-/// - On newer kernels, the prefix through `procs` stays compatible, but bytes
-///   after `procs` are used for the newer ABI tail and memory values may be
-///   scaled by a `mem_unit` field that this historical type does not expose.
+/// - On success, writes one 64-byte `Sysinfo` record to `info`.
+/// - `uptime` reports seconds since boot.
+/// - `loads` reports the 1-, 5-, and 15-minute load averages as fixed-point
+///   values shifted left by 16 bits.
+/// - Current kernels report RAM and swap values in units of `mem_unit` bytes.
+/// - The prefix through `procs` is compatible with Linux 1.0, but the current
+///   i386 ABI uses the tail after `procs` for `pad`, `totalhigh`, `freehigh`,
+///   `mem_unit`, and padding.
 ///
 /// # Errors
 /// - `EFAULT`: `info` is null or does not point to writable memory for one
@@ -46,6 +43,8 @@ use crate::arch::current::{Sysno, syscall1};
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=1.0#n17)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/kernel.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/kernel.h?h=1.0#n65)
+/// - Current ABI layout:
+///   [include/uapi/linux/sysinfo.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/sysinfo.h?h=v6.19#n8)
 pub unsafe fn sysinfo(info: *mut Sysinfo) -> Int {
     // SAFETY: `info` is forwarded to the kernel exactly as provided by the
     // caller, which must uphold the pointer validity and aliasing
@@ -88,7 +87,11 @@ mod tests {
             totalswap: 0,
             freeswap: 0,
             procs: 0,
-            _f: [1; 22],
+            pad: 0,
+            totalhigh: 0,
+            freehigh: 0,
+            mem_unit: 0,
+            _f: [1; 8],
         };
 
         // SAFETY: `info` is a valid writable output buffer for one `Sysinfo`
@@ -101,6 +104,7 @@ mod tests {
         assert!(info.procs > 0, "procs should report at least one task");
         assert!(info.totalram >= info.freeram);
         assert!(info.totalswap >= info.freeswap);
+        assert!(info.mem_unit > 0, "mem_unit should be non-zero");
     }
 
     #[test]
