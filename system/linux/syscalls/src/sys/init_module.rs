@@ -177,18 +177,25 @@ pub unsafe fn init_module_1_0(
 mod tests {
     use celer_system_linux_ctypes::{Char, ModRoutines, UnsignedLong, Void};
 
-    use crate::arch::{
-        current::{Sysno, syscall3},
-        linux_1_0::{Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4},
+    use crate::arch::current::{Sysno, syscall3};
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::{
+        Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4,
     };
 
-    use super::{init_module, init_module_1_0};
+    use super::init_module;
+    #[cfg(target_arch = "x86")]
+    use super::init_module_1_0;
 
     #[test]
     fn test_init_module_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::InitModule as isize, 128);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::InitModule as isize, 105);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_init_module_sysno() {
         assert_eq!(Linux10Sysno::InitModule as isize, 128);
@@ -234,6 +241,7 @@ mod tests {
         );
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_init_module_matches_raw_syscall() {
         let module_name = c"";

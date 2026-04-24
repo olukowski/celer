@@ -118,19 +118,27 @@ pub unsafe fn sysinfo_1_0(info: *mut Linux10Sysinfo) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{
-        Sysinfo, linux_1_0::Sysinfo as Linux10Sysinfo,
-    };
+    use celer_system_linux_ctypes::Sysinfo;
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::linux_1_0::Sysinfo as Linux10Sysinfo;
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{sysinfo, sysinfo_1_0};
+    use super::sysinfo;
+    #[cfg(target_arch = "x86")]
+    use super::sysinfo_1_0;
 
     #[test]
     fn test_sysinfo_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Sysinfo as isize, 116);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Sysinfo as isize, 179);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_sysinfo_sysno() {
         assert_eq!(Linux10Sysno::Sysinfo as isize, 116);
@@ -145,6 +153,7 @@ mod tests {
         assert_eq!(core::mem::offset_of!(Sysinfo, procs), 40);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_sysinfo_layout() {
         assert_eq!(core::mem::size_of::<Linux10Sysinfo>(), 64);
@@ -171,7 +180,10 @@ mod tests {
             totalhigh: 0,
             freehigh: 0,
             mem_unit: 0,
+            #[cfg(target_arch = "x86")]
             _f: [1; 8],
+            #[cfg(target_arch = "aarch64")]
+            _f: [],
         };
 
         // SAFETY: `info` is a valid writable output buffer for one `Sysinfo`
@@ -196,6 +208,7 @@ mod tests {
         assert_eq!(ret, -14, "expected EFAULT from null pointer, got {ret}");
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_sysinfo_null_pointer() {
         // SAFETY: a null pointer is permitted and the kernel reports invalid

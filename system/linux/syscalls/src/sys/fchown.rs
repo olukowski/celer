@@ -121,7 +121,9 @@ mod tests {
         let uid = metadata.uid();
         let gid = metadata.gid();
 
-        if uid > OldUidT::MAX.into() || gid > OldGidT::MAX.into() {
+        if u64::from(uid) > u64::from(OldUidT::MAX)
+            || u64::from(gid) > u64::from(OldGidT::MAX)
+        {
             fs::remove_file(&path).unwrap();
             return;
         }
@@ -179,7 +181,7 @@ mod tests {
         let metadata = file.metadata().unwrap();
         let gid = metadata.gid();
 
-        if gid > OldGidT::MAX.into() {
+        if u64::from(gid) > u64::from(OldGidT::MAX) {
             fs::remove_file(&path).unwrap();
             return;
         }

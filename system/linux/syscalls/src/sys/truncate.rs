@@ -103,11 +103,17 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use celer_system_linux_ctypes::{Char, OffT, UnsignedInt};
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::UnsignedInt;
+    use celer_system_linux_ctypes::{Char, OffT};
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{truncate, truncate_1_0};
+    use super::truncate;
+    #[cfg(target_arch = "x86")]
+    use super::truncate_1_0;
 
     fn create_temp_path(prefix: &str) -> PathBuf {
         let mut path = env::temp_dir();
@@ -123,7 +129,10 @@ mod tests {
 
     #[test]
     fn test_truncate_syscall_number() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Truncate as isize, 92);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Truncate as isize, 45);
     }
 
     #[test]
@@ -193,11 +202,13 @@ mod tests {
         assert_eq!(rc, -22, "expected EINVAL from truncate: {rc}");
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_truncate_1_0_syscall_number() {
         assert_eq!(Linux10Sysno::Truncate as isize, 92);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_truncate_1_0_shrinks_regular_file() {
         let path = create_temp_path("celer_sys_truncate_1_0_file");

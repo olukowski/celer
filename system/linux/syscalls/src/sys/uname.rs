@@ -141,12 +141,17 @@ pub unsafe fn newuname(name: *mut NewUtsname) -> Int {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{NewUtsname, OldOldUtsname, OldUtsname};
+    use celer_system_linux_ctypes::NewUtsname;
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::{OldOldUtsname, OldUtsname};
 
     use crate::arch::current::Sysno;
 
-    use super::{newuname, oldolduname, olduname};
+    use super::newuname;
+    #[cfg(target_arch = "x86")]
+    use super::{oldolduname, olduname};
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_uname() {
         assert_eq!(core::mem::size_of::<OldOldUtsname>(), 45);
@@ -177,6 +182,7 @@ mod tests {
         assert_ne!(name.version[0], 0);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_uname_null_pointer() {
         let ret = unsafe { oldolduname(core::ptr::null_mut()) };
@@ -186,10 +192,15 @@ mod tests {
 
     #[test]
     fn test_newuname_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Olduname as isize, 109);
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Newuname as isize, 122);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Newuname as isize, 160);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_olduname() {
         assert_eq!(core::mem::size_of::<OldUtsname>(), 325);
@@ -225,6 +236,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_olduname_null_pointer() {
         let ret = unsafe { olduname(core::ptr::null_mut()) };

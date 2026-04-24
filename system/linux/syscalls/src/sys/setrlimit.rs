@@ -123,16 +123,18 @@ pub unsafe fn setrlimit_1_0(
 mod tests {
     use std::fs;
 
-    use celer_system_linux_ctypes::{
-        Int, Rlimit, UnsignedInt, UnsignedLong,
-        linux_1_0::Rlimit as Linux10Rlimit,
-    };
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::linux_1_0::Rlimit as Linux10Rlimit;
+    use celer_system_linux_ctypes::{Int, Rlimit, UnsignedInt, UnsignedLong};
 
+    #[cfg(target_arch = "x86")]
     use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
     use crate::sys::test_support::process_global_state_guard;
 
-    use super::{setrlimit, setrlimit_1_0};
+    use super::setrlimit;
+    #[cfg(target_arch = "x86")]
+    use super::setrlimit_1_0;
 
     const RLIMIT_CPU: UnsignedInt = 0;
     const RLIMIT_NOFILE: UnsignedInt = 7;
@@ -150,6 +152,7 @@ mod tests {
         assert_eq!(core::mem::offset_of!(Rlimit, rlim_max), 4);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_setrlimit_layout() {
         assert_eq!(Linux10Sysno::Setrlimit as isize, 75);
@@ -214,11 +217,12 @@ mod tests {
             .trim()
             .parse::<u64>()
             .expect("nr_open should parse as an integer");
-        let requested: UnsignedLong = nr_open
-            .checked_add(1)
-            .expect("nr_open + 1 should fit in u64")
-            .try_into()
-            .expect("nr_open + 1 should fit in UnsignedLong");
+        let requested = UnsignedLong::try_from(
+            nr_open
+                .checked_add(1)
+                .expect("nr_open + 1 should fit in u64"),
+        )
+        .expect("nr_open + 1 should fit in UnsignedLong");
         let limits = Rlimit {
             rlim_cur: requested,
             rlim_max: requested,
@@ -233,6 +237,7 @@ mod tests {
         );
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_setrlimit_matches_current_raw_slot() {
         let limits = Linux10Rlimit {

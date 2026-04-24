@@ -67,14 +67,17 @@ mod tests {
     use celer_system_linux_ctypes::{Int, OldGidT, PidT};
 
     use super::setregid16;
-    use crate::sys::{exit, fork, getegid16, getgid16, waitpid};
+    use crate::sys::{
+        getegid16, getgid16,
+        test_support::{_exit as exit, fork, waitpid},
+    };
     fn assert_child_setregid16(
         rgid: OldGidT,
         egid: OldGidT,
         expected_gid: OldGidT,
         expected_egid: OldGidT,
     ) {
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
 
         const ENOSYS: Int = -38;
@@ -89,14 +92,14 @@ mod tests {
             if pid == 0 {
                 let rc = setregid16(rgid, egid);
                 if rc == ENOSYS {
-                    exit(0);
+                    unsafe { exit(0) };
                 }
 
                 let gid = getgid16();
                 let egid_now = getegid16();
                 let ok =
                     rc == 0 && gid == expected_gid && egid_now == expected_egid;
-                exit(if ok { 0 } else { 1 });
+                unsafe { exit(if ok { 0 } else { 1 }) };
             }
         }
 

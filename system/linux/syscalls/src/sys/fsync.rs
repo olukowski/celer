@@ -77,7 +77,10 @@ mod tests {
 
     #[test]
     fn test_fsync_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Fsync as isize, 118);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Fsync as isize, 82);
     }
 
     #[test]
@@ -111,7 +114,7 @@ mod tests {
         let mut fds = [0 as Int; 2];
 
         // SAFETY: `fds` is writable for two `Int` values.
-        let rc = unsafe { crate::sys::pipe(fds.as_mut_ptr()) };
+        let rc = unsafe { crate::sys::test_support::pipe(fds.as_mut_ptr()) };
         assert_eq!(rc, 0, "pipe failed: {rc}");
 
         let result = fsync(fds[0]);

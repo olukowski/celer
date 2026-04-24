@@ -91,15 +91,21 @@ pub unsafe fn fstatfs_1_0(fd: UnsignedInt, buf: *mut Linux10Statfs) -> Long {
 mod tests {
     use std::{fs::File, os::fd::AsRawFd as _};
 
+    use celer_system_linux_ctypes::{FsidT, Statfs, UnsignedInt};
+    #[cfg(target_arch = "x86")]
     use celer_system_linux_ctypes::{
-        FsidT, Statfs, UnsignedInt, linux_1_0,
-        linux_1_0::Statfs as Linux10Statfs,
+        linux_1_0, linux_1_0::Statfs as Linux10Statfs,
     };
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{fstatfs, fstatfs_1_0};
+    use super::fstatfs;
+    #[cfg(target_arch = "x86")]
+    use super::fstatfs_1_0;
 
+    #[cfg(target_arch = "x86")]
     fn zeroed_linux_1_0_statfs() -> Linux10Statfs {
         Linux10Statfs {
             f_type: 0,
@@ -117,7 +123,11 @@ mod tests {
 
     #[test]
     fn test_fstatfs_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Fstatfs as isize, 100);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Fstatfs as isize, 44);
+        #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Fstatfs as isize, 100);
     }
 
@@ -125,49 +135,57 @@ mod tests {
     fn test_fstatfs_layout() {
         assert_eq!(core::mem::size_of::<FsidT>(), 8);
         assert_eq!(core::mem::align_of::<FsidT>(), 4);
-        assert_eq!(core::mem::size_of::<Statfs>(), 64);
-        assert_eq!(core::mem::align_of::<Statfs>(), 4);
         assert_eq!(core::mem::offset_of!(Statfs, f_type), 0);
-        assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 4);
-        assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
-        assert_eq!(core::mem::offset_of!(Statfs, f_bfree), 12);
-        assert_eq!(core::mem::offset_of!(Statfs, f_bavail), 16);
-        assert_eq!(core::mem::offset_of!(Statfs, f_files), 20);
-        assert_eq!(core::mem::offset_of!(Statfs, f_ffree), 24);
-        assert_eq!(core::mem::offset_of!(Statfs, f_fsid), 28);
-        assert_eq!(core::mem::offset_of!(Statfs, f_namelen), 36);
-        assert_eq!(core::mem::offset_of!(Statfs, f_frsize), 40);
-        assert_eq!(core::mem::offset_of!(Statfs, f_flags), 44);
-        assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(core::mem::size_of::<Statfs>(), 64);
+            assert_eq!(core::mem::align_of::<Statfs>(), 4);
+            assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 4);
+            assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
+            assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(core::mem::size_of::<Statfs>(), 120);
+            assert_eq!(core::mem::align_of::<Statfs>(), 8);
+            assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 8);
+            assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 16);
+            assert_eq!(core::mem::offset_of!(Statfs, f_spare), 88);
+        }
     }
 
     #[test]
     fn test_fstatfs_success() {
         let file = File::open("/").unwrap();
         let fd = file.as_raw_fd() as UnsignedInt;
+        #[cfg(target_arch = "x86")]
+        let sentinel = u32::MAX;
+        #[cfg(target_arch = "aarch64")]
+        let sentinel = i64::from(u32::MAX);
         let mut buf = Statfs {
-            f_type: u32::MAX,
-            f_bsize: u32::MAX,
-            f_blocks: u32::MAX,
-            f_bfree: u32::MAX,
-            f_bavail: u32::MAX,
-            f_files: u32::MAX,
-            f_ffree: u32::MAX,
+            f_type: sentinel,
+            f_bsize: sentinel,
+            f_blocks: sentinel,
+            f_bfree: sentinel,
+            f_bavail: sentinel,
+            f_files: sentinel,
+            f_ffree: sentinel,
             f_fsid: FsidT { val: [-1, -1] },
-            f_namelen: u32::MAX,
-            f_frsize: u32::MAX,
-            f_flags: u32::MAX,
-            f_spare: [u32::MAX; 4],
+            f_namelen: sentinel,
+            f_frsize: sentinel,
+            f_flags: sentinel,
+            f_spare: [sentinel; 4],
         };
 
         // SAFETY: `buf` is writable for a full `Statfs`.
         let ret = unsafe { fstatfs(fd, &raw mut buf) };
 
         assert_eq!(ret, 0, "fstatfs failed for /: {ret}");
-        assert_ne!(buf.f_type, u32::MAX, "expected kernel to fill f_type");
+        assert_ne!(buf.f_type, sentinel, "expected kernel to fill f_type");
         assert!(buf.f_bsize > 0, "expected positive block size: {:?}", buf);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_fstatfs_wrapper_success() {
         let file = File::open("/").unwrap();

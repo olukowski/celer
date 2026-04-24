@@ -66,8 +66,7 @@ mod tests {
 
     use celer_system_linux_ctypes::{Int, Long, UnsignedInt};
 
-    use crate::arch::current::Sysno;
-    use crate::sys::open;
+    use crate::{arch::current::Sysno, sys::test_support::open};
 
     use super::fcntl;
 
@@ -85,7 +84,10 @@ mod tests {
 
     #[test]
     fn test_fcntl_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Fcntl as isize, 55);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Fcntl as isize, 25);
     }
 
     #[test]

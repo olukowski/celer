@@ -49,14 +49,19 @@ pub fn getpgid(pid: PidT) -> PidT {
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
-    use crate::arch::current::{Sysno, syscall1};
-    use crate::sys::{getpgrp, getpid};
+    use crate::{
+        arch::current::{Sysno, syscall1},
+        sys::{getpid, test_support::getpgrp},
+    };
 
     use super::getpgid;
 
     #[test]
     fn test_getpgid_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Getpgid as isize, 132);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Getpgid as isize, 155);
     }
 
     #[test]
@@ -65,7 +70,7 @@ mod tests {
 
         assert_eq!(
             pgid,
-            getpgrp(),
+            unsafe { getpgrp() },
             "getpgid(0) should match the caller's process group"
         );
     }
@@ -76,7 +81,7 @@ mod tests {
 
         assert_eq!(
             pgid,
-            getpgrp(),
+            unsafe { getpgrp() },
             "getpgid(getpid()) should match the caller's process group"
         );
     }

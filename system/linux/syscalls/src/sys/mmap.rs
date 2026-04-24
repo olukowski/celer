@@ -104,7 +104,7 @@ pub unsafe fn mmap(
     {
         // SAFETY: the caller upholds the process-memory invariants required
         // by this mapping operation.
-        return unsafe {
+        unsafe {
             syscall6(
                 Sysno::Mmap,
                 addr.addr() as isize,
@@ -114,7 +114,7 @@ pub unsafe fn mmap(
                 fd as isize,
                 offset as isize,
             ) as UnsignedLong
-        };
+        }
     }
 
     #[cfg(target_arch = "x86")]
