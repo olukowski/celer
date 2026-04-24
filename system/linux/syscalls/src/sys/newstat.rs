@@ -42,7 +42,8 @@ use crate::arch::{
 /// - `ENOTDIR`: a non-directory component was used where pathname traversal
 ///   required a directory.
 /// - `EACCES`: pathname traversal lacked search permission on a directory.
-/// - `ELOOP`: pathname resolution followed more than five symlinks.
+/// - `ELOOP`: current pathname resolution exceeded the kernel `MAXSYMLINKS`
+///   limit while following symlinks.
 /// - `EIO`: pathname resolution failed while reading a symlink target or while
 ///   performing filesystem lookup IO.
 /// - `EOVERFLOW`: file metadata cannot be represented in the i386
@@ -63,6 +64,7 @@ use crate::arch::{
 /// # Historical References
 /// - Current i386 `struct stat`: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/include/uapi/asm/stat.h?h=v7.0#n10)
 /// - Current copy-out: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/stat.c?h=v7.0#n466)
+/// - Current symlink traversal limit: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/namei.h?h=v7.0#n14)
 /// - Linux 1.0 `struct new_stat`, preserved as [`celer_system_linux_ctypes::linux_1_0::NewStat`]: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
 pub unsafe fn stat(filename: *const Char, statbuf: *mut NewStat) -> Long {
     // SAFETY: guaranteed by caller.
@@ -93,6 +95,9 @@ pub unsafe fn stat(filename: *const Char, statbuf: *mut NewStat) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n105)
 /// - Linux 1.0 `struct new_stat`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+/// - Linux 1.0 filesystem symlink following rejected more than five nested
+///   links, for example:
+///   [Linux 1.0 ext2](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/ext2/symlink.c?h=1.0#n71)
 pub unsafe fn stat_1_0(
     filename: *const Char,
     statbuf: *mut Linux10NewStat,

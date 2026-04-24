@@ -352,7 +352,7 @@ pub enum Sysno {
     Wait4 = 114,
     /// <https://man7.org/linux/man-pages/man2/swapon.2.html>
     Swapoff = 115,
-    /// Historical Linux 1.0 `sysinfo` ABI.
+    /// <https://man7.org/linux/man-pages/man2/sysinfo.2.html>
     Sysinfo = 116,
     /// Historical i386 SYSVIPC multiplexor ABI.
     Ipc = 117,
