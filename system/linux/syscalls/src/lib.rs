@@ -13,6 +13,8 @@ pub mod arch;
 mod access;
 mod acct;
 mod adjtimex;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod alarm;
 mod errno;
 pub mod sys;
 
@@ -20,4 +22,6 @@ pub mod sys;
 pub use access::{AccessError, access};
 pub use acct::{AcctError, acct};
 pub use adjtimex::{AdjtimexError, AdjtimexState, adjtimex};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use alarm::alarm;
 pub use errno::Errno;
