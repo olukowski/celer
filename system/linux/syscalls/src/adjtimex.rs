@@ -1,11 +1,11 @@
-use celer_system_linux_ctypes::{ADJ_ADJTIME, Int, Timex};
+use celer_system_linux_ctypes::{Int, Timex};
 
 use crate::errno::Errno;
+use crate::helpers::result_from_ret;
 use crate::sys;
 
 /// Errors returned by [`adjtimex`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum AdjtimexError {
     Efault,
     Einval,
@@ -14,13 +14,13 @@ pub enum AdjtimexError {
     Other(Errno),
 }
 
-impl From<isize> for AdjtimexError {
-    fn from(value: isize) -> Self {
-        match Errno::from(value) {
+impl AdjtimexError {
+    fn from_errno(errno: Errno) -> Self {
+        match errno {
+            Errno::Efault => Self::Efault,
             Errno::Einval => Self::Einval,
+            Errno::Enodev => Self::Enodev,
             Errno::Eperm => Self::Eperm,
-            Errno::Raw(19) => Self::Enodev,
-            Errno::Raw(14) => Self::Efault,
             errno => Self::Other(errno),
         }
     }
@@ -41,19 +41,13 @@ pub fn adjtimex(txc: &mut Timex) -> Result<Int, AdjtimexError> {
     // duration of the syscall call site.
     let ret = unsafe { sys::adjtimex(txc as *mut Timex) };
 
-    if Errno::is_errno(ret as isize) {
-        Err(AdjtimexError::from(ret as isize))
-    } else {
-        Ok(ret)
-    }
+    result_from_ret(ret as isize, |ret| ret as Int, AdjtimexError::from_errno)
 }
 
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use celer_system_linux_ctypes::{
-        ADJ_ADJTIME, ADJ_TICK, Timex,
-    };
+    use celer_system_linux_ctypes::{ADJ_ADJTIME, ADJ_TICK, Timex};
 
     use super::{AdjtimexError, adjtimex};
 

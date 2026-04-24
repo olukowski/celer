@@ -3,20 +3,20 @@ use core::ffi::CStr;
 use celer_system_linux_ctypes::Int;
 
 use crate::errno::Errno;
+use crate::helpers::unit_from_ret;
 use crate::sys;
 
 /// Errors returned by [`access`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum AccessError {
     Einval,
     Enomem,
     Other(Errno),
 }
 
-impl From<isize> for AccessError {
-    fn from(value: isize) -> Self {
-        match Errno::from(value) {
+impl AccessError {
+    fn from_errno(errno: Errno) -> Self {
+        match errno {
             Errno::Einval => Self::Einval,
             Errno::Enomem => Self::Enomem,
             errno => Self::Other(errno),
@@ -38,11 +38,7 @@ pub fn access(pathname: &CStr, mode: Int) -> Result<(), AccessError> {
     // pathname pointer for the duration of the call.
     let ret = unsafe { sys::access(pathname.as_ptr(), mode) };
 
-    if Errno::is_errno(ret) {
-        Err(AccessError::from(ret))
-    } else {
-        Ok(())
-    }
+    unit_from_ret(ret as isize, AccessError::from_errno)
 }
 
 #[cfg(test)]

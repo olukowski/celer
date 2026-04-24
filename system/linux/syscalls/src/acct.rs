@@ -1,19 +1,19 @@
 use core::ffi::CStr;
 
 use crate::errno::Errno;
+use crate::helpers::unit_from_ret;
 use crate::sys;
 
 /// Errors returned by [`acct`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum AcctError {
     Eperm,
     Other(Errno),
 }
 
-impl From<isize> for AcctError {
-    fn from(value: isize) -> Self {
-        match Errno::from(value) {
+impl AcctError {
+    fn from_errno(errno: Errno) -> Self {
+        match errno {
             Errno::Eperm => Self::Eperm,
             errno => Self::Other(errno),
         }
@@ -35,11 +35,7 @@ pub fn acct(name: Option<&CStr>) -> Result<(), AcctError> {
     let ret =
         unsafe { sys::acct(name.map_or(core::ptr::null(), CStr::as_ptr)) };
 
-    if Errno::is_errno(ret) {
-        Err(AcctError::from(ret))
-    } else {
-        Ok(())
-    }
+    unit_from_ret(ret as isize, AcctError::from_errno)
 }
 
 #[cfg(test)]

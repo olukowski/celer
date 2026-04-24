@@ -7,9 +7,7 @@ use crate::sys;
 /// On success, returns the whole seconds remaining on a previously armed alarm,
 /// or `0` when no alarm was pending.
 pub fn alarm(seconds: UnsignedInt) -> UnsignedInt {
-    // SAFETY: the raw syscall takes only an integer argument and has no caller-visible
-    // memory-safety preconditions.
-    let ret = unsafe { sys::alarm(seconds) };
+    let ret = sys::alarm(seconds);
 
     ret as UnsignedInt
 }
