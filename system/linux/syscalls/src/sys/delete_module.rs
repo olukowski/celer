@@ -4,9 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Unload a kernel module by name.
 ///
-/// This wrapper targets the original Linux 1.0 i386 syscall number 129 ABI.
-/// Linux 1.0 reads only `module_name`; current x86-32 kernels keep syscall
-/// number 129 as `delete_module` and add `flags`, which Linux 1.0 ignores.
+/// This wrapper spans the original Linux 1.0 x86 syscall slot `129` ABI and
+/// the current native `delete_module(2)` entrypoints exported by this crate on
+/// x86 and aarch64. Linux 1.0 reads only `module_name`; current kernels add
+/// `flags`, which Linux 1.0 ignores.
 ///
 /// # Safety
 /// - When non-null, `module_name` must be valid to read a NUL-terminated string
@@ -18,10 +19,11 @@ use crate::arch::current::{Sysno, syscall2};
 ///   tries to free modules already marked for deletion; current kernels treat
 ///   the second argument as unload flags, reject unreadable names with
 ///   `EFAULT`, and perform additional dependency, state, and capability checks
-///   before stopping the module
-/// - Availability: Linux 1.0 provides the syscall; current x86 kernels expose
-///   the syscall slot, and `CONFIG_MODULES` controls whether that slot reaches
-///   the real implementation or the generic `sys_ni` fallback
+///   before stopping the module.
+/// - Availability: Linux 1.0 provides the x86 syscall; current x86 and
+///   aarch64 kernels expose the syscall slot, and `CONFIG_MODULES` controls
+///   whether that slot reaches the real implementation or the generic
+///   `sys_ni` fallback.
 ///
 /// # Required Privileges
 /// - Linux 1.0 requires a superuser caller.
@@ -35,7 +37,7 @@ use crate::arch::current::{Sysno, syscall2};
 /// - When Linux 1.0 finds the named module and it is still running, it calls
 ///   the module cleanup function before marking the module deleted.
 /// - Linux 1.0 ignores `flags`.
-/// - Current x86-32 kernels interpret `flags` according to the modern
+/// - Current kernels interpret `flags` according to the modern
 ///   `delete_module(2)` ABI.
 /// - Current kernels pass `module_name` to `strncpy_from_user`; a null
 ///   `module_name` is rejected with `EFAULT` after the permission and global
@@ -60,17 +62,21 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/delete_module.2.html)
-/// - Current mainline x86 table:
+/// - Stable x86 table:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n144)
-/// - Current mainline implementation:
-///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v7.0#n804)
-/// - Current mainline fallback:
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n294)
+/// - Stable implementation:
+///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v7.0#n776)
+/// - Stable fallback:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys_ni.c?h=v7.0#n92)
-/// - Current LTS x86 table:
+/// - LTS x86 table:
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n144)
-/// - Current LTS implementation:
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n294)
+/// - LTS implementation:
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/module/main.c?h=v6.18.18#n776)
-/// - Current LTS fallback:
+/// - LTS fallback:
 ///   [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys_ni.c?h=v6.18.18#n92)
 /// - First stable:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n110)

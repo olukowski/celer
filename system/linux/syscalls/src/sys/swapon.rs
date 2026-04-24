@@ -4,9 +4,10 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Enable swapping on a block device or regular file.
 ///
-/// This wrapper targets the original Linux 1.0 i386 syscall number 87 ABI.
-/// Linux 1.0 took only `specialfile`, while current x86 kernels keep syscall
-/// number 87 as `swapon` and add `swap_flags`. Passing `swap_flags` remains
+/// This wrapper spans the original Linux 1.0 x86 syscall slot `87` ABI and
+/// the current native `swapon(2)` entrypoints exported by this crate on x86
+/// and aarch64. Linux 1.0 took only `specialfile`, while current kernels take
+/// both `specialfile` and `swap_flags`. Passing `swap_flags` remains
 /// compatible with Linux 1.0 because that historical entrypoint only consumes
 /// the pathname argument.
 ///
@@ -17,10 +18,9 @@ use crate::arch::current::{Sysno, syscall2};
 /// # Kernel Support
 /// - Introduced: Linux 0.95
 /// - Behavior changes: Linux 1.0 accepted only a pathname and therefore
-///   ignores `swap_flags`; current x86 kernels keep the same syscall number
-///   but validate `swap_flags` and apply the supported flag bits before
-///   activating swap.
-/// - Availability: present on supported x86 Linux kernels
+///   ignores `swap_flags`; current kernels validate `swap_flags` and apply the
+///   supported flag bits before activating swap.
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - Linux 1.0 requires a superuser caller.
@@ -33,14 +33,14 @@ use crate::arch::current::{Sysno, syscall2};
 /// - Linux 1.0 accepts either a block device or a regular file.
 /// - Linux 1.0 reads the first swap page and requires the legacy
 ///   `SWAP-SPACE` signature before enabling the swap area.
-/// - Current x86 kernels interpret `swap_flags` according to the modern
+/// - Current kernels interpret `swap_flags` according to the modern
 ///   `swapon(2)` ABI.
 ///
 /// # Errors
 /// - `EPERM`: the caller lacks permission to activate swap.
 /// - `EPERM`: Linux 1.0 has no free swap slot in its fixed
 ///   `MAX_SWAPFILES` array.
-/// - `EINVAL`: current x86 kernels reject unsupported `swap_flags` bits.
+/// - `EINVAL`: current kernels reject unsupported `swap_flags` bits.
 /// - `EFAULT`: `specialfile` is not readable as a user pathname.
 /// - `ENOENT`: `specialfile` is empty, missing, or otherwise fails pathname
 ///   lookup with `ENOENT`.
@@ -62,8 +62,14 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/swapon.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/swapfile.c?h=v6.19#n3443)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/swapfile.c?h=v6.18.18#n3443)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/swapfile.c?h=v7.0#n3328)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n102)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n577)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/swapfile.c?h=v6.18.18#n3443)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n102)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n577)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/swap.c?h=1.0#n726)
 ///
 /// # Historical References

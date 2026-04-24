@@ -4,12 +4,12 @@ use crate::arch::current::{Sysno, syscall2};
 
 /// Copy the current process resource limits for one Linux resource.
 ///
-/// This wrapper exposes i386 syscall number 76. Linux 1.0 used a signed
-/// 32-bit `struct rlimit` layout for this slot; current x86 kernels implement
+/// On x86, this wrapper uses syscall number `76`. Linux 1.0 used a signed
+/// 32-bit `struct rlimit` layout for that slot; current x86 kernels implement
 /// the same slot as the legacy `old_getrlimit` entrypoint, whose unsigned
 /// 32-bit output fields are clamped to the historical signed range. On
-/// aarch64, this wrapper exposes syscall number 163, the native
-/// `sys_getrlimit` entrypoint using the native `struct rlimit` layout.
+/// aarch64, this wrapper uses syscall number `163`, the native
+/// `sys_getrlimit` entrypoint with the native `struct rlimit` layout.
 ///
 /// # Safety
 /// - `rlim` must point to writable memory for one [`Rlimit`] value for the
@@ -48,8 +48,16 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/getrlimit.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1628)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1628)
+/// - Stable native implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1563)
+/// - Stable x86 compatibility implementation: [v7.0 old_getrlimit](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1628)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n91)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n437)
+/// - LTS native implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1563)
+/// - LTS x86 compatibility implementation: [v6.18.18 old_getrlimit](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1628)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n91)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n437)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n685)
 ///
 /// # Historical References
