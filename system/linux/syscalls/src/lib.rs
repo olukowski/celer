@@ -12,10 +12,12 @@ pub mod arch;
 
 mod access;
 mod acct;
+mod adjtimex;
 mod errno;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::{AccessError, access};
 pub use acct::{AcctError, acct};
+pub use adjtimex::{AdjtimexError, AdjtimexState, adjtimex};
 pub use errno::Errno;
