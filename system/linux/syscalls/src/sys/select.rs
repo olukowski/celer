@@ -159,7 +159,7 @@ pub unsafe fn select(
     }
 }
 
-#[cfg(all(test, target_arch = "x86"))]
+#[cfg(all(test, any(target_arch = "x86", target_arch = "x86_64")))]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::sync::Mutex;
@@ -224,7 +224,12 @@ mod tests {
     }
 
     fn empty_fd_set() -> FdSet {
-        FdSet { fds_bits: [0; 32] }
+        FdSet {
+            #[cfg(target_arch = "x86")]
+            fds_bits: [0; 32],
+            #[cfg(target_arch = "x86_64")]
+            fds_bits: [0; 16],
+        }
     }
 
     fn set_fd(set: &mut FdSet, fd: Int) {
@@ -247,16 +252,23 @@ mod tests {
 
     #[test]
     fn test_select_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Select as isize, 82);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Select as isize, 23);
     }
 
     #[test]
     fn test_select_fd_set_layout() {
         assert_eq!(core::mem::size_of::<FdSet>(), 128);
+        #[cfg(target_arch = "x86")]
         assert_eq!(core::mem::align_of::<FdSet>(), 4);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(core::mem::align_of::<FdSet>(), 8);
         assert_eq!(core::mem::offset_of!(FdSet, fds_bits), 0);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_select_args_layout() {
         assert_eq!(core::mem::size_of::<SelectArgs>(), 20);
