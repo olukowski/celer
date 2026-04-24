@@ -40,6 +40,7 @@ mod fchown;
 mod fcntl;
 #[cfg(target_arch = "x86")]
 mod fork;
+mod fstatfs;
 mod helpers;
 pub mod sys;
 
@@ -71,9 +72,11 @@ pub use fchown::{Fchown16Error, fchown16};
 pub use fcntl::{FcntlError, fcntl};
 #[cfg(target_arch = "x86")]
 pub use fork::{ForkError, fork};
+pub use fstatfs::{FstatfsError, fstatfs};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
     pub use super::create_module::{CreateModuleError, create_module};
+    pub use super::fstatfs::{FstatfsError, fstatfs_1_0 as fstatfs};
 }

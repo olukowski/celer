@@ -18,6 +18,7 @@ pub enum Errno {
     Enomem,
     Enosys,
     Enotdir,
+    Eoverflow,
     Eperm,
     Erofs,
     Ewouldblock,
@@ -45,6 +46,7 @@ impl Errno {
             12 => Self::Enomem,
             38 => Self::Enosys,
             20 => Self::Enotdir,
+            75 => Self::Eoverflow,
             1 => Self::Eperm,
             30 => Self::Erofs,
             other => Self::Raw(other),
@@ -90,6 +92,7 @@ mod tests {
         assert_eq!(Errno::from_raw(12), Errno::Enomem);
         assert_eq!(Errno::from_raw(38), Errno::Enosys);
         assert_eq!(Errno::from_raw(20), Errno::Enotdir);
+        assert_eq!(Errno::from_raw(75), Errno::Eoverflow);
         assert_eq!(Errno::from_raw(1), Errno::Eperm);
         assert_eq!(Errno::from_raw(30), Errno::Erofs);
         assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));
