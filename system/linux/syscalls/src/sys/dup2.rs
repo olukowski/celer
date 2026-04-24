@@ -53,7 +53,7 @@ mod tests {
     };
 
     #[cfg(target_arch = "x86")]
-    use celer_system_linux_ctypes::Stat as NativeStat;
+    use celer_system_linux_ctypes::NewStat as NativeStat;
     #[cfg(target_arch = "x86_64")]
     use celer_system_linux_ctypes::Stat64 as NativeStat;
     use celer_system_linux_ctypes::UnsignedInt;
@@ -108,19 +108,33 @@ mod tests {
             __pad0: 0,
             st_rdev: 0,
             st_size: 0,
+            #[cfg(target_arch = "x86")]
+            st_blksize: 0,
             #[cfg(target_arch = "x86_64")]
             st_blksize: 0,
+            #[cfg(target_arch = "x86")]
+            st_blocks: 0,
             #[cfg(target_arch = "x86_64")]
             st_blocks: 0,
             st_atime: 0,
+            #[cfg(target_arch = "x86")]
+            st_atime_nsec: 0,
             #[cfg(target_arch = "x86_64")]
             st_atime_nsec: 0,
             st_mtime: 0,
+            #[cfg(target_arch = "x86")]
+            st_mtime_nsec: 0,
             #[cfg(target_arch = "x86_64")]
             st_mtime_nsec: 0,
             st_ctime: 0,
+            #[cfg(target_arch = "x86")]
+            st_ctime_nsec: 0,
             #[cfg(target_arch = "x86_64")]
             st_ctime_nsec: 0,
+            #[cfg(target_arch = "x86")]
+            __unused4: 0,
+            #[cfg(target_arch = "x86")]
+            __unused5: 0,
             #[cfg(target_arch = "x86_64")]
             __unused: [0; 3],
         };

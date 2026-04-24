@@ -247,26 +247,26 @@ mod tests {
     fn test_new_stat_layout() {
         #[cfg(target_arch = "x86")]
         {
-            assert_eq!(size_of::<NewStat>(), 64);
-            assert_eq!(align_of::<NewStat>(), 4);
-            assert_eq!(offset_of!(NewStat, st_dev), 0);
-            assert_eq!(offset_of!(NewStat, st_ino), 4);
-            assert_eq!(offset_of!(NewStat, st_mode), 8);
-            assert_eq!(offset_of!(NewStat, st_nlink), 10);
-            assert_eq!(offset_of!(NewStat, st_uid), 12);
-            assert_eq!(offset_of!(NewStat, st_gid), 14);
-            assert_eq!(offset_of!(NewStat, st_rdev), 16);
-            assert_eq!(offset_of!(NewStat, st_size), 20);
-            assert_eq!(offset_of!(NewStat, st_blksize), 24);
-            assert_eq!(offset_of!(NewStat, st_blocks), 28);
-            assert_eq!(offset_of!(NewStat, st_atime), 32);
-            assert_eq!(offset_of!(NewStat, st_atime_nsec), 36);
-            assert_eq!(offset_of!(NewStat, st_mtime), 40);
-            assert_eq!(offset_of!(NewStat, st_mtime_nsec), 44);
-            assert_eq!(offset_of!(NewStat, st_ctime), 48);
-            assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
-            assert_eq!(offset_of!(NewStat, __unused4), 56);
-            assert_eq!(offset_of!(NewStat, __unused5), 60);
+            assert_eq!(size_of::<NativeStat>(), 64);
+            assert_eq!(align_of::<NativeStat>(), 4);
+            assert_eq!(offset_of!(NativeStat, st_dev), 0);
+            assert_eq!(offset_of!(NativeStat, st_ino), 4);
+            assert_eq!(offset_of!(NativeStat, st_mode), 8);
+            assert_eq!(offset_of!(NativeStat, st_nlink), 10);
+            assert_eq!(offset_of!(NativeStat, st_uid), 12);
+            assert_eq!(offset_of!(NativeStat, st_gid), 14);
+            assert_eq!(offset_of!(NativeStat, st_rdev), 16);
+            assert_eq!(offset_of!(NativeStat, st_size), 20);
+            assert_eq!(offset_of!(NativeStat, st_blksize), 24);
+            assert_eq!(offset_of!(NativeStat, st_blocks), 28);
+            assert_eq!(offset_of!(NativeStat, st_atime), 32);
+            assert_eq!(offset_of!(NativeStat, st_atime_nsec), 36);
+            assert_eq!(offset_of!(NativeStat, st_mtime), 40);
+            assert_eq!(offset_of!(NativeStat, st_mtime_nsec), 44);
+            assert_eq!(offset_of!(NativeStat, st_ctime), 48);
+            assert_eq!(offset_of!(NativeStat, st_ctime_nsec), 52);
+            assert_eq!(offset_of!(NativeStat, __unused4), 56);
+            assert_eq!(offset_of!(NativeStat, __unused5), 60);
         }
         #[cfg(target_arch = "x86_64")]
         {

@@ -103,7 +103,10 @@ mod tests {
 
     #[test]
     fn test_readlink_syscall_number() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Readlink as isize, 85);
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(Sysno::Readlink as isize, 89);
     }
 
     #[test]
