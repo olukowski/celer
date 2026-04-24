@@ -107,7 +107,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `brk`
 - [x] `chdir`
 - [x] `chmod` - x86, x86_64
-- [ ] `chroot`
+- [x] `chroot`
 - [ ] `close`
 - [ ] `creat` - x86, x86_64
 - [ ] `create_module` - x86
