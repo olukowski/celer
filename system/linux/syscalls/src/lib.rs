@@ -18,6 +18,8 @@ mod adjtimex;
 mod alarm;
 mod brk;
 mod chdir;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod chmod;
 mod errno;
 mod helpers;
 pub mod sys;
@@ -30,4 +32,6 @@ pub use adjtimex::{AdjtimexError, adjtimex};
 pub use alarm::alarm;
 pub use brk::{BrkError, brk};
 pub use chdir::{ChdirError, chdir};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use chmod::{ChmodError, chmod};
 pub use errno::Errno;
