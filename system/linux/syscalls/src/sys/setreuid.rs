@@ -65,15 +65,19 @@ mod tests {
     use celer_system_linux_ctypes::{OldUidT, PidT};
 
     use super::setreuid16;
-    use crate::sys::{exit, fork, geteuid16, getuid16, waitpid};
+    use crate::sys::{
+        geteuid::geteuid16,
+        getuid::getuid16,
+        test_support::{_exit as exit, fork, waitpid},
+    };
     fn assert_child_setreuid16(ruid: OldUidT, euid: OldUidT) {
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
 
         fn handle_pid(pid: PidT, ruid: OldUidT, euid: OldUidT) {
             if pid == 0 {
                 let rc = setreuid16(ruid, euid);
-                exit(if rc == 0 { 0 } else { 1 });
+                unsafe { exit(if rc == 0 { 0 } else { 1 }) };
             }
         }
 

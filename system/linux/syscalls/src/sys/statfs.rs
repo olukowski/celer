@@ -1,10 +1,11 @@
-use celer_system_linux_ctypes::{
-    Char, Long, Statfs, linux_1_0::Statfs as Linux10Statfs,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::Statfs as Linux10Statfs;
+use celer_system_linux_ctypes::{Char, Long, Statfs};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Return filesystem status for the filesystem containing `path` through the
@@ -89,6 +90,7 @@ pub unsafe fn statfs(path: *const Char, buf: *mut Statfs) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n29)
 /// - Linux 1.0 `struct statfs`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/vfs.h?h=1.0#n8)
+#[cfg(target_arch = "x86")]
 pub unsafe fn statfs_1_0(path: *const Char, buf: *mut Linux10Statfs) -> Long {
     // SAFETY: guaranteed by caller.
     (unsafe {
@@ -103,13 +105,19 @@ pub unsafe fn statfs_1_0(path: *const Char, buf: *mut Linux10Statfs) -> Long {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use celer_system_linux_ctypes::{Char, FsidT, Statfs};
+    #[cfg(target_arch = "x86")]
     use celer_system_linux_ctypes::{
-        Char, FsidT, Statfs, linux_1_0, linux_1_0::Statfs as Linux10Statfs,
+        linux_1_0, linux_1_0::Statfs as Linux10Statfs,
     };
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{statfs, statfs_1_0};
+    use super::statfs;
+    #[cfg(target_arch = "x86")]
+    use super::statfs_1_0;
 
     fn zeroed_statfs() -> Statfs {
         Statfs {
@@ -128,6 +136,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     fn zeroed_linux_1_0_statfs() -> Linux10Statfs {
         Linux10Statfs {
             f_type: 0,
@@ -153,25 +162,32 @@ mod tests {
     fn test_statfs_layout() {
         assert_eq!(core::mem::size_of::<FsidT>(), 8);
         assert_eq!(core::mem::align_of::<FsidT>(), 4);
-        assert_eq!(core::mem::size_of::<Statfs>(), 64);
-        assert_eq!(core::mem::align_of::<Statfs>(), 4);
         assert_eq!(core::mem::offset_of!(Statfs, f_type), 0);
-        assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 4);
-        assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
-        assert_eq!(core::mem::offset_of!(Statfs, f_bfree), 12);
-        assert_eq!(core::mem::offset_of!(Statfs, f_bavail), 16);
-        assert_eq!(core::mem::offset_of!(Statfs, f_files), 20);
-        assert_eq!(core::mem::offset_of!(Statfs, f_ffree), 24);
-        assert_eq!(core::mem::offset_of!(Statfs, f_fsid), 28);
-        assert_eq!(core::mem::offset_of!(Statfs, f_namelen), 36);
-        assert_eq!(core::mem::offset_of!(Statfs, f_frsize), 40);
-        assert_eq!(core::mem::offset_of!(Statfs, f_flags), 44);
-        assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(core::mem::size_of::<Statfs>(), 64);
+            assert_eq!(core::mem::align_of::<Statfs>(), 4);
+            assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 4);
+            assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 8);
+            assert_eq!(core::mem::offset_of!(Statfs, f_spare), 48);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(core::mem::size_of::<Statfs>(), 120);
+            assert_eq!(core::mem::align_of::<Statfs>(), 8);
+            assert_eq!(core::mem::offset_of!(Statfs, f_bsize), 8);
+            assert_eq!(core::mem::offset_of!(Statfs, f_blocks), 16);
+            assert_eq!(core::mem::offset_of!(Statfs, f_spare), 88);
+        }
     }
 
     #[test]
     fn test_statfs_syscall_number() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Statfs as isize, 99);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Statfs as isize, 43);
+        #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Statfs as isize, 99);
     }
 
@@ -188,6 +204,7 @@ mod tests {
         assert!(buf.f_bsize > 0, "expected a positive block size");
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_statfs_wrapper_root_succeeds() {
         let path = b"/\0";

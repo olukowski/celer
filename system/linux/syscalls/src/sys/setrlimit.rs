@@ -1,31 +1,34 @@
-use celer_system_linux_ctypes::{
-    Long, Rlimit, UnsignedInt, linux_1_0::Rlimit as Linux10Rlimit,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::Rlimit as Linux10Rlimit;
+use celer_system_linux_ctypes::{Long, Rlimit, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Set the calling task's soft and hard resource limits for one resource.
 ///
-/// This wrapper exposes the current x86 `setrlimit(2)` ABI at syscall slot
-/// `75`. Linux 1.0 used the same syscall slot with a signed 32-bit
-/// `struct rlimit` layout, exposed separately as
-/// [`crate::sys::linux_1_0::setrlimit`].
+/// This wrapper exposes the current native `setrlimit(2)` ABI. On x86 this is
+/// syscall slot `75`; Linux 1.0 used the same syscall slot with a signed
+/// 32-bit `struct rlimit` layout, exposed separately as
+/// [`crate::sys::linux_1_0::setrlimit`]. On aarch64 this is syscall slot
+/// `164` with the native `struct rlimit` layout.
 ///
 /// # Safety
 /// - `rlim` must be valid to read one [`Rlimit`] for the duration of the
 ///   syscall.
 ///
 /// # Kernel Support
-/// - Historical slot introduced: Linux 1.0
+/// - Historical slot introduced: Linux 1.0 on i386; present from the initial
+///   aarch64 syscall table
 /// - Behavior changes: current kernels use unsigned `rlim_t` fields, validate
 ///   `rlim_cur <= rlim_max`, reject malformed user pointers before limit
 ///   checks, cap `RLIMIT_NOFILE` against `sysctl_nr_open`, and may deny
 ///   updates through an LSM hook.
-/// - Availability: this wrapper is ABI-correct for current supported x86 Linux
-///   kernels; it is not ABI-compatible with Linux 1.0.
+/// - Availability: this wrapper is ABI-correct for current supported x86 and
+///   aarch64 Linux kernels; it is not ABI-compatible with Linux 1.0.
 ///
 /// # Required Privileges
 /// - Current kernels require privilege to raise the hard limit and also reject
@@ -36,8 +39,7 @@ use crate::arch::{
 /// - On success, the kernel replaces both the soft and hard limits for that
 ///   resource with the unsigned `rlim_t` values from `rlim`.
 /// - Current kernels accept resource IDs in the current `RLIM_NLIMITS` range.
-/// - `UnsignedLong::MAX` is the current i386 bit pattern for
-///   `RLIM_INFINITY`.
+/// - `UnsignedLong::MAX` is the native bit pattern for `RLIM_INFINITY`.
 ///
 /// # Errors
 /// - `EFAULT`: on current kernels, `rlim` is not readable for one
@@ -102,6 +104,7 @@ pub unsafe fn setrlimit(resource: UnsignedInt, rlim: *const Rlimit) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n701)
 /// - Linux 1.0 `struct rlimit`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/resource.h?h=1.0#n60)
+#[cfg(target_arch = "x86")]
 pub unsafe fn setrlimit_1_0(
     resource: UnsignedInt,
     rlim: *const Linux10Rlimit,
@@ -121,33 +124,50 @@ pub unsafe fn setrlimit_1_0(
 mod tests {
     use std::fs;
 
-    use celer_system_linux_ctypes::{
-        Int, Rlimit, UnsignedInt, UnsignedLong,
-        linux_1_0::Rlimit as Linux10Rlimit,
-    };
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::linux_1_0::Rlimit as Linux10Rlimit;
+    use celer_system_linux_ctypes::{Rlimit, UnsignedInt, UnsignedLong};
 
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
     use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use crate::sys::test_support::process_global_state_guard;
+    use crate::sys::{getrlimit, test_support::process_global_state_guard};
 
-    use super::{setrlimit, setrlimit_1_0};
+    use super::setrlimit;
+    #[cfg(target_arch = "x86")]
+    use super::setrlimit_1_0;
 
     const RLIMIT_CPU: UnsignedInt = 0;
     const RLIMIT_NOFILE: UnsignedInt = 7;
     const CURRENT_RLIM_NLIMITS: UnsignedInt = 16;
 
-    unsafe extern "C" {
-        fn getrlimit(resource: UnsignedInt, rlim: *mut Rlimit) -> Int;
+    #[test]
+    fn test_setrlimit_sysno() {
+        #[cfg(target_arch = "x86")]
+        assert_eq!(Sysno::Setrlimit as isize, 75);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Setrlimit as isize, 164);
     }
 
     #[test]
     fn test_setrlimit_layout() {
-        assert_eq!(core::mem::size_of::<Rlimit>(), 8);
-        assert_eq!(core::mem::align_of::<Rlimit>(), 4);
         assert_eq!(core::mem::offset_of!(Rlimit, rlim_cur), 0);
-        assert_eq!(core::mem::offset_of!(Rlimit, rlim_max), 4);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(core::mem::size_of::<Rlimit>(), 8);
+            assert_eq!(core::mem::align_of::<Rlimit>(), 4);
+            assert_eq!(core::mem::offset_of!(Rlimit, rlim_max), 4);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(core::mem::size_of::<Rlimit>(), 16);
+            assert_eq!(core::mem::align_of::<Rlimit>(), 8);
+            assert_eq!(core::mem::offset_of!(Rlimit, rlim_max), 8);
+        }
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_setrlimit_layout() {
         assert_eq!(Linux10Sysno::Setrlimit as isize, 75);
@@ -212,11 +232,12 @@ mod tests {
             .trim()
             .parse::<u64>()
             .expect("nr_open should parse as an integer");
-        let requested: UnsignedLong = nr_open
-            .checked_add(1)
-            .expect("nr_open + 1 should fit in u64")
-            .try_into()
-            .expect("nr_open + 1 should fit in UnsignedLong");
+        let requested = UnsignedLong::try_from(
+            nr_open
+                .checked_add(1)
+                .expect("nr_open + 1 should fit in u64"),
+        )
+        .expect("nr_open + 1 should fit in UnsignedLong");
         let limits = Rlimit {
             rlim_cur: requested,
             rlim_max: requested,
@@ -231,6 +252,7 @@ mod tests {
         );
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_setrlimit_matches_current_raw_slot() {
         let limits = Linux10Rlimit {

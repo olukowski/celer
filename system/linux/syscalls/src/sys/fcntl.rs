@@ -2,8 +2,8 @@ use celer_system_linux_ctypes::{Int, Long, UnsignedInt};
 
 use crate::arch::current::{Sysno, syscall3};
 
-/// Manipulate an open file descriptor `fd` with the legacy x86 32-bit
-/// `fcntl` syscall entrypoint.
+/// Manipulate an open file descriptor `fd` through the kernel's `fcntl`
+/// syscall entrypoint.
 ///
 /// # Safety
 /// - Some `cmd` values cause the kernel to treat `arg` as a userspace pointer
@@ -42,8 +42,14 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/fcntl.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/fcntl.c?h=v6.19#n587)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/fcntl.c?h=v6.18.18#n587)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/fcntl.c?h=v7.0#n587)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n70)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n87)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/fcntl.c?h=v6.18.18#n587)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n70)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n87)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/fcntl.c?h=1.0#n66)
 ///
 /// # Historical References
@@ -66,8 +72,7 @@ mod tests {
 
     use celer_system_linux_ctypes::{Int, Long, UnsignedInt};
 
-    use crate::arch::current::Sysno;
-    use crate::sys::open;
+    use crate::{arch::current::Sysno, sys::test_support::open};
 
     use super::fcntl;
 
@@ -85,7 +90,10 @@ mod tests {
 
     #[test]
     fn test_fcntl_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Fcntl as isize, 55);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Fcntl as isize, 25);
     }
 
     #[test]
@@ -103,7 +111,9 @@ mod tests {
         path_bytes.push(0);
 
         // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
-        let fd = unsafe { open(path_bytes.as_ptr().cast(), 0 as Int, 0 as _) };
+        let fd = unsafe {
+            open(path_bytes.as_ptr().cast(), 0 as Int, 0 as libc::mode_t)
+        };
         assert!(fd >= 0, "open failed: {fd}");
 
         // SAFETY: `F_GETFD` treats `arg` as a scalar.

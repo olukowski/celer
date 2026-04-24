@@ -4,26 +4,26 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Read or adjust kernel clock discipline parameters through `struct timex`.
 ///
-/// This wrapper targets the original Linux 1.0 x86 `sys_adjtimex` entry
-/// point. The same pointer is used for both copy-in and copy-out, but Linux
-/// 1.0 copies only the historical prefix through [`Timex::tick`], while
-/// current kernels copy the full 32-bit `old_timex32`-compatible layout.
+/// This wrapper targets the native `sys_adjtimex` entrypoint. The same pointer
+/// is used for both copy-in and copy-out, but Linux 1.0 copies only the
+/// historical prefix through [`Timex::tick`], while current kernels copy the
+/// full native layout.
 ///
 /// # Safety
 /// - `txc_p`, when non-null, must be valid for the kernel to read and later
 ///   write the copied ABI bytes for the duration of the syscall.
 /// - Linux 1.0 touches the historical prefix through [`Timex::tick`].
-/// - Current kernels touch the full 32-bit `old_timex32`-compatible layout.
+/// - Current kernels touch the full native layout.
 /// - The pointed-to memory must not violate Rust's aliasing rules while the
 ///   kernel may write through it.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
-/// - Behavior changes: current x86 kernels still accept the 32-bit
-///   `old_timex32` layout, but they add newer mode bits, extra read-only
+/// - Introduced: Linux 1.0 on i386; present from the initial aarch64 syscall
+///   table
+/// - Behavior changes: current kernels add newer mode bits, extra read-only
 ///   fields, `TIME_WAIT` / `TIME_ERROR` return states, and a possible
 ///   `ENODEV` failure if the core clock is not valid
-/// - Availability: present on supported x86 Linux kernels
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - Linux 1.0 requires the superuser check whenever `modes != 0`.
@@ -34,8 +34,8 @@ use crate::arch::current::{Sysno, syscall1};
 /// - `txc_p` points to an input/output [`Timex`] buffer.
 /// - Linux 1.0 validates write access to and copies only the historical
 ///   prefix through [`Timex::tick`], because its `struct timex` ends there.
-/// - Current kernels copy the full 32-bit `old_timex32`-compatible layout,
-///   including the read-only tail fields after [`Timex::tick`].
+/// - Current kernels copy the full native layout, including the read-only tail
+///   fields after [`Timex::tick`].
 /// - With `modes == 0`, the syscall is a read-only query and returns the
 ///   current clock state code while filling the copied-out fields with current
 ///   values.
@@ -50,7 +50,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// # Errors
 /// - `EFAULT`: `txc_p` is null or does not point to writable memory for the
 ///   bytes the kernel copies back out: through [`Timex::tick`] on Linux 1.0,
-///   or the full 32-bit `old_timex32` layout on current kernels.
+///   or the full native layout on current kernels.
 /// - `EPERM`: Linux 1.0 rejects any nonzero `modes` from an unprivileged
 ///   caller.
 /// - `EINVAL`: in Linux 1.0, `ADJ_OFFSET` supplies an out-of-range `offset`,
@@ -116,19 +116,29 @@ mod tests {
 
     #[test]
     fn test_adjtimex_sysno() {
-        assert_eq!(Sysno::Adjtimex as isize, 124);
+        #[cfg(target_arch = "x86")]
+        let expected = 124;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 171;
+
+        assert_eq!(Sysno::Adjtimex as isize, expected);
     }
 
     #[test]
     fn test_adjtimex_layout() {
-        assert_eq!(core::mem::size_of::<Timex>(), 128);
-        assert_eq!(core::mem::align_of::<Timex>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (128, 4, 36, 44, 48, 80, 84);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (208, 8, 72, 88, 96, 160, 164);
+
+        assert_eq!(core::mem::size_of::<Timex>(), expected.0);
+        assert_eq!(core::mem::align_of::<Timex>(), expected.1);
         assert_eq!(core::mem::offset_of!(Timex, modes), 0);
-        assert_eq!(core::mem::offset_of!(Timex, time), 36);
-        assert_eq!(core::mem::offset_of!(Timex, tick), 44);
-        assert_eq!(core::mem::offset_of!(Timex, ppsfreq), 48);
-        assert_eq!(core::mem::offset_of!(Timex, tai), 80);
-        assert_eq!(core::mem::offset_of!(Timex, __padding), 84);
+        assert_eq!(core::mem::offset_of!(Timex, time), expected.2);
+        assert_eq!(core::mem::offset_of!(Timex, tick), expected.3);
+        assert_eq!(core::mem::offset_of!(Timex, ppsfreq), expected.4);
+        assert_eq!(core::mem::offset_of!(Timex, tai), expected.5);
+        assert_eq!(core::mem::offset_of!(Timex, __padding), expected.6);
     }
 
     #[test]

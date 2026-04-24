@@ -45,7 +45,7 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/setdomainname.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1473)
+/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1473)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1473)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n669)
 pub unsafe fn setdomainname(name: *const Char, len: Int) -> Int {
@@ -66,7 +66,12 @@ mod tests {
 
     #[test]
     fn test_setdomainname_sysno() {
-        assert_eq!(Sysno::Setdomainname as isize, 121);
+        #[cfg(target_arch = "x86")]
+        let expected = 121;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 162;
+
+        assert_eq!(Sysno::Setdomainname as isize, expected);
     }
 
     #[test]

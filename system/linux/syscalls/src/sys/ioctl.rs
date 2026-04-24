@@ -42,7 +42,7 @@ use crate::arch::current::{Sysno, syscall3};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/ioctl.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/ioctl.c?h=v6.19#n583)
+/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/ioctl.c?h=v7.0#n583)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/ioctl.c?h=v6.18.18#n583)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/ioctl.c?h=1.0#n57)
 ///
@@ -89,7 +89,12 @@ mod tests {
 
     #[test]
     fn test_ioctl_sysno() {
-        assert_eq!(Sysno::Ioctl as isize, 54);
+        #[cfg(target_arch = "x86")]
+        let expected = 54;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 29;
+
+        assert_eq!(Sysno::Ioctl as isize, expected);
     }
 
     #[test]

@@ -1,8 +1,9 @@
 use celer_system_linux_ctypes::{Int, OffT, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Truncate the open file referred to by `fd` to `length` bytes.
@@ -71,6 +72,7 @@ pub fn ftruncate(fd: UnsignedInt, length: OffT) -> Int {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n94)
 /// - Current implementation:
 ///   [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/open.c?h=v7.0#n211)
+#[cfg(target_arch = "x86")]
 pub fn ftruncate_1_0(fd: UnsignedInt, length: UnsignedInt) -> Int {
     // SAFETY: the syscall only takes integer arguments and has no caller-side
     // memory-safety precondition.
@@ -96,9 +98,13 @@ mod tests {
 
     use celer_system_linux_ctypes::{OffT, UnsignedInt};
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{ftruncate, ftruncate_1_0};
+    use super::ftruncate;
+    #[cfg(target_arch = "x86")]
+    use super::ftruncate_1_0;
 
     fn create_temp_path() -> PathBuf {
         let mut path = std::env::temp_dir();
@@ -114,9 +120,13 @@ mod tests {
 
     #[test]
     fn test_ftruncate_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Ftruncate as isize, 93);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Ftruncate as isize, 46);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_ftruncate_1_0_sysno() {
         assert_eq!(Linux10Sysno::Ftruncate as isize, 93);
@@ -152,6 +162,7 @@ mod tests {
         assert_eq!(ret, -9);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_ftruncate_1_0_invalid_fd() {
         let ret = ftruncate_1_0(9_999 as UnsignedInt, 0 as UnsignedInt);

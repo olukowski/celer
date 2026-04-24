@@ -84,11 +84,11 @@ mod tests {
     use celer_system_linux_ctypes::{Char, Int, PidT};
 
     use super::execve;
-    use crate::sys::{exit, fork, waitpid};
+    use crate::sys::test_support::{_exit as exit, fork, waitpid};
 
     #[test]
     fn test_execve() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         fn use_pid(pid: PidT) {
             if pid == 0 {
                 let filename = b"/bin/true\0";
@@ -106,9 +106,9 @@ mod tests {
                 };
 
                 if ret < 0 {
-                    exit(1);
+                    unsafe { exit(1) };
                 }
-                exit(0);
+                unsafe { exit(0) };
             }
         }
 

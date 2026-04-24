@@ -80,10 +80,13 @@ mod tests {
     use super::setgroups16;
     use crate::{
         arch::current::{Sysno, syscall2},
-        sys::{exit, fork, getgid16, waitpid},
+        sys::{
+            getgid::getgid16,
+            test_support::{_exit as exit, fork, waitpid},
+        },
     };
     fn assert_child_matches_raw(groups: &[OldGidT]) {
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
 
         fn handle_pid(pid: PidT, groups: &[OldGidT]) {
@@ -103,7 +106,7 @@ mod tests {
                         grouplist.addr() as isize,
                     ) as i32
                 };
-                exit(if wrapped == raw { 0 } else { 1 });
+                unsafe { exit(if wrapped == raw { 0 } else { 1 }) };
             }
         }
 

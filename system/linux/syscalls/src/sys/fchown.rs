@@ -104,7 +104,12 @@ mod tests {
 
     #[test]
     fn test_fchown16_sysno() {
-        assert_eq!(Sysno::Fchown as isize, 95);
+        #[cfg(target_arch = "x86")]
+        let expected = 95;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 55;
+
+        assert_eq!(Sysno::Fchown as isize, expected);
     }
 
     #[test]
@@ -121,7 +126,9 @@ mod tests {
         let uid = metadata.uid();
         let gid = metadata.gid();
 
-        if uid > OldUidT::MAX.into() || gid > OldGidT::MAX.into() {
+        if u64::from(uid) > u64::from(OldUidT::MAX)
+            || u64::from(gid) > u64::from(OldGidT::MAX)
+        {
             fs::remove_file(&path).unwrap();
             return;
         }
@@ -179,7 +186,7 @@ mod tests {
         let metadata = file.metadata().unwrap();
         let gid = metadata.gid();
 
-        if gid > OldGidT::MAX.into() {
+        if u64::from(gid) > u64::from(OldGidT::MAX) {
             fs::remove_file(&path).unwrap();
             return;
         }

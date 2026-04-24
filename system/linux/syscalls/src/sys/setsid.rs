@@ -50,7 +50,10 @@ pub fn setsid() -> PidT {
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
-    use crate::sys::{exit, fork, getpgrp, getpid, waitpid};
+    use crate::sys::{
+        getpid,
+        test_support::{_exit as exit, fork, getpgrp, waitpid},
+    };
 
     use super::setsid;
 
@@ -67,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_setsid_already_session_leader() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
         fn handle_pid(pid: PidT) {
             if pid == 0 {
@@ -77,14 +80,14 @@ mod tests {
                     "expected first setsid to succeed, got {first}"
                 );
                 assert_eq!(first, getpid());
-                assert_eq!(getpgrp(), first);
+                assert_eq!(unsafe { getpgrp() }, first);
 
                 let second = setsid();
                 assert_eq!(
                     second, -1,
                     "expected EPERM from repeated setsid, got {second}"
                 );
-                exit(0);
+                unsafe { exit(0) };
             }
         }
 

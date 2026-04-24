@@ -18,7 +18,7 @@ use crate::arch::current::{Sysno, syscall2};
 ///   [`RUSAGE_CHILDREN`](celer_system_linux_ctypes::RUSAGE_CHILDREN); current
 ///   kernels also accept `RUSAGE_THREAD` and populate additional accounting
 ///   fields
-/// - Availability: present on supported x86 Linux kernels
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -49,8 +49,14 @@ use crate::arch::current::{Sysno, syscall2};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/getrusage.2.html)
-/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1934)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1934)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1934)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n92)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n443)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1934)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n92)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n443)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n770)
 ///
 /// # Historical References
@@ -105,16 +111,21 @@ mod tests {
 
     #[test]
     fn test_getrusage_layout() {
-        assert_eq!(core::mem::size_of::<Timeval>(), 8);
-        assert_eq!(core::mem::align_of::<Timeval>(), 4);
-        assert_eq!(core::mem::size_of::<Rusage>(), 72);
-        assert_eq!(core::mem::align_of::<Rusage>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (8, 4, 72, 4, 8, 16, 32, 36, 68);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (16, 8, 144, 8, 16, 32, 64, 72, 136);
+
+        assert_eq!(core::mem::size_of::<Timeval>(), expected.0);
+        assert_eq!(core::mem::align_of::<Timeval>(), expected.1);
+        assert_eq!(core::mem::size_of::<Rusage>(), expected.2);
+        assert_eq!(core::mem::align_of::<Rusage>(), expected.3);
         assert_eq!(core::mem::offset_of!(Rusage, ru_utime), 0);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_stime), 8);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_maxrss), 16);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_minflt), 32);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_majflt), 36);
-        assert_eq!(core::mem::offset_of!(Rusage, ru_nivcsw), 68);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_stime), expected.4);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_maxrss), expected.5);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_minflt), expected.6);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_majflt), expected.7);
+        assert_eq!(core::mem::offset_of!(Rusage, ru_nivcsw), expected.8);
     }
 
     #[test]

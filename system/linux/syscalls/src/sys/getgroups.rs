@@ -100,7 +100,12 @@ mod tests {
 
     #[test]
     fn test_getgroups_sysno() {
-        assert_eq!(Sysno::Getgroups as isize, 80);
+        #[cfg(target_arch = "x86")]
+        let expected = 80;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 158;
+
+        assert_eq!(Sysno::Getgroups as isize, expected);
     }
 
     #[test]

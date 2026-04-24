@@ -5,8 +5,9 @@ use crate::arch::current::{Sysno, syscall4};
 /// Wait for a child selected by `pid` and optionally collect its wait status
 /// and resource usage.
 ///
-/// This wrapper targets the original Linux 1.0 `wait4` entry point at x86
-/// syscall slot `114`.
+/// This wrapper spans the original Linux 1.0 x86 `wait4` syscall slot `114`
+/// and the current native `wait4(2)` entrypoints exported by this crate on
+/// x86 and aarch64.
 ///
 /// # Safety
 /// - `stat_addr`, when non-null, must be valid to write one [`Int`] value for
@@ -22,8 +23,8 @@ use crate::arch::current::{Sysno, syscall4};
 ///   `__WCLONE` without rejecting unknown option bits; current kernels also
 ///   accept `WCONTINUED`, `__WNOTHREAD`, and `__WALL`, reject other bits with
 ///   `EINVAL`, reject `pid == INT_MIN` with `ESRCH`, and surface `ru`
-///   copy-out faults as `EFAULT`
-/// - Availability: present on supported x86 Linux kernels
+///   copy-out faults as `EFAULT`.
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -57,8 +58,14 @@ use crate::arch::current::{Sysno, syscall4};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/wait4.2.html)
-/// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/exit.c?h=v6.19#n1899)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/exit.c?h=v6.18.18#n1894)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/exit.c?h=v7.0#n1905)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n129)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n631)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/exit.c?h=v6.18.18#n1894)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n129)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n631)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/exit.c?h=1.0#n484)
 ///
 /// # Historical References
@@ -94,9 +101,11 @@ mod tests {
     use celer_system_linux_ctypes::{Int, Rusage, Timeval};
 
     use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::sys::{SigHandler, sig_handler, sig_handler_from_raw, signal};
     use crate::sys::{
-        SigHandler, exit, fork, getpid, kill, pause, sig_handler,
-        sig_handler_from_raw, signal, waitpid,
+        getpid, kill,
+        test_support::{_exit as exit, fork, pause, waitpid},
     };
 
     use super::wait4;
@@ -110,6 +119,54 @@ mod tests {
 
     extern "C" fn handle_sigalrm(_: Int) {}
 
+    #[cfg(target_arch = "aarch64")]
+    type SigHandler = libc::sigaction;
+
+    #[cfg(target_arch = "aarch64")]
+    unsafe fn install_signal_handler(
+        sig: Int,
+        handler: extern "C" fn(Int),
+    ) -> SigHandler {
+        let mut action = unsafe { core::mem::zeroed::<libc::sigaction>() };
+        action.sa_sigaction = handler as libc::sighandler_t;
+        action.sa_flags = 0;
+        let empty_mask = unsafe { libc::sigemptyset(&raw mut action.sa_mask) };
+        assert_eq!(empty_mask, 0, "sigemptyset failed: {empty_mask}");
+
+        let mut old = core::mem::MaybeUninit::<libc::sigaction>::uninit();
+        let rc = unsafe {
+            libc::sigaction(sig, &raw const action, old.as_mut_ptr())
+        };
+        assert_eq!(rc, 0, "installing signal handler failed: {rc}");
+        unsafe { old.assume_init() }
+    }
+
+    #[cfg(target_arch = "x86")]
+    unsafe fn install_signal_handler(
+        sig: Int,
+        handler: extern "C" fn(Int),
+    ) -> SigHandler {
+        let old = unsafe { signal(sig, sig_handler(handler)) };
+        assert_ne!(old, -1, "installing signal handler failed");
+        sig_handler_from_raw(old)
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    unsafe fn restore_signal_handler(sig: Int, old: &SigHandler) {
+        let _ = unsafe {
+            libc::sigaction(
+                sig,
+                old as *const SigHandler,
+                core::ptr::null_mut(),
+            )
+        };
+    }
+
+    #[cfg(target_arch = "x86")]
+    unsafe fn restore_signal_handler(sig: Int, old: &SigHandler) {
+        let _ = unsafe { signal(sig, *old) };
+    }
+
     struct RestoreHandler {
         sig: Int,
         old: SigHandler,
@@ -117,20 +174,20 @@ mod tests {
 
     impl Drop for RestoreHandler {
         fn drop(&mut self) {
-            let _ = unsafe { signal(self.sig, self.old) };
+            unsafe { restore_signal_handler(self.sig, &self.old) };
         }
     }
 
     fn spawn_signal_sender(target: Int, sig: Int) -> Int {
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
         if pid == 0 {
             thread::sleep(Duration::from_millis(100));
             let rc = kill(target, sig);
             if rc != 0 {
-                exit(1);
+                unsafe { exit(1) };
             }
-            exit(0);
+            unsafe { exit(0) };
         }
 
         pid
@@ -205,14 +262,17 @@ mod tests {
 
     #[test]
     fn test_wait4_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Wait4 as isize, 114);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Wait4 as isize, 260);
     }
 
     #[test]
     fn test_wait4_reaps_exited_child_and_collects_rusage() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         if pid == 0 {
-            exit(0);
+            unsafe { exit(0) };
         }
 
         let mut status: Int = -1;
@@ -231,10 +291,10 @@ mod tests {
 
     #[test]
     fn test_wait4_wnohang_returns_zero_for_live_child() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         if pid == 0 {
-            let _ = pause();
-            exit(0);
+            let _ = unsafe { pause() };
+            unsafe { exit(0) };
         }
 
         let mut status: Int = -1;
@@ -274,9 +334,9 @@ mod tests {
 
     #[test]
     fn test_wait4_reports_efault_for_bad_rusage_pointer() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         if pid == 0 {
-            exit(0);
+            unsafe { exit(0) };
         }
 
         let mut status: Int = 0;
@@ -295,9 +355,9 @@ mod tests {
 
     #[test]
     fn test_wait4_reports_efault_for_bad_status_pointer() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         if pid == 0 {
-            exit(0);
+            unsafe { exit(0) };
         }
 
         let mut usage = zeroed_rusage();
@@ -328,21 +388,18 @@ mod tests {
     fn test_wait4_interrupted_by_signal_returns_eintr() {
         let _guard = WAIT4_SIGNAL_LOCK.lock().unwrap();
 
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
         if pid == 0 {
-            let old = unsafe { signal(SIGUSR1, sig_handler(handle_sigalrm)) };
-            assert!(old >= 0, "installing SIGUSR1 handler failed: {old}");
-            let _restore = RestoreHandler {
-                sig: SIGUSR1,
-                old: sig_handler_from_raw(old),
-            };
+            let old =
+                unsafe { install_signal_handler(SIGUSR1, handle_sigalrm) };
+            let _restore = RestoreHandler { sig: SIGUSR1, old };
 
-            let child = fork();
+            let child = unsafe { fork() };
             assert!(child >= 0, "fork failed: {child}");
             if child == 0 {
-                let _ = pause();
-                exit(0);
+                let _ = unsafe { pause() };
+                unsafe { exit(0) };
             }
 
             let sender = spawn_signal_sender(getpid(), SIGUSR1);
@@ -368,7 +425,7 @@ mod tests {
                 wait4(child, core::ptr::null_mut(), 0, core::ptr::null_mut())
             };
             assert_eq!(reaped, child, "cleanup wait4 failed: {reaped}");
-            exit(0);
+            unsafe { exit(0) };
         }
 
         let mut status = 0;

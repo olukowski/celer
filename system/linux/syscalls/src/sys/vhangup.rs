@@ -43,7 +43,10 @@ mod tests {
 
     use crate::{
         arch::current::{Sysno, syscall0},
-        sys::{exit, fork, setsid, waitpid},
+        sys::{
+            setsid,
+            test_support::{_exit as exit, fork, waitpid},
+        },
     };
 
     use super::vhangup;
@@ -52,12 +55,15 @@ mod tests {
 
     #[test]
     fn test_vhangup_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Vhangup as isize, 111);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Vhangup as isize, 58);
     }
 
     #[test]
     fn test_vhangup_after_setsid_matches_raw_syscall() {
-        let pid = fork();
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
 
         fn handle_child(pid: PidT) {
@@ -82,7 +88,7 @@ mod tests {
                     wrapped == 0 || wrapped == EPERM,
                     "expected success or EPERM from vhangup without a controlling tty, got {wrapped}",
                 );
-                exit(0);
+                unsafe { exit(0) };
             }
         }
 

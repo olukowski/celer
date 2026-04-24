@@ -1,7 +1,12 @@
 use celer_system_linux_ctypes::{SizeT, UnsignedInt, UnsignedLong, Void};
 
-use crate::arch::current::{Sysno, syscall1};
+use crate::arch::current::Sysno;
+#[cfg(target_arch = "x86")]
+use crate::arch::current::syscall1;
+#[cfg(target_arch = "aarch64")]
+use crate::arch::current::syscall6;
 
+#[cfg(target_arch = "x86")]
 #[repr(C)]
 struct MmapArgs {
     addr: UnsignedLong,
@@ -95,22 +100,44 @@ pub unsafe fn mmap(
     fd: UnsignedInt,
     offset: UnsignedLong,
 ) -> UnsignedLong {
-    let args = MmapArgs {
-        addr: addr.addr() as UnsignedLong,
-        len: len as UnsignedLong,
-        prot,
-        flags,
-        fd: fd as UnsignedLong,
-        offset,
-    };
+    #[cfg(target_arch = "aarch64")]
+    {
+        // SAFETY: the caller upholds the process-memory invariants required
+        // by this mapping operation.
+        unsafe {
+            syscall6(
+                Sysno::Mmap,
+                addr.addr() as isize,
+                len as isize,
+                prot as isize,
+                flags as isize,
+                fd as isize,
+                offset as isize,
+            ) as UnsignedLong
+        }
+    }
 
-    // SAFETY: the caller upholds the process-memory invariants required by
-    // this mapping operation, and `args` is a valid six-word ABI block.
-    unsafe {
-        syscall1(Sysno::Mmap, (&raw const args).addr() as isize) as UnsignedLong
+    #[cfg(target_arch = "x86")]
+    {
+        let args = MmapArgs {
+            addr: addr.addr() as UnsignedLong,
+            len: len as UnsignedLong,
+            prot,
+            flags,
+            fd: fd as UnsignedLong,
+            offset,
+        };
+
+        // SAFETY: the caller upholds the process-memory invariants required by
+        // this mapping operation, and `args` is a valid six-word ABI block.
+        unsafe {
+            syscall1(Sysno::Mmap, (&raw const args).addr() as isize)
+                as UnsignedLong
+        }
     }
 }
 
+#[cfg(all(test, target_arch = "x86"))]
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {

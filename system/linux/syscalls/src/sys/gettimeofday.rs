@@ -67,7 +67,12 @@ mod tests {
 
     #[test]
     fn test_gettimeofday_sysno() {
-        assert_eq!(Sysno::Gettimeofday as isize, 78);
+        #[cfg(target_arch = "x86")]
+        let expected = 78;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 169;
+
+        assert_eq!(Sysno::Gettimeofday as isize, expected);
     }
 
     #[test]

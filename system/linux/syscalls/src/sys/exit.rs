@@ -46,11 +46,13 @@ mod tests {
     use celer_system_linux_ctypes::Int;
 
     use super::exit;
-    use crate::sys::{fork, waitpid};
+    use crate::sys::test_support::{fork, waitpid};
 
     #[test]
     fn test_exit_terminates_child_when_dispatched() {
-        let pid = fork();
+        // SAFETY: `fork` is used here to isolate the `exit` syscall under
+        // test from the test process itself.
+        let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
 
         if pid == 0 {

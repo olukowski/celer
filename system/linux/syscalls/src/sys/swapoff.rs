@@ -4,9 +4,10 @@ use crate::arch::current::{Sysno, syscall1};
 
 /// Disable swapping on an active swap area.
 ///
-/// This wrapper targets the original Linux 1.0 i386 syscall number 115 ABI.
-/// Current x86-32 kernels keep syscall number 115 as `swapoff` with the same
-/// single-pathname calling convention.
+/// This wrapper spans the original Linux 1.0 x86 syscall slot `115` ABI and
+/// the current native `swapoff(2)` entrypoints exported by this crate on x86
+/// and aarch64. Current kernels keep the same single-pathname calling
+/// convention.
 ///
 /// # Safety
 /// - The pathname pointer must be valid to read a NUL-terminated string for
@@ -19,7 +20,7 @@ use crate::arch::current::{Sysno, syscall1};
 ///   current kernels open the pathname for read-write access, match the
 ///   resulting file mapping against active swap areas, and perform additional
 ///   accounting and teardown synchronization checks before deactivation.
-/// - Availability: present on supported x86 Linux kernels
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - Linux 1.0 requires a superuser caller.
@@ -54,8 +55,14 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/swapon.2.html)
-/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/swapfile.c?h=v7.0#n2769)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/swapfile.c?h=v6.18.18#n2868)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/mm/swapfile.c?h=v7.0#n2769)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n130)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n579)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/mm/swapfile.c?h=v6.18.18#n2868)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n130)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n579)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/mm/swap.c?h=1.0#n674)
 ///
 /// # Historical References
@@ -95,7 +102,12 @@ mod tests {
 
     #[test]
     fn test_swapoff_sysno() {
-        assert_eq!(Sysno::Swapoff as isize, 115);
+        #[cfg(target_arch = "x86")]
+        let expected = 115;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 225;
+
+        assert_eq!(Sysno::Swapoff as isize, expected);
     }
 
     #[test]

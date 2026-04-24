@@ -1,10 +1,11 @@
-use celer_system_linux_ctypes::{
-    Char, Int, ModRoutines, UnsignedInt, UnsignedLong, Void,
-};
+use celer_system_linux_ctypes::{Char, Int, UnsignedLong, Void};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::{ModRoutines, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall3},
-    linux_1_0::{Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4},
+use crate::arch::current::{Sysno, syscall3};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4,
 };
 
 /// Load a kernel module image from user memory.
@@ -152,6 +153,7 @@ pub unsafe fn init_module(
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/module.h?h=1.0#n30)
 /// - Linux 1.0 syscall table:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n137)
+#[cfg(target_arch = "x86")]
 pub unsafe fn init_module_1_0(
     module_name: *const Char,
     code: *const Void,
@@ -175,18 +177,25 @@ pub unsafe fn init_module_1_0(
 mod tests {
     use celer_system_linux_ctypes::{Char, ModRoutines, UnsignedLong, Void};
 
-    use crate::arch::{
-        current::{Sysno, syscall3},
-        linux_1_0::{Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4},
+    use crate::arch::current::{Sysno, syscall3};
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::{
+        Sysno as Linux10Sysno, syscall4 as linux_1_0_syscall4,
     };
 
-    use super::{init_module, init_module_1_0};
+    use super::init_module;
+    #[cfg(target_arch = "x86")]
+    use super::init_module_1_0;
 
     #[test]
     fn test_init_module_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::InitModule as isize, 128);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::InitModule as isize, 105);
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_init_module_sysno() {
         assert_eq!(Linux10Sysno::InitModule as isize, 128);
@@ -194,10 +203,15 @@ mod tests {
 
     #[test]
     fn test_mod_routines_layout() {
-        assert_eq!(core::mem::size_of::<ModRoutines>(), 8);
-        assert_eq!(core::mem::align_of::<ModRoutines>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (8, 4, 4);
+        #[cfg(target_arch = "aarch64")]
+        let expected = (16, 8, 8);
+
+        assert_eq!(core::mem::size_of::<ModRoutines>(), expected.0);
+        assert_eq!(core::mem::align_of::<ModRoutines>(), expected.1);
         assert_eq!(core::mem::offset_of!(ModRoutines, init), 0);
-        assert_eq!(core::mem::offset_of!(ModRoutines, cleanup), 4);
+        assert_eq!(core::mem::offset_of!(ModRoutines, cleanup), expected.2);
     }
 
     #[test]
@@ -232,6 +246,7 @@ mod tests {
         );
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn test_linux_1_0_init_module_matches_raw_syscall() {
         let module_name = c"";

@@ -5,10 +5,10 @@ use crate::arch::current::{Sysno, syscall3};
 /// Read from or control the kernel log buffer through the historical
 /// `sys_syslog` multiplexed syscall ABI.
 ///
-/// This wrapper targets the original Linux 1.0 syscall slot `103` ABI.
-/// Linux 1.0 accepts command types `0..=8`; current x86 kernels keep the same
-/// syscall number and add command types `9` (`SIZE_UNREAD`) and
-/// `10` (`SIZE_BUFFER`).
+/// This wrapper spans the original Linux 1.0 x86 syscall slot `103` ABI and
+/// the current native `syslog(2)` entrypoints exported by this crate on x86
+/// and aarch64. Linux 1.0 accepts command types `0..=8`; current kernels keep
+/// those commands and add `9` (`SIZE_UNREAD`) and `10` (`SIZE_BUFFER`).
 ///
 /// # Safety
 /// - If `type_` is `2`, `3`, or `4` and `len > 0`, `buf` must point to
@@ -17,9 +17,9 @@ use crate::arch::current::{Sysno, syscall3};
 /// # Kernel Support
 /// - Introduced: Linux 0.96a
 /// - Behavior changes: Linux 1.0 exposes only command types `0..=8`;
-///   current x86 kernels keep those historical commands and add
-///   `SIZE_UNREAD` (`9`) and `SIZE_BUFFER` (`10`)
-/// - Availability: present on supported x86 Linux kernels
+///   current kernels keep those historical commands and add
+///   `SIZE_UNREAD` (`9`) and `SIZE_BUFFER` (`10`).
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - Linux 1.0 allows unprivileged callers only for command type `3`
@@ -65,12 +65,20 @@ use crate::arch::current::{Sysno, syscall3};
 ///   `security_syslog()`.
 ///
 /// # References
+/// - Stable x86 table:
+///   [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n118)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n327)
 /// - Stable entry:
 ///   [v7.0 syslog](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n1853)
 /// - Stable helper:
 ///   [v7.0 do_syslog](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n1740)
 /// - Stable permission check:
 ///   [v7.0 check_syslog_permissions](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/printk/printk.c?h=v7.0#n617)
+/// - LTS x86 table:
+///   [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n118)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n327)
 /// - LTS entry:
 ///   [v6.18.18 syslog](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/printk/printk.c?h=v6.18.18#n1851)
 /// - LTS helper:
@@ -108,7 +116,12 @@ mod tests {
 
     #[test]
     fn test_syslog_sysno() {
-        assert_eq!(Sysno::Syslog as isize, 103);
+        #[cfg(target_arch = "x86")]
+        let expected = 103;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 116;
+
+        assert_eq!(Sysno::Syslog as isize, expected);
     }
 
     #[test]

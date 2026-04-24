@@ -12,7 +12,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Behavior changes: Linux 1.0 returns the raw `task_struct.pgrp` field,
 ///   while current kernels return the namespace-visible PGID after an LSM hook
 ///   check.
-/// - Availability: present on supported x86 Linux kernels
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -31,8 +31,14 @@ use crate::arch::current::{Sysno, syscall1};
 ///
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/getpgid.2.html)
-/// - Stable: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1215)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1215)
+/// - Stable implementation: [v7.0](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v7.0#n1215)
+/// - Stable x86 table: [v7.0 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v7.0#n147)
+/// - Stable aarch64 syscall numbers:
+///   [v7.0 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v7.0#n418)
+/// - LTS implementation: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1215)
+/// - LTS x86 table: [v6.18.18 syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.18.18#n147)
+/// - LTS aarch64 syscall numbers:
+///   [v6.18.18 asm-generic unistd](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/asm-generic/unistd.h?h=v6.18.18#n418)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n509)
 ///
 /// # Historical References
@@ -49,14 +55,19 @@ pub fn getpgid(pid: PidT) -> PidT {
 mod tests {
     use celer_system_linux_ctypes::PidT;
 
-    use crate::arch::current::{Sysno, syscall1};
-    use crate::sys::{getpgrp, getpid};
+    use crate::{
+        arch::current::{Sysno, syscall1},
+        sys::{getpid, test_support::getpgrp},
+    };
 
     use super::getpgid;
 
     #[test]
     fn test_getpgid_sysno() {
+        #[cfg(target_arch = "x86")]
         assert_eq!(Sysno::Getpgid as isize, 132);
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(Sysno::Getpgid as isize, 155);
     }
 
     #[test]
@@ -65,7 +76,7 @@ mod tests {
 
         assert_eq!(
             pgid,
-            getpgrp(),
+            unsafe { getpgrp() },
             "getpgid(0) should match the caller's process group"
         );
     }
@@ -76,7 +87,7 @@ mod tests {
 
         assert_eq!(
             pgid,
-            getpgrp(),
+            unsafe { getpgrp() },
             "getpgid(getpid()) should match the caller's process group"
         );
     }
