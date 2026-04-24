@@ -38,6 +38,8 @@ mod fchmod;
 #[cfg(target_arch = "x86")]
 mod fchown;
 mod fcntl;
+#[cfg(target_arch = "x86")]
+mod fork;
 mod helpers;
 pub mod sys;
 
@@ -67,6 +69,8 @@ pub use fchmod::{FchmodError, fchmod};
 #[cfg(target_arch = "x86")]
 pub use fchown::{Fchown16Error, fchown16};
 pub use fcntl::{FcntlError, fcntl};
+#[cfg(target_arch = "x86")]
+pub use fork::{ForkError, fork};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]

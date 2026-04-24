@@ -26,6 +26,8 @@ use crate::arch::current::{Sysno, syscall0};
 ///   kernel pages for the child; current kernels also use it when process or
 ///   thread limits block `copy_process()`.
 /// - `ENOMEM`: current kernels failed to allocate child task resources.
+/// - `EINTR`: current kernels detected a pending fatal signal after preparing
+///   the child task but before making it visible.
 /// - `EINVAL`: current NOMMU kernels reject `fork`.
 ///
 /// # References
