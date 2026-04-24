@@ -427,6 +427,7 @@ pub struct Tms {
     pub tms_cstime: Long,
 }
 
+#[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
     use super::{Char, Int, Long, OffT, UnsignedLong, UnsignedShort};
 
@@ -652,7 +653,9 @@ pub struct OldLinuxDirent {
 mod tests {
     use core::mem::{align_of, offset_of, size_of};
 
-    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo, linux_1_0};
+    #[cfg(target_arch = "x86")]
+    use super::linux_1_0;
+    use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo};
 
     #[test]
     fn current_newstat_layout_matches_linux_v7_0_struct_stat() {
@@ -703,6 +706,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn linux_1_0_newstat_layout_is_preserved() {
         assert_eq!(size_of::<linux_1_0::NewStat>(), 64);
@@ -768,6 +772,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn linux_1_0_statfs_layout_is_preserved() {
         assert_eq!(size_of::<linux_1_0::FsidT>(), 8);
@@ -827,6 +832,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn linux_1_0_sysinfo_layout_is_preserved() {
         assert_eq!(size_of::<linux_1_0::Sysinfo>(), 64);
@@ -859,6 +865,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     #[test]
     fn linux_1_0_dirent_layout_is_preserved() {
         assert_eq!(size_of::<linux_1_0::Dirent>(), 268);

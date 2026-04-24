@@ -1,17 +1,19 @@
-use celer_system_linux_ctypes::{
-    Long, NewStat, UnsignedInt, linux_1_0::NewStat as Linux10NewStat,
-};
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
+use celer_system_linux_ctypes::{Long, NewStat, UnsignedInt};
 
-use crate::arch::{
-    current::{Sysno, syscall2},
-    linux_1_0::{Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2},
+use crate::arch::current::{Sysno, syscall2};
+#[cfg(target_arch = "x86")]
+use crate::arch::linux_1_0::{
+    Sysno as Linux10Sysno, syscall2 as linux_1_0_syscall2,
 };
 
 /// Get file status information for an open file descriptor through the
-/// current i386 `newfstat` ABI.
+/// current native `fstat`/`newfstat` ABI.
 ///
 /// Linux 1.0 exposes syscall number `108` as `fstat`, but wires that slot to
-/// `sys_newfstat(unsigned int fd, struct new_stat *statbuf)`.
+/// `sys_newfstat(unsigned int fd, struct new_stat *statbuf)`. Current aarch64
+/// exposes syscall number `80` as `fstat`, also wired to `sys_newfstat`.
 ///
 /// # Safety
 /// - `statbuf` must point to writable memory for one [`NewStat`] value for
@@ -19,11 +21,12 @@ use crate::arch::{
 ///   not violate Rust aliasing or lifetime rules.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 1.0 on i386; present from the initial aarch64 syscall
+///   table
 /// - Behavior changes: modern x86 kernels still expose this syscall number,
 ///   but later kernels route through `vfs_fstat()` and newer compat-copy
 ///   helpers with representability checks that Linux 1.0 did not perform.
-/// - Availability: present on supported x86 Linux kernels
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - None
@@ -73,6 +76,7 @@ pub unsafe fn newfstat(fd: UnsignedInt, statbuf: *mut NewStat) -> Long {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/stat.c?h=1.0#n168)
 /// - Linux 1.0 `struct new_stat`:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/stat.h?h=1.0#n20)
+#[cfg(target_arch = "x86")]
 pub unsafe fn newfstat_1_0(
     fd: UnsignedInt,
     statbuf: *mut Linux10NewStat,
@@ -95,13 +99,17 @@ mod tests {
         os::unix::fs::MetadataExt as _,
     };
 
-    use celer_system_linux_ctypes::{
-        NewStat, UnsignedInt, linux_1_0::NewStat as Linux10NewStat,
-    };
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::linux_1_0::NewStat as Linux10NewStat;
+    use celer_system_linux_ctypes::{NewStat, UnsignedInt};
 
-    use crate::arch::{current::Sysno, linux_1_0::Sysno as Linux10Sysno};
+    use crate::arch::current::Sysno;
+    #[cfg(target_arch = "x86")]
+    use crate::arch::linux_1_0::Sysno as Linux10Sysno;
 
-    use super::{newfstat, newfstat_1_0};
+    use super::newfstat;
+    #[cfg(target_arch = "x86")]
+    use super::newfstat_1_0;
 
     fn zeroed_newstat() -> NewStat {
         NewStat {
@@ -126,6 +134,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_arch = "x86")]
     fn zeroed_linux_1_0_newstat() -> Linux10NewStat {
         Linux10NewStat {
             st_dev: 0,
@@ -159,31 +168,48 @@ mod tests {
 
     #[test]
     fn test_newfstat_layout() {
-        assert_eq!(size_of::<NewStat>(), 64);
-        assert_eq!(core::mem::align_of::<NewStat>(), 4);
+        #[cfg(target_arch = "x86")]
+        let expected = (
+            64, 4, 4, 8, 10, 12, 14, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52,
+            56, 60,
+        );
+        #[cfg(target_arch = "aarch64")]
+        let expected = (
+            120, 8, 8, 16, 24, 26, 28, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104,
+            112, 116,
+        );
+
+        assert_eq!(size_of::<NewStat>(), expected.0);
+        assert_eq!(core::mem::align_of::<NewStat>(), expected.1);
         assert_eq!(core::mem::offset_of!(NewStat, st_dev), 0);
-        assert_eq!(core::mem::offset_of!(NewStat, st_ino), 4);
-        assert_eq!(core::mem::offset_of!(NewStat, st_mode), 8);
-        assert_eq!(core::mem::offset_of!(NewStat, st_nlink), 10);
-        assert_eq!(core::mem::offset_of!(NewStat, st_uid), 12);
-        assert_eq!(core::mem::offset_of!(NewStat, st_gid), 14);
-        assert_eq!(core::mem::offset_of!(NewStat, st_rdev), 16);
-        assert_eq!(core::mem::offset_of!(NewStat, st_size), 20);
-        assert_eq!(core::mem::offset_of!(NewStat, st_blksize), 24);
-        assert_eq!(core::mem::offset_of!(NewStat, st_blocks), 28);
-        assert_eq!(core::mem::offset_of!(NewStat, st_atime), 32);
-        assert_eq!(core::mem::offset_of!(NewStat, st_atime_nsec), 36);
-        assert_eq!(core::mem::offset_of!(NewStat, st_mtime), 40);
-        assert_eq!(core::mem::offset_of!(NewStat, st_mtime_nsec), 44);
-        assert_eq!(core::mem::offset_of!(NewStat, st_ctime), 48);
-        assert_eq!(core::mem::offset_of!(NewStat, st_ctime_nsec), 52);
-        assert_eq!(core::mem::offset_of!(NewStat, __unused4), 56);
-        assert_eq!(core::mem::offset_of!(NewStat, __unused5), 60);
+        assert_eq!(core::mem::offset_of!(NewStat, st_ino), expected.2);
+        assert_eq!(core::mem::offset_of!(NewStat, st_mode), expected.3);
+        assert_eq!(core::mem::offset_of!(NewStat, st_nlink), expected.4);
+        assert_eq!(core::mem::offset_of!(NewStat, st_uid), expected.5);
+        assert_eq!(core::mem::offset_of!(NewStat, st_gid), expected.6);
+        assert_eq!(core::mem::offset_of!(NewStat, st_rdev), expected.7);
+        assert_eq!(core::mem::offset_of!(NewStat, st_size), expected.8);
+        assert_eq!(core::mem::offset_of!(NewStat, st_blksize), expected.9);
+        assert_eq!(core::mem::offset_of!(NewStat, st_blocks), expected.10);
+        assert_eq!(core::mem::offset_of!(NewStat, st_atime), expected.11);
+        assert_eq!(core::mem::offset_of!(NewStat, st_atime_nsec), expected.12);
+        assert_eq!(core::mem::offset_of!(NewStat, st_mtime), expected.13);
+        assert_eq!(core::mem::offset_of!(NewStat, st_mtime_nsec), expected.14);
+        assert_eq!(core::mem::offset_of!(NewStat, st_ctime), expected.15);
+        assert_eq!(core::mem::offset_of!(NewStat, st_ctime_nsec), expected.16);
+        assert_eq!(core::mem::offset_of!(NewStat, __unused4), expected.17);
+        assert_eq!(core::mem::offset_of!(NewStat, __unused5), expected.18);
     }
 
     #[test]
     fn test_newfstat_syscall_number() {
-        assert_eq!(Sysno::Newfstat as isize, 108);
+        #[cfg(target_arch = "x86")]
+        let expected = 108;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 80;
+
+        assert_eq!(Sysno::Newfstat as isize, expected);
+        #[cfg(target_arch = "x86")]
         assert_eq!(Linux10Sysno::Newfstat as isize, 108);
     }
 
@@ -199,13 +225,20 @@ mod tests {
         let ret = unsafe { newfstat(fd, &raw mut statbuf) };
 
         assert_eq!(ret, 0, "newfstat failed for /: {ret}");
-        assert_eq!(statbuf.st_ino as u64, metadata.ino());
+        #[cfg(target_arch = "x86")]
+        assert_eq!(u64::from(statbuf.st_ino), metadata.ino());
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(statbuf.st_ino, metadata.ino());
         assert_eq!(statbuf.st_mode as u32, metadata.mode());
-        assert_eq!(statbuf.st_nlink as u64, metadata.nlink());
-        assert_eq!(statbuf.st_size as u64, metadata.size());
+        assert_eq!(u64::from(statbuf.st_nlink), metadata.nlink());
+        #[cfg(target_arch = "x86")]
+        assert_eq!(u64::from(statbuf.st_size), metadata.size());
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(statbuf.st_size, metadata.size());
     }
 
     #[test]
+    #[cfg(target_arch = "x86")]
     fn test_linux_1_0_newfstat_wrapper_success() {
         let file = File::open("/").unwrap();
         let fd = file.as_raw_fd() as UnsignedInt;

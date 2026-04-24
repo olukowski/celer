@@ -1,6 +1,10 @@
 use celer_system_linux_ctypes::{Char, Int};
 
-use crate::arch::current::{Sysno, syscall1};
+use crate::arch::current::Sysno;
+#[cfg(target_arch = "x86")]
+use crate::arch::current::syscall1;
+#[cfg(target_arch = "aarch64")]
+use crate::arch::current::syscall2;
 
 /// Unmount a filesystem or mount point.
 ///
@@ -9,12 +13,13 @@ use crate::arch::current::{Sysno, syscall1};
 ///   the duration of the syscall.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 0.10
+/// - Introduced: Linux 0.10 on i386; aarch64 exposes the same implementation
+///   through the two-argument `umount2` syscall slot
 /// - Behavior changes: Linux 1.0 accepts either a mounted block-device path
 ///   or a mounted path and special-cases the root filesystem by remounting it
 ///   read-only; current kernels that still expose `oldumount` route it to the
 ///   flagless `ksys_umount(name, 0)` path
-/// - Availability: present on supported x86 Linux kernels
+/// - Availability: present on supported x86 and aarch64 Linux kernels
 ///
 /// # Required Privileges
 /// - Linux 1.0 requires a superuser caller.
@@ -57,7 +62,17 @@ use crate::arch::current::{Sysno, syscall1};
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/super.c?h=0.10#n166)
 pub unsafe fn umount(name: *const Char) -> Int {
     // SAFETY: guaranteed by caller.
-    unsafe { syscall1(Sysno::Umount, name.addr() as isize) as Int }
+    #[cfg(target_arch = "x86")]
+    unsafe {
+        syscall1(Sysno::Umount, name.addr() as isize) as Int
+    }
+
+    // SAFETY: guaranteed by caller. The public wrapper is flagless, matching
+    // the legacy `oldumount` behavior by passing flags as zero.
+    #[cfg(target_arch = "aarch64")]
+    unsafe {
+        syscall2(Sysno::Umount, name.addr() as isize, 0) as Int
+    }
 }
 
 #[cfg(test)]
@@ -65,7 +80,19 @@ pub unsafe fn umount(name: *const Char) -> Int {
 mod tests {
     use celer_system_linux_ctypes::Char;
 
+    use crate::arch::current::Sysno;
+
     use super::umount;
+
+    #[test]
+    fn test_umount_syscall_number() {
+        #[cfg(target_arch = "x86")]
+        let expected = 22;
+        #[cfg(target_arch = "aarch64")]
+        let expected = 39;
+
+        assert_eq!(Sysno::Umount as isize, expected);
+    }
 
     #[test]
     fn test_umount_invalid_name() {

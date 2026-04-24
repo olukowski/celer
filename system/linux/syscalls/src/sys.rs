@@ -41,7 +41,6 @@ mod dup;
 #[cfg(target_arch = "x86")]
 mod dup2;
 mod execve;
-#[cfg(target_arch = "x86")]
 mod exit;
 mod fchdir;
 mod fchmod;
@@ -98,7 +97,6 @@ mod mmap;
 mod modify_ldt;
 mod mount;
 mod munmap;
-#[cfg(target_arch = "x86")]
 mod newfstat;
 #[cfg(target_arch = "x86")]
 mod newlstat;
@@ -175,7 +173,6 @@ mod time;
 mod times;
 mod truncate;
 mod umask;
-#[cfg(target_arch = "x86")]
 mod umount;
 mod uname;
 #[cfg(target_arch = "x86")]
@@ -234,7 +231,6 @@ pub use dup::dup;
 #[cfg(target_arch = "x86")]
 pub use dup2::dup2;
 pub use execve::execve;
-#[cfg(target_arch = "x86")]
 pub use exit::exit;
 pub use fchdir::fchdir;
 pub use fchmod::fchmod;
@@ -294,7 +290,6 @@ pub use mmap::mmap;
 pub use modify_ldt::modify_ldt;
 pub use mount::mount;
 pub use munmap::munmap;
-#[cfg(target_arch = "x86")]
 pub use newfstat::newfstat;
 #[cfg(target_arch = "x86")]
 pub use newlstat::newlstat;
@@ -375,7 +370,6 @@ pub use time::time;
 pub use times::times;
 pub use truncate::truncate;
 pub use umask::umask;
-#[cfg(target_arch = "x86")]
 pub use umount::umount;
 #[cfg(target_arch = "aarch64")]
 pub use uname::newuname;
