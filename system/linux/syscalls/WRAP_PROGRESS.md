@@ -119,7 +119,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `fchdir`
 - [x] `fchmod`
 - [x] `fchown16` - x86
-- [ ] `fcntl`
+- [x] `fcntl`
 - [ ] `fork` - x86
 - [ ] `fstatfs`
 - [ ] `fsync`

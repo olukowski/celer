@@ -37,6 +37,7 @@ mod fchdir;
 mod fchmod;
 #[cfg(target_arch = "x86")]
 mod fchown;
+mod fcntl;
 mod helpers;
 pub mod sys;
 
@@ -65,6 +66,7 @@ pub use fchdir::{FchdirError, fchdir};
 pub use fchmod::{FchmodError, fchmod};
 #[cfg(target_arch = "x86")]
 pub use fchown::{Fchown16Error, fchown16};
+pub use fcntl::{FcntlError, fcntl};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
