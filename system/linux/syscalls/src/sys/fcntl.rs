@@ -105,7 +105,9 @@ mod tests {
         path_bytes.push(0);
 
         // SAFETY: the pointed-to test data stays valid for the duration of the syscall.
-        let fd = unsafe { open(path_bytes.as_ptr().cast(), 0 as Int, 0 as _) };
+        let fd = unsafe {
+            open(path_bytes.as_ptr().cast(), 0 as Int, 0 as libc::mode_t)
+        };
         assert!(fd >= 0, "open failed: {fd}");
 
         // SAFETY: `F_GETFD` treats `arg` as a scalar.

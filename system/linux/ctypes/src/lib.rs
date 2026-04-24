@@ -655,27 +655,52 @@ mod tests {
     use super::{FsidT, NewStat, OldLinuxDirent, Statfs, Sysinfo, linux_1_0};
 
     #[test]
-    fn current_i386_newstat_layout_matches_linux_v7_0_struct_stat() {
-        assert_eq!(size_of::<NewStat>(), 64);
-        assert_eq!(align_of::<NewStat>(), 4);
+    fn current_newstat_layout_matches_linux_v7_0_struct_stat() {
         assert_eq!(offset_of!(NewStat, st_dev), 0);
-        assert_eq!(offset_of!(NewStat, st_ino), 4);
-        assert_eq!(offset_of!(NewStat, st_mode), 8);
-        assert_eq!(offset_of!(NewStat, st_nlink), 10);
-        assert_eq!(offset_of!(NewStat, st_uid), 12);
-        assert_eq!(offset_of!(NewStat, st_gid), 14);
-        assert_eq!(offset_of!(NewStat, st_rdev), 16);
-        assert_eq!(offset_of!(NewStat, st_size), 20);
-        assert_eq!(offset_of!(NewStat, st_blksize), 24);
-        assert_eq!(offset_of!(NewStat, st_blocks), 28);
-        assert_eq!(offset_of!(NewStat, st_atime), 32);
-        assert_eq!(offset_of!(NewStat, st_atime_nsec), 36);
-        assert_eq!(offset_of!(NewStat, st_mtime), 40);
-        assert_eq!(offset_of!(NewStat, st_mtime_nsec), 44);
-        assert_eq!(offset_of!(NewStat, st_ctime), 48);
-        assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
-        assert_eq!(offset_of!(NewStat, __unused4), 56);
-        assert_eq!(offset_of!(NewStat, __unused5), 60);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<NewStat>(), 64);
+            assert_eq!(align_of::<NewStat>(), 4);
+            assert_eq!(offset_of!(NewStat, st_ino), 4);
+            assert_eq!(offset_of!(NewStat, st_mode), 8);
+            assert_eq!(offset_of!(NewStat, st_nlink), 10);
+            assert_eq!(offset_of!(NewStat, st_uid), 12);
+            assert_eq!(offset_of!(NewStat, st_gid), 14);
+            assert_eq!(offset_of!(NewStat, st_rdev), 16);
+            assert_eq!(offset_of!(NewStat, st_size), 20);
+            assert_eq!(offset_of!(NewStat, st_blksize), 24);
+            assert_eq!(offset_of!(NewStat, st_blocks), 28);
+            assert_eq!(offset_of!(NewStat, st_atime), 32);
+            assert_eq!(offset_of!(NewStat, st_atime_nsec), 36);
+            assert_eq!(offset_of!(NewStat, st_mtime), 40);
+            assert_eq!(offset_of!(NewStat, st_mtime_nsec), 44);
+            assert_eq!(offset_of!(NewStat, st_ctime), 48);
+            assert_eq!(offset_of!(NewStat, st_ctime_nsec), 52);
+            assert_eq!(offset_of!(NewStat, __unused4), 56);
+            assert_eq!(offset_of!(NewStat, __unused5), 60);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(size_of::<NewStat>(), 120);
+            assert_eq!(align_of::<NewStat>(), 8);
+            assert_eq!(offset_of!(NewStat, st_ino), 8);
+            assert_eq!(offset_of!(NewStat, st_mode), 16);
+            assert_eq!(offset_of!(NewStat, st_nlink), 18);
+            assert_eq!(offset_of!(NewStat, st_uid), 20);
+            assert_eq!(offset_of!(NewStat, st_gid), 22);
+            assert_eq!(offset_of!(NewStat, st_rdev), 24);
+            assert_eq!(offset_of!(NewStat, st_size), 32);
+            assert_eq!(offset_of!(NewStat, st_blksize), 40);
+            assert_eq!(offset_of!(NewStat, st_blocks), 48);
+            assert_eq!(offset_of!(NewStat, st_atime), 56);
+            assert_eq!(offset_of!(NewStat, st_atime_nsec), 64);
+            assert_eq!(offset_of!(NewStat, st_mtime), 72);
+            assert_eq!(offset_of!(NewStat, st_mtime_nsec), 80);
+            assert_eq!(offset_of!(NewStat, st_ctime), 88);
+            assert_eq!(offset_of!(NewStat, st_ctime_nsec), 96);
+            assert_eq!(offset_of!(NewStat, __unused4), 104);
+            assert_eq!(offset_of!(NewStat, __unused5), 112);
+        }
     }
 
     #[test]
@@ -705,23 +730,42 @@ mod tests {
     }
 
     #[test]
-    fn current_i386_statfs_layout_matches_linux_v7_0_struct_statfs() {
+    fn current_statfs_layout_matches_linux_v7_0_struct_statfs() {
         assert_eq!(size_of::<FsidT>(), 8);
         assert_eq!(align_of::<FsidT>(), 4);
-        assert_eq!(size_of::<Statfs>(), 64);
-        assert_eq!(align_of::<Statfs>(), 4);
         assert_eq!(offset_of!(Statfs, f_type), 0);
-        assert_eq!(offset_of!(Statfs, f_bsize), 4);
-        assert_eq!(offset_of!(Statfs, f_blocks), 8);
-        assert_eq!(offset_of!(Statfs, f_bfree), 12);
-        assert_eq!(offset_of!(Statfs, f_bavail), 16);
-        assert_eq!(offset_of!(Statfs, f_files), 20);
-        assert_eq!(offset_of!(Statfs, f_ffree), 24);
-        assert_eq!(offset_of!(Statfs, f_fsid), 28);
-        assert_eq!(offset_of!(Statfs, f_namelen), 36);
-        assert_eq!(offset_of!(Statfs, f_frsize), 40);
-        assert_eq!(offset_of!(Statfs, f_flags), 44);
-        assert_eq!(offset_of!(Statfs, f_spare), 48);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<Statfs>(), 64);
+            assert_eq!(align_of::<Statfs>(), 4);
+            assert_eq!(offset_of!(Statfs, f_bsize), 4);
+            assert_eq!(offset_of!(Statfs, f_blocks), 8);
+            assert_eq!(offset_of!(Statfs, f_bfree), 12);
+            assert_eq!(offset_of!(Statfs, f_bavail), 16);
+            assert_eq!(offset_of!(Statfs, f_files), 20);
+            assert_eq!(offset_of!(Statfs, f_ffree), 24);
+            assert_eq!(offset_of!(Statfs, f_fsid), 28);
+            assert_eq!(offset_of!(Statfs, f_namelen), 36);
+            assert_eq!(offset_of!(Statfs, f_frsize), 40);
+            assert_eq!(offset_of!(Statfs, f_flags), 44);
+            assert_eq!(offset_of!(Statfs, f_spare), 48);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(size_of::<Statfs>(), 120);
+            assert_eq!(align_of::<Statfs>(), 8);
+            assert_eq!(offset_of!(Statfs, f_bsize), 8);
+            assert_eq!(offset_of!(Statfs, f_blocks), 16);
+            assert_eq!(offset_of!(Statfs, f_bfree), 24);
+            assert_eq!(offset_of!(Statfs, f_bavail), 32);
+            assert_eq!(offset_of!(Statfs, f_files), 40);
+            assert_eq!(offset_of!(Statfs, f_ffree), 48);
+            assert_eq!(offset_of!(Statfs, f_fsid), 56);
+            assert_eq!(offset_of!(Statfs, f_namelen), 64);
+            assert_eq!(offset_of!(Statfs, f_frsize), 72);
+            assert_eq!(offset_of!(Statfs, f_flags), 80);
+            assert_eq!(offset_of!(Statfs, f_spare), 88);
+        }
     }
 
     #[test]
@@ -743,23 +787,44 @@ mod tests {
     }
 
     #[test]
-    fn current_i386_sysinfo_layout_matches_linux_v7_0_struct_sysinfo() {
-        assert_eq!(size_of::<Sysinfo>(), 64);
-        assert_eq!(align_of::<Sysinfo>(), 4);
+    fn current_sysinfo_layout_matches_linux_v7_0_struct_sysinfo() {
         assert_eq!(offset_of!(Sysinfo, uptime), 0);
-        assert_eq!(offset_of!(Sysinfo, loads), 4);
-        assert_eq!(offset_of!(Sysinfo, totalram), 16);
-        assert_eq!(offset_of!(Sysinfo, freeram), 20);
-        assert_eq!(offset_of!(Sysinfo, sharedram), 24);
-        assert_eq!(offset_of!(Sysinfo, bufferram), 28);
-        assert_eq!(offset_of!(Sysinfo, totalswap), 32);
-        assert_eq!(offset_of!(Sysinfo, freeswap), 36);
-        assert_eq!(offset_of!(Sysinfo, procs), 40);
-        assert_eq!(offset_of!(Sysinfo, pad), 42);
-        assert_eq!(offset_of!(Sysinfo, totalhigh), 44);
-        assert_eq!(offset_of!(Sysinfo, freehigh), 48);
-        assert_eq!(offset_of!(Sysinfo, mem_unit), 52);
-        assert_eq!(offset_of!(Sysinfo, _f), 56);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<Sysinfo>(), 64);
+            assert_eq!(align_of::<Sysinfo>(), 4);
+            assert_eq!(offset_of!(Sysinfo, loads), 4);
+            assert_eq!(offset_of!(Sysinfo, totalram), 16);
+            assert_eq!(offset_of!(Sysinfo, freeram), 20);
+            assert_eq!(offset_of!(Sysinfo, sharedram), 24);
+            assert_eq!(offset_of!(Sysinfo, bufferram), 28);
+            assert_eq!(offset_of!(Sysinfo, totalswap), 32);
+            assert_eq!(offset_of!(Sysinfo, freeswap), 36);
+            assert_eq!(offset_of!(Sysinfo, procs), 40);
+            assert_eq!(offset_of!(Sysinfo, pad), 42);
+            assert_eq!(offset_of!(Sysinfo, totalhigh), 44);
+            assert_eq!(offset_of!(Sysinfo, freehigh), 48);
+            assert_eq!(offset_of!(Sysinfo, mem_unit), 52);
+            assert_eq!(offset_of!(Sysinfo, _f), 56);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(size_of::<Sysinfo>(), 112);
+            assert_eq!(align_of::<Sysinfo>(), 8);
+            assert_eq!(offset_of!(Sysinfo, loads), 8);
+            assert_eq!(offset_of!(Sysinfo, totalram), 32);
+            assert_eq!(offset_of!(Sysinfo, freeram), 40);
+            assert_eq!(offset_of!(Sysinfo, sharedram), 48);
+            assert_eq!(offset_of!(Sysinfo, bufferram), 56);
+            assert_eq!(offset_of!(Sysinfo, totalswap), 64);
+            assert_eq!(offset_of!(Sysinfo, freeswap), 72);
+            assert_eq!(offset_of!(Sysinfo, procs), 80);
+            assert_eq!(offset_of!(Sysinfo, pad), 82);
+            assert_eq!(offset_of!(Sysinfo, totalhigh), 88);
+            assert_eq!(offset_of!(Sysinfo, freehigh), 96);
+            assert_eq!(offset_of!(Sysinfo, mem_unit), 104);
+            assert_eq!(offset_of!(Sysinfo, _f), 108);
+        }
     }
 
     #[test]
@@ -774,13 +839,24 @@ mod tests {
     }
 
     #[test]
-    fn current_i386_old_linux_dirent_prefix_layout_matches_linux_v7_0() {
-        assert_eq!(size_of::<OldLinuxDirent>(), 4108);
-        assert_eq!(align_of::<OldLinuxDirent>(), 4);
+    fn current_old_linux_dirent_prefix_layout_matches_linux_v7_0() {
         assert_eq!(offset_of!(OldLinuxDirent, d_ino), 0);
-        assert_eq!(offset_of!(OldLinuxDirent, d_offset), 4);
-        assert_eq!(offset_of!(OldLinuxDirent, d_namlen), 8);
-        assert_eq!(offset_of!(OldLinuxDirent, d_name), 10);
+        #[cfg(target_arch = "x86")]
+        {
+            assert_eq!(size_of::<OldLinuxDirent>(), 4108);
+            assert_eq!(align_of::<OldLinuxDirent>(), 4);
+            assert_eq!(offset_of!(OldLinuxDirent, d_offset), 4);
+            assert_eq!(offset_of!(OldLinuxDirent, d_namlen), 8);
+            assert_eq!(offset_of!(OldLinuxDirent, d_name), 10);
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            assert_eq!(size_of::<OldLinuxDirent>(), 4120);
+            assert_eq!(align_of::<OldLinuxDirent>(), 8);
+            assert_eq!(offset_of!(OldLinuxDirent, d_offset), 8);
+            assert_eq!(offset_of!(OldLinuxDirent, d_namlen), 16);
+            assert_eq!(offset_of!(OldLinuxDirent, d_name), 18);
+        }
     }
 
     #[test]

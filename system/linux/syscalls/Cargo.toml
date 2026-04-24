@@ -10,5 +10,8 @@ readme = "README.md"
 [dependencies]
 celer_system_linux_ctypes.workspace = true
 
+[dev-dependencies]
+libc = "0.2"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }

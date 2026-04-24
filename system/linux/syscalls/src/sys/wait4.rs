@@ -91,14 +91,16 @@ mod tests {
     use std::thread;
     use std::time::Duration;
 
-    use celer_system_linux_ctypes::{Int, Long, Rusage, Timeval};
+    use celer_system_linux_ctypes::{Int, Rusage, Timeval};
 
     use crate::arch::current::Sysno;
+    #[cfg(target_arch = "aarch64")]
+    use crate::sys::test_support::signal as c_signal;
+    #[cfg(target_arch = "x86")]
+    use crate::sys::{SigHandler, sig_handler, sig_handler_from_raw, signal};
     use crate::sys::{
         getpid, kill,
-        test_support::{
-            _exit as exit, fork, pause, signal as c_signal, waitpid,
-        },
+        test_support::{_exit as exit, fork, pause, waitpid},
     };
 
     use super::wait4;
@@ -112,10 +114,22 @@ mod tests {
 
     extern "C" fn handle_sigalrm(_: Int) {}
 
-    type SigHandler = *const ();
+    #[cfg(target_arch = "aarch64")]
+    type SigHandler = libc::sighandler_t;
 
+    #[cfg(target_arch = "aarch64")]
     fn sig_handler(handler: extern "C" fn(Int)) -> SigHandler {
-        handler as SigHandler
+        handler as usize
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    unsafe fn signal(sig: Int, handler: SigHandler) -> isize {
+        unsafe { c_signal(sig, handler) as isize }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    fn sig_handler_from_raw(raw: isize) -> SigHandler {
+        raw as usize
     }
 
     struct RestoreHandler {
@@ -125,7 +139,7 @@ mod tests {
 
     impl Drop for RestoreHandler {
         fn drop(&mut self) {
-            let _ = unsafe { c_signal(self.sig, self.old) };
+            let _ = unsafe { signal(self.sig, self.old) };
         }
     }
 
@@ -342,13 +356,12 @@ mod tests {
         let pid = unsafe { fork() };
         assert!(pid >= 0, "fork failed: {pid}");
         if pid == 0 {
-            let old = unsafe { c_signal(SIGUSR1, sig_handler(handle_sigalrm)) };
-            assert_ne!(
-                old.addr() as Long,
-                -1,
-                "installing SIGUSR1 handler failed"
-            );
-            let _restore = RestoreHandler { sig: SIGUSR1, old };
+            let old = unsafe { signal(SIGUSR1, sig_handler(handle_sigalrm)) };
+            assert_ne!(old, -1, "installing SIGUSR1 handler failed");
+            let _restore = RestoreHandler {
+                sig: SIGUSR1,
+                old: sig_handler_from_raw(old),
+            };
 
             let child = unsafe { fork() };
             assert!(child >= 0, "fork failed: {child}");
