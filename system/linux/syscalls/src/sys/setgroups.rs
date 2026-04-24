@@ -81,7 +81,7 @@ mod tests {
     use crate::{
         arch::current::{Sysno, syscall2},
         sys::{
-            getgid16,
+            getgid::getgid16,
             test_support::{_exit as exit, fork, waitpid},
         },
     };

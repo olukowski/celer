@@ -71,8 +71,9 @@ mod tests {
 
     use celer_system_linux_ctypes::UnsignedInt;
 
-    use crate::sys::test_support::process_global_state_guard;
-    use crate::{arch::current::Sysno, sys::geteuid16};
+    use crate::{
+        arch::current::Sysno, sys::test_support::process_global_state_guard,
+    };
 
     use super::fchdir;
 
@@ -157,7 +158,7 @@ mod tests {
 
     #[test]
     fn test_fchdir_requires_execute_permission() {
-        if geteuid16() == 0 {
+        if unsafe { libc::geteuid() } == 0 {
             return;
         }
 

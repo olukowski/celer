@@ -68,7 +68,8 @@ mod tests {
 
     use super::setregid16;
     use crate::sys::{
-        getegid16, getgid16,
+        getegid::getegid16,
+        getgid::getgid16,
         test_support::{_exit as exit, fork, waitpid},
     };
     fn assert_child_setregid16(

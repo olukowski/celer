@@ -66,7 +66,8 @@ mod tests {
 
     use super::setreuid16;
     use crate::sys::{
-        geteuid16, getuid16,
+        geteuid::geteuid16,
+        getuid::getuid16,
         test_support::{_exit as exit, fork, waitpid},
     };
     fn assert_child_setreuid16(ruid: OldUidT, euid: OldUidT) {
