@@ -162,66 +162,14 @@ pub unsafe fn select(
 #[cfg(all(test, any(target_arch = "x86", target_arch = "x86_64")))]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use std::sync::Mutex;
-    use std::thread;
-    use std::time::Duration;
-
     use celer_system_linux_ctypes::{FdSet, Int, Timeval, UnsignedLong};
 
     use crate::arch::current::Sysno;
-    use crate::sys::{
-        SigHandler, close, exit, fork, getpid, kill, pipe, sig_handler,
-        sig_handler_from_raw, signal, waitpid, write,
-    };
+    use crate::sys::{close, pipe, write};
 
-    use super::{SelectArgs, select};
+    use super::select;
 
-    const EINTR: Int = -(4 as Int);
     const EINVAL: Int = -(22 as Int);
-    const SIGUSR1: Int = 10;
-
-    static SELECT_SIGNAL_LOCK: Mutex<()> = Mutex::new(());
-
-    extern "C" fn handle_sigalrm(_: Int) {}
-
-    struct RestoreHandler {
-        sig: Int,
-        old: SigHandler,
-    }
-
-    impl Drop for RestoreHandler {
-        fn drop(&mut self) {
-            let _ = unsafe { signal(self.sig, self.old) };
-        }
-    }
-
-    fn spawn_signal_sender(target: Int, sig: Int) -> Int {
-        let pid = fork();
-        assert!(pid >= 0, "fork failed: {pid}");
-        if pid == 0 {
-            thread::sleep(Duration::from_millis(100));
-            let rc = kill(target, sig);
-            if rc != 0 {
-                exit(1);
-            }
-            exit(0);
-        }
-
-        pid
-    }
-
-    fn assert_clean_exit(status: Int) {
-        assert_eq!(
-            status & 0x7f,
-            0,
-            "expected normal exit status, got {status}"
-        );
-        assert_eq!(
-            (status >> 8) & 0xff,
-            0,
-            "expected zero exit code, got {status}"
-        );
-    }
 
     fn empty_fd_set() -> FdSet {
         FdSet {
@@ -266,18 +214,6 @@ mod tests {
         #[cfg(target_arch = "x86_64")]
         assert_eq!(core::mem::align_of::<FdSet>(), 8);
         assert_eq!(core::mem::offset_of!(FdSet, fds_bits), 0);
-    }
-
-    #[cfg(target_arch = "x86")]
-    #[test]
-    fn test_select_args_layout() {
-        assert_eq!(core::mem::size_of::<SelectArgs>(), 20);
-        assert_eq!(core::mem::align_of::<SelectArgs>(), 4);
-        assert_eq!(core::mem::offset_of!(SelectArgs, nfds), 0);
-        assert_eq!(core::mem::offset_of!(SelectArgs, readfds), 4);
-        assert_eq!(core::mem::offset_of!(SelectArgs, writefds), 8);
-        assert_eq!(core::mem::offset_of!(SelectArgs, exceptfds), 12);
-        assert_eq!(core::mem::offset_of!(SelectArgs, timeout), 16);
     }
 
     #[test]
@@ -432,6 +368,80 @@ mod tests {
         };
 
         assert_eq!(rc, EINVAL, "expected EINVAL, got {rc}");
+    }
+}
+
+#[cfg(all(test, target_arch = "x86"))]
+#[cfg_attr(coverage_nightly, coverage(off))]
+mod x86_tests {
+    use std::sync::Mutex;
+    use std::thread;
+    use std::time::Duration;
+
+    use celer_system_linux_ctypes::Int;
+
+    use crate::sys::{
+        SigHandler, exit, fork, getpid, kill, sig_handler,
+        sig_handler_from_raw, signal, waitpid,
+    };
+
+    use super::{SelectArgs, select};
+
+    const EINTR: Int = -(4 as Int);
+    const SIGUSR1: Int = 10;
+
+    static SELECT_SIGNAL_LOCK: Mutex<()> = Mutex::new(());
+
+    extern "C" fn handle_sigalrm(_: Int) {}
+
+    struct RestoreHandler {
+        sig: Int,
+        old: SigHandler,
+    }
+
+    impl Drop for RestoreHandler {
+        fn drop(&mut self) {
+            let _ = unsafe { signal(self.sig, self.old) };
+        }
+    }
+
+    fn spawn_signal_sender(target: Int, sig: Int) -> Int {
+        let pid = fork();
+        assert!(pid >= 0, "fork failed: {pid}");
+        if pid == 0 {
+            thread::sleep(Duration::from_millis(100));
+            let rc = kill(target, sig);
+            if rc != 0 {
+                exit(1);
+            }
+            exit(0);
+        }
+
+        pid
+    }
+
+    fn assert_clean_exit(status: Int) {
+        assert_eq!(
+            status & 0x7f,
+            0,
+            "expected normal exit status, got {status}"
+        );
+        assert_eq!(
+            (status >> 8) & 0xff,
+            0,
+            "expected zero exit code, got {status}"
+        );
+    }
+
+    #[test]
+    fn test_select_args_layout() {
+        assert_eq!(core::mem::size_of::<SelectArgs>(), 20);
+        assert_eq!(core::mem::align_of::<SelectArgs>(), 4);
+        assert_eq!(core::mem::offset_of!(SelectArgs, nfds), 0);
+        assert_eq!(core::mem::offset_of!(SelectArgs, readfds), 4);
+        assert_eq!(core::mem::offset_of!(SelectArgs, writefds), 8);
+        assert_eq!(core::mem::offset_of!(SelectArgs, exceptfds), 12);
+        assert_eq!(core::mem::offset_of!(SelectArgs, timeout), 16);
     }
 
     #[test]
