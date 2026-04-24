@@ -15,7 +15,7 @@ use crate::arch::current::{Sysno, syscall3};
 ///   writable memory for `len` bytes for the duration of the syscall.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.96a
 /// - Behavior changes: Linux 1.0 exposes only command types `0..=8`;
 ///   current x86 kernels keep those historical commands and add
 ///   `SIZE_UNREAD` (`9`) and `SIZE_BUFFER` (`10`)
@@ -55,8 +55,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///   type `8` uses an unsupported `len` value.
 /// - `EFAULT`: a read-like command uses a `buf` pointer that is not writable
 ///   for the requested byte count.
-/// - `ERESTARTSYS`: on Linux 1.0, command type `2` was waiting for log data
-///   and a signal interrupted the sleep before data became available.
+/// - `EINTR`: command type `2` was waiting for log data and a signal handler
+///   interrupted the wait without restarting the syscall. On Linux 1.0 this
+///   path uses internal `ERESTARTSYS`; the signal-return path either exposes
+///   `EINTR` to user space or restarts the syscall.
 /// - `ENOMEM`: on current kernels, command types `2`, `3`, and `4` can fail
 ///   while allocating temporary log-copy buffers.
 /// - Current kernels can also return additional policy-dependent errors from
@@ -77,6 +79,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///   [Linux 1.0 sys_syslog](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/printk.c?h=1.0#n55)
 ///
 /// # Historical References
+/// - First appearance:
+///   [Linux 0.96a sys_syslog](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/printk.c?h=0.96a#n27)
+/// - Linux 1.0 signal restart handling:
+///   [kernel/signal.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=1.0#n384)
 /// - Linux 1.0 syscall table:
 ///   [kernel/sched.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n140)
 pub unsafe fn syslog(type_: Int, buf: *mut Char, len: Int) -> Int {

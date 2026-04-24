@@ -16,7 +16,7 @@ use crate::arch::current::{Sysno, syscall3};
 ///   pointer.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.96a
 /// - Behavior changes: current x86 kernels still expose syscall slot `89`
 ///   through the legacy `old_readdir` ABI, but successful calls return `1`
 ///   per emitted entry and write a variable-length record instead of the
@@ -75,8 +75,10 @@ use crate::arch::current::{Sysno, syscall3};
 ///   [include/linux/dirent.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/dirent.h?h=1.0#n6)
 /// - Linux 1.0 syscall table:
 ///   [include/linux/unistd.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n98)
-/// - First appearance in a stable release:
+/// - First stable syscall table:
 ///   [kernel/sched.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n137)
+/// - First appearance:
+///   [Linux 0.96a sys_readdir](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/read_write.c?h=0.96a#n21)
 /// - Current x86 syscall table:
 ///   [arch/x86/entry/syscalls/syscall_32.tbl](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.19#n104)
 /// - Current x86 ABI shape:

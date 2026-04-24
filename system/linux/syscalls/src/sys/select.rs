@@ -83,8 +83,10 @@ struct SelectArgs {
 /// - `EINVAL`: `nfds` is negative.
 /// - `EINVAL`: on current kernels, `timeout` contains invalid field values.
 /// - `ENOMEM`: Kernel allocation of the temporary select wait table failed.
-/// - `EINTR`: on current kernels, no descriptor became ready before return
-///   and an unblocked signal interrupted the wait.
+/// - `EINTR`: no descriptor became ready before return and an unblocked
+///   signal handler interrupted the wait. On Linux 1.0 this path uses
+///   internal `ERESTARTNOHAND`; the signal-return path either exposes `EINTR`
+///   to user space or restarts the syscall when no handler runs.
 ///
 /// # References
 /// - Stable entry:
@@ -103,6 +105,8 @@ struct SelectArgs {
 ///   [Linux 0.12 sys_select](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/select.c?h=0.12#n216)
 /// - Linux 1.0 syscall table:
 ///   [include/linux/unistd.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n91)
+/// - Linux 1.0 signal restart handling:
+///   [kernel/signal.c](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=1.0#n384)
 /// - Linux 1.0 `fd_set` layout:
 ///   [include/linux/types.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/types.h?h=1.0#n84)
 /// - Current x86 `fd_set` layout:

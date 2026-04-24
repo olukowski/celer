@@ -17,7 +17,7 @@ use crate::arch::{
 ///   allocations that the kernel may mutate in ways Rust cannot observe.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.99.8
 /// - Behavior changes: Linux 1.0 zeroed and returned the original 64-byte
 ///   `struct sysinfo` layout; current kernels still use syscall number `116`
 ///   on i386, but write the later 64-byte ABI tail with `totalhigh`,
@@ -46,6 +46,7 @@ use crate::arch::{
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n2959)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n2959)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=1.0#n17)
+/// - First appearance: [Linux 0.99.8](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=0.99.8#n17)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/kernel.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/kernel.h?h=1.0#n65)
 /// - Current ABI layout:
@@ -72,7 +73,7 @@ pub unsafe fn sysinfo(info: *mut Sysinfo) -> Int {
 ///   through that pointer.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.99.8
 /// - Behavior changes: current kernels still use syscall number `116` on i386,
 ///   but write the later 64-byte ABI tail with `totalhigh`, `freehigh`, and
 ///   `mem_unit` after `procs`.
@@ -99,6 +100,8 @@ pub unsafe fn sysinfo(info: *mut Sysinfo) -> Int {
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n125)
 /// - Linux 1.0 implementation:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=1.0#n17)
+/// - First appearance:
+///   [Linux 0.99.8](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/info.c?h=0.99.8#n17)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/kernel.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/kernel.h?h=1.0#n65)
 pub unsafe fn sysinfo_1_0(info: *mut Linux10Sysinfo) -> Int {

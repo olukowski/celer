@@ -5,7 +5,7 @@ use crate::arch::current::{Sysno, syscall3};
 /// Set the nice value for processes selected by `which` and `who`.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
+/// - Introduced: Linux 0.96a
 /// - Behavior changes: Linux 1.0 converts `niceval` to an internal scheduler
 ///   priority with `PZERO - niceval` and floors the result at `1`; current
 ///   kernels clamp `niceval` to the standard nice range `[-20, 19]`, use
@@ -46,6 +46,7 @@ use crate::arch::current::{Sysno, syscall3};
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n259)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n259)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n52)
+/// - First appearance: [Linux 0.96a](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.96a#n54)
 pub fn setpriority(which: Int, who: Int, niceval: Int) -> Int {
     // SAFETY: `setpriority` takes only scalar arguments and has no caller-side
     // memory-safety precondition.

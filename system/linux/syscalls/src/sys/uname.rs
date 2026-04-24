@@ -12,10 +12,10 @@ use crate::arch::current::{Sysno, syscall1};
 ///   allocations that the kernel may mutate through this output buffer.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
-/// - Behavior changes: Linux 1.0's `sys_olduname` entry uses the legacy
-///   `struct oldold_utsname` ABI; newer kernels keep the same ABI under the
-///   `oldolduname` syscall name.
+/// - Introduced: Linux 0.10, as syscall number `59` named `uname`
+/// - Behavior changes: Linux 1.0's `sys_olduname` entry uses the same legacy
+///   45-byte ABI under the `oldolduname` syscall name; newer kernels keep
+///   that `oldolduname` ABI.
 /// - Availability: always present on supported Linux kernels
 ///
 /// # Required Privileges
@@ -37,6 +37,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1392)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1392)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n625)
+/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n216)
 pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
     // SAFETY: guaranteed by caller.
     (unsafe { syscall1(Sysno::Oldolduname, name.addr() as isize) }) as Int
@@ -52,10 +53,11 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
 ///   allocations that the kernel may mutate through this output buffer.
 ///
 /// # Kernel Support
-/// - Introduced: Linux 1.0
-/// - Behavior changes: Linux 1.0 copied the fixed `struct old_utsname`
-///   directly; current kernels may overwrite `release` for `UNAME26` tasks and
-///   `machine` for `PER_LINUX32` tasks after the main copy.
+/// - Introduced: Linux 0.99.8, as syscall number `109` named `uname`
+/// - Behavior changes: Linux 1.0 keeps the same fixed five-field 65-byte
+///   string ABI under the `olduname` syscall name. Current kernels may
+///   overwrite `release` for `UNAME26` tasks and `machine` for `PER_LINUX32`
+///   tasks after the main copy.
 /// - Availability: always present on supported Linux kernels
 ///
 /// # Required Privileges
@@ -77,6 +79,7 @@ pub unsafe fn oldolduname(name: *mut OldOldUtsname) -> Int {
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sys.c?h=v6.19#n1372)
 /// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sys.c?h=v6.18.18#n1372)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n604)
+/// - First appearance: [Linux 0.99.8](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.99.8#n554)
 /// - Linux 1.0 ABI layout:
 ///   [include/linux/utsname.h](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/utsname.h?h=1.0#n16)
 pub unsafe fn olduname(name: *mut OldUtsname) -> Int {
