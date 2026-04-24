@@ -26,7 +26,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/nice.2.html)
 /// - Stable: [v6.19](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/sched/syscalls.c?h=v6.19#n132)
-/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/syscalls.c?h=v6.18.18#n132)
+/// - LTS: [v6.18.18](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/syscalls.c?h=v6.18.18#n153)
 ///
 /// # Historical References
 /// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=0.10#n382)

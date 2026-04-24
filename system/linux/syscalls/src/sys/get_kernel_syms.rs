@@ -50,7 +50,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// - Linux 1.0 syscall table:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sched.c?h=1.0#n145)
 /// - Linux 1.0 implementation:
-///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n132)
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n135)
 /// - Linux 1.0 ABI layout:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/module.h?h=1.0#n36)
 /// - Linux 1.0 user-range validation helper:

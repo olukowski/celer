@@ -56,9 +56,9 @@ pub const SIG_SETMASK: Int = 2;
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/sigprocmask.2.html)
 /// - Current mainline:
-///   [v7.0-rc7](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/signal.c?h=v7.0-rc7#n4571)
+///   [v7.0-rc7](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/signal.c?h=v7.0-rc7#n4579)
 /// - Current compat note:
-///   [v7.0-rc7](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/compat.c?h=v7.0-rc7#n27)
+///   [v7.0-rc7](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/compat.c?h=v7.0-rc7#n40)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=1.0#n50)
 ///
 /// # Historical References

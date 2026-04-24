@@ -149,7 +149,7 @@ pub unsafe fn init_module(
 /// - Linux 1.0 implementation:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/module.c?h=1.0#n70)
 /// - Linux 1.0 `struct mod_routines`:
-///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/module.h?h=1.0#n25)
+///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/module.h?h=1.0#n30)
 /// - Linux 1.0 syscall table:
 ///   [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/include/linux/unistd.h?h=1.0#n137)
 pub unsafe fn init_module_1_0(

@@ -39,7 +39,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// # References
 /// - `man` [page](https://man7.org/linux/man-pages/man2/sigpending.2.html)
 /// - Current mainline:
-///   [v7.0-rc7](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/signal.c?h=v7.0-rc7#n4543)
+///   [v7.0-rc7](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/signal.c?h=v7.0-rc7#n4540)
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/signal.c?h=1.0#n96)
 ///
 /// # Historical References

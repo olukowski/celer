@@ -30,7 +30,7 @@ use crate::arch::current::{Sysno, syscall1};
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=1.0#n465)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n78)
+/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/fs/open.c?h=0.10#n192)
 pub fn close(fd: Int) -> Int {
     // SAFETY: close is always safe to call.
     unsafe { syscall1(Sysno::Close, fd as isize) as Int }

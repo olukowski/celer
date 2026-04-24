@@ -38,7 +38,7 @@ use crate::arch::current::{Sysno, syscall0};
 /// - First stable: [Linux 1.0](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=1.0#n527)
 ///
 /// # Historical References
-/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n204)
+/// - First appearance: [Linux 0.10](https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/kernel/sys.c?h=0.10#n206)
 pub fn setsid() -> PidT {
     // SAFETY: `setsid` takes no arguments and has no caller-visible
     // memory-safety precondition.
