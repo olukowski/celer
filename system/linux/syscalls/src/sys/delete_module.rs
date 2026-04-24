@@ -9,7 +9,7 @@ use crate::arch::current::{Sysno, syscall2};
 /// number 129 as `delete_module` and add `flags`, which Linux 1.0 ignores.
 ///
 /// # Safety
-/// - The pathname pointer must be valid to read a NUL-terminated string for
+/// - The module-name pointer must be valid to read a NUL-terminated string for
 ///   the duration of the syscall.
 ///
 /// # Kernel Support
