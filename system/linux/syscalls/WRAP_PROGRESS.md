@@ -114,7 +114,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `delete_module`
 - [x] `dup`
 - [x] `dup2` - x86, x86_64
-- [ ] `execve`
+- [x] `execve`
 - [ ] `exit`
 - [ ] `fchdir`
 - [ ] `fchmod`

@@ -2,6 +2,7 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Errno {
     Eacces,
+    Eagain,
     E2big,
     Ebadf,
     Ebusy,
@@ -10,8 +11,10 @@ pub enum Errno {
     Eexist,
     Einval,
     Eintr,
+    Eloop,
     Enodev,
     Enoent,
+    Enoexec,
     Enomem,
     Enosys,
     Enotdir,
@@ -26,6 +29,7 @@ impl Errno {
     pub const fn from_raw(raw: u16) -> Self {
         match raw {
             13 => Self::Eacces,
+            11 => Self::Eagain,
             7 => Self::E2big,
             9 => Self::Ebadf,
             16 => Self::Ebusy,
@@ -34,14 +38,15 @@ impl Errno {
             17 => Self::Eexist,
             22 => Self::Einval,
             4 => Self::Eintr,
+            40 => Self::Eloop,
             19 => Self::Enodev,
             2 => Self::Enoent,
+            8 => Self::Enoexec,
             12 => Self::Enomem,
             38 => Self::Enosys,
             20 => Self::Enotdir,
             1 => Self::Eperm,
             30 => Self::Erofs,
-            11 => Self::Ewouldblock,
             other => Self::Raw(other),
         }
     }
@@ -69,6 +74,7 @@ mod tests {
     #[test]
     fn test_from_raw_named_values() {
         assert_eq!(Errno::from_raw(13), Errno::Eacces);
+        assert_eq!(Errno::from_raw(11), Errno::Eagain);
         assert_eq!(Errno::from_raw(7), Errno::E2big);
         assert_eq!(Errno::from_raw(9), Errno::Ebadf);
         assert_eq!(Errno::from_raw(16), Errno::Ebusy);
@@ -77,14 +83,15 @@ mod tests {
         assert_eq!(Errno::from_raw(17), Errno::Eexist);
         assert_eq!(Errno::from_raw(22), Errno::Einval);
         assert_eq!(Errno::from_raw(4), Errno::Eintr);
+        assert_eq!(Errno::from_raw(40), Errno::Eloop);
         assert_eq!(Errno::from_raw(19), Errno::Enodev);
         assert_eq!(Errno::from_raw(2), Errno::Enoent);
+        assert_eq!(Errno::from_raw(8), Errno::Enoexec);
         assert_eq!(Errno::from_raw(12), Errno::Enomem);
         assert_eq!(Errno::from_raw(38), Errno::Enosys);
         assert_eq!(Errno::from_raw(20), Errno::Enotdir);
         assert_eq!(Errno::from_raw(1), Errno::Eperm);
         assert_eq!(Errno::from_raw(30), Errno::Erofs);
-        assert_eq!(Errno::from_raw(11), Errno::Ewouldblock);
         assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));
     }
 

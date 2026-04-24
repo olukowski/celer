@@ -37,7 +37,7 @@ impl DeleteModuleError {
             Errno::Enoent => Self::Enoent,
             Errno::Efault => Self::Efault,
             Errno::Eintr => Self::Eintr,
-            Errno::Ewouldblock => Self::Ewouldblock,
+            Errno::Eagain | Errno::Ewouldblock => Self::Ewouldblock,
             Errno::Ebusy => Self::Ebusy,
             Errno::Enosys => Self::Enosys,
             errno => Self::Other(errno),
@@ -144,6 +144,10 @@ mod tests {
         assert_eq!(
             DeleteModuleError::from_errno(Errno::Eintr),
             DeleteModuleError::Eintr
+        );
+        assert_eq!(
+            DeleteModuleError::from_errno(Errno::Eagain),
+            DeleteModuleError::Ewouldblock
         );
         assert_eq!(
             DeleteModuleError::from_errno(Errno::Ewouldblock),

@@ -31,6 +31,7 @@ mod dup;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod dup2;
 mod errno;
+mod execve;
 mod helpers;
 pub mod sys;
 
@@ -53,6 +54,7 @@ pub use dup::{DupError, dup};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use dup2::{Dup2Error, dup2};
 pub use errno::Errno;
+pub use execve::{ExecveError, execve};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
