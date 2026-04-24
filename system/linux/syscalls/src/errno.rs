@@ -2,6 +2,7 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Errno {
     Eacces,
+    Ebadf,
     Efault,
     Eexist,
     Einval,
@@ -20,6 +21,7 @@ impl Errno {
     pub const fn from_raw(raw: u16) -> Self {
         match raw {
             13 => Self::Eacces,
+            9 => Self::Ebadf,
             14 => Self::Efault,
             17 => Self::Eexist,
             22 => Self::Einval,
