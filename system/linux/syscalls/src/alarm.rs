@@ -6,6 +6,8 @@ use crate::sys;
 ///
 /// On success, returns the whole seconds remaining on a previously armed alarm,
 /// or `0` when no alarm was pending.
+///
+/// See [`sys::alarm`] for kernel behavior and source references.
 pub fn alarm(seconds: UnsignedInt) -> UnsignedInt {
     let ret = sys::alarm(seconds);
 

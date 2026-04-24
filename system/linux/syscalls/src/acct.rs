@@ -7,7 +7,10 @@ use crate::sys;
 /// Errors returned by [`acct`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum AcctError {
+    /// `EPERM`.
     Eperm,
+    /// Another errno returned by delegated pathname, file-opening, or
+    /// accounting-file validation work.
     Other(Errno),
 }
 
@@ -22,13 +25,19 @@ impl AcctError {
 
 /// Enable or disable process accounting through the historical `acct` slot.
 ///
+/// This safe wrapper takes `None` for a null raw pathname and `Some(&CStr)` for
+/// a NUL-terminated accounting-file pathname.
+///
 /// Passing `None` disables accounting for the current PID namespace.
 /// Passing `Some(path)` enables accounting on the named file.
 ///
+/// See [`sys::acct`] for kernel behavior, reachable errors, and source
+/// references.
+///
 /// # Errors
-/// - `EPERM`: the caller lacks `CAP_SYS_PACCT`.
-/// - `Other(..)`: pathname resolution, file opening, or accounting-file
-///   validation returned a delegated errno.
+/// - [`AcctError::Eperm`]: the permission check failed.
+/// - [`AcctError::Other`]: delegated pathname, file-opening, or
+///   accounting-file validation error.
 pub fn acct(name: Option<&CStr>) -> Result<(), AcctError> {
     // SAFETY: `CStr` guarantees a valid, NUL-terminated string for the
     // duration of the syscall, and `None` maps to a null pointer.

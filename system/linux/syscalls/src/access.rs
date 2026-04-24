@@ -9,8 +9,12 @@ use crate::sys;
 /// Errors returned by [`access`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum AccessError {
+    /// `EINVAL`.
     Einval,
+    /// `ENOMEM`.
     Enomem,
+    /// Another errno returned by delegated pathname, permission, or filesystem
+    /// work.
     Other(Errno),
 }
 
@@ -26,13 +30,19 @@ impl AccessError {
 
 /// Check whether the calling process can access a file by pathname.
 ///
+/// This safe wrapper takes a NUL-terminated [`CStr`] pathname and maps the raw
+/// syscall return value into `Result<(), AccessError>`.
+///
 /// On success, returns `Ok(())` when the requested access is permitted.
 ///
+/// See [`sys::access`] for kernel behavior, reachable errors, and source
+/// references.
+///
 /// # Errors
-/// - `EINVAL`: `mode` contains unsupported bits.
-/// - `ENOMEM`: temporary override credential allocation failed.
-/// - `Other(..)`: pathname resolution, inode permissions, or filesystem-specific
-///   checks returned a delegated errno.
+/// - [`AccessError::Einval`]: `mode` contains unsupported bits.
+/// - [`AccessError::Enomem`]: temporary credential allocation failed.
+/// - [`AccessError::Other`]: delegated pathname, permission, or filesystem
+///   error.
 pub fn access(pathname: &CStr, mode: Int) -> Result<(), AccessError> {
     // SAFETY: the `CStr` argument guarantees a valid, NUL-terminated
     // pathname pointer for the duration of the call.

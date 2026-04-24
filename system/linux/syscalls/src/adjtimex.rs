@@ -7,10 +7,15 @@ use crate::sys;
 /// Errors returned by [`adjtimex`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum AdjtimexError {
+    /// `EFAULT`.
     Efault,
+    /// `EINVAL`.
     Einval,
+    /// `EPERM`.
     Eperm,
+    /// `ENODEV`.
     Enodev,
+    /// Another errno returned by delegated kernel work.
     Other(Errno),
 }
 
@@ -28,14 +33,22 @@ impl AdjtimexError {
 
 /// Read or adjust kernel clock discipline parameters through `struct timex`.
 ///
+/// This safe wrapper takes a mutable [`Timex`] reference and maps the raw
+/// syscall return value into `Result<Int, AdjtimexError>`.
+///
 /// On success, returns the kernel's time-state code and leaves the updated
 /// `timex` contents in `txc`.
 ///
+/// See [`sys::adjtimex`] for kernel behavior, reachable errors, and source
+/// references.
+///
 /// # Errors
-/// - `EFAULT`: the kernel could not copy the `timex` contents in or out.
-/// - `EINVAL`: the supplied mode bits or parameter ranges are invalid.
-/// - `EPERM`: the caller lacks permission to perform the requested update.
-/// - `ENODEV`: the core clock is not valid.
+/// - [`AdjtimexError::Efault`]: the kernel could not copy the `timex`
+///   contents in or out.
+/// - [`AdjtimexError::Einval`]: mode bits or parameter ranges were invalid.
+/// - [`AdjtimexError::Eperm`]: the permission check failed.
+/// - [`AdjtimexError::Enodev`]: the core clock was not valid.
+/// - [`AdjtimexError::Other`]: another errno.
 pub fn adjtimex(txc: &mut Timex) -> Result<Int, AdjtimexError> {
     // SAFETY: `&mut Timex` guarantees a valid, writable user buffer for the
     // duration of the syscall call site.

@@ -79,6 +79,21 @@ A checked syscall means:
   set is source-verified to be closed;
 - tests cover success and at least one practical error path when feasible.
 
+## Documentation
+
+Wrapped syscall docs should document wrapper semantics, not kernel behavior.
+Kernel support, historical notes, required privileges, detailed behavior,
+reachable error analysis, and source references belong in `sys::*`.
+
+Each wrapped syscall should document:
+
+- the Rust argument conversions it provides;
+- the `Ok(...)` value when it is not obvious;
+- the syscall-specific error variants;
+- any remaining caller-visible safety precondition;
+- a link to the raw `sys::*` wrapper for kernel behavior, reachable errors,
+  and source references.
+
 ## Helpers
 
 Shared conversion helpers should live in a private `helpers` module.
