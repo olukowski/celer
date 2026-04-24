@@ -2,6 +2,7 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Errno {
     Eacces,
+    E2big,
     Ebadf,
     Efault,
     Eexist,
@@ -10,6 +11,7 @@ pub enum Errno {
     Enodev,
     Enoent,
     Enomem,
+    Enosys,
     Enotdir,
     Eperm,
     Erofs,
@@ -21,6 +23,7 @@ impl Errno {
     pub const fn from_raw(raw: u16) -> Self {
         match raw {
             13 => Self::Eacces,
+            7 => Self::E2big,
             9 => Self::Ebadf,
             14 => Self::Efault,
             17 => Self::Eexist,
@@ -29,6 +32,7 @@ impl Errno {
             19 => Self::Enodev,
             2 => Self::Enoent,
             12 => Self::Enomem,
+            38 => Self::Enosys,
             20 => Self::Enotdir,
             1 => Self::Eperm,
             30 => Self::Erofs,

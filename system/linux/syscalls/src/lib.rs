@@ -24,6 +24,8 @@ mod chroot;
 mod close;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod creat;
+#[cfg(target_arch = "x86")]
+mod create_module;
 mod errno;
 mod helpers;
 pub mod sys;
@@ -43,3 +45,9 @@ pub use close::{CloseError, close};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use creat::{CreatError, creat};
 pub use errno::Errno;
+
+/// Wrapped historical Linux 1.0 syscall ABIs.
+#[cfg(target_arch = "x86")]
+pub mod linux_1_0 {
+    pub use super::create_module::{CreateModuleError, create_module};
+}
