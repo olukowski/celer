@@ -198,7 +198,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `socketcall` - x86
 - [x] `ssetmask` - x86
 - [x] `stat` - x86, x86_64
-- [ ] `statfs`
+- [x] `statfs`
 - [ ] `stime` - x86
 - [ ] `swapoff`
 - [ ] `swapon`

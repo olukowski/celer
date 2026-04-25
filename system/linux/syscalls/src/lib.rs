@@ -157,6 +157,7 @@ mod socketcall;
 mod ssetmask;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod stat;
+mod statfs;
 pub mod sys;
 mod uname;
 
@@ -320,6 +321,7 @@ pub use stat::OldstatError;
 pub use stat::oldstat;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use stat::{StatError, stat};
+pub use statfs::{StatfsError, statfs};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
@@ -336,4 +338,5 @@ pub mod linux_1_0 {
     pub use super::newlstat::{NewlstatError, newlstat_1_0 as newlstat};
     pub use super::setrlimit::{SetrlimitError, setrlimit_1_0 as setrlimit};
     pub use super::stat::{StatError, stat_1_0 as stat};
+    pub use super::statfs::{StatfsError, statfs_1_0 as statfs};
 }
