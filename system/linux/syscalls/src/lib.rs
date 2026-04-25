@@ -87,6 +87,8 @@ mod mkdir;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod mknod;
 mod mmap;
+#[cfg(target_arch = "x86")]
+mod modify_ldt;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -166,6 +168,8 @@ pub use mkdir::{MkdirError, mkdir};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use mknod::{MknodError, mknod};
 pub use mmap::{MmapError, mmap};
+#[cfg(target_arch = "x86")]
+pub use modify_ldt::{ModifyLdtError, modify_ldt};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
