@@ -158,7 +158,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `newfstat`
 - [x] `newlstat` - x86, x86_64
 - [x] `newuname`
-- [ ] `nice` - x86
+- [x] `nice` - x86
 - [ ] `oldfstat` - x86
 - [ ] `oldlstat` - x86
 - [ ] `oldolduname` - x86

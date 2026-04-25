@@ -95,6 +95,8 @@ mod munmap;
 mod newfstat;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod newlstat;
+#[cfg(target_arch = "x86")]
+mod nice;
 
 mod uname;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -182,6 +184,8 @@ pub use munmap::{MunmapError, munmap};
 pub use newfstat::{NewfstatError, newfstat};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use newlstat::{NewlstatError, newlstat};
+#[cfg(target_arch = "x86")]
+pub use nice::{NiceError, nice};
 pub use uname::{NewunameError, newuname};
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
