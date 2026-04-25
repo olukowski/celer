@@ -100,6 +100,8 @@ mod newfstat;
 mod newlstat;
 #[cfg(target_arch = "x86")]
 mod nice;
+#[cfg(target_arch = "x86")]
+mod stat;
 pub mod sys;
 mod uname;
 
@@ -193,6 +195,8 @@ pub use newfstat::{NewfstatError, newfstat};
 pub use newlstat::{NewlstatError, newlstat};
 #[cfg(target_arch = "x86")]
 pub use nice::{NiceError, nice};
+#[cfg(target_arch = "x86")]
+pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, oldolduname};
