@@ -168,6 +168,28 @@ mod tests {
     }
 
     #[test]
+    fn test_fcntl_getown_returns_nonnegative_owner() {
+        let path = temp_path();
+        let file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .read(true)
+            .write(true)
+            .open(&path)
+            .unwrap();
+
+        let fd = file.into_raw_fd();
+
+        // SAFETY: `F_SETOWN` and `F_GETOWN` treat `arg` as a scalar.
+        assert_eq!(unsafe { fcntl(fd, F_SETOWN, 0) }, Ok(0));
+        // SAFETY: `F_GETOWN` treats `arg` as ignored scalar input.
+        assert_eq!(unsafe { fcntl(fd, F_GETOWN, 0) }, Ok(0));
+
+        assert_eq!(close(fd), Ok(()));
+        fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
     fn test_fcntl_getown_reports_negative_process_group_ambiguously() {
         let path = temp_path();
         let file = OpenOptions::new()
