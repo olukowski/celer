@@ -167,7 +167,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `open` - x86, x86_64
 - [x] `pause` - x86, x86_64
 - [x] `pipe` - x86, x86_64
-- [ ] `ptrace`
+- [x] `ptrace`
 - [ ] `read`
 - [ ] `readdir` - x86
 - [ ] `readlink` - x86, x86_64
