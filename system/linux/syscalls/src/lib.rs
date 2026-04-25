@@ -245,7 +245,7 @@ pub use getppid::getppid;
 pub use getpriority::{GetpriorityError, getpriority};
 pub use getrlimit::{GetrlimitError, getrlimit};
 pub use getrusage::{GetrusageError, getrusage};
-pub use gettimeofday::{GettimeofdayError, gettimeofday};
+pub use gettimeofday::gettimeofday;
 #[cfg(target_arch = "x86")]
 pub use getuid::getuid16;
 #[cfg(target_arch = "x86")]
@@ -329,7 +329,7 @@ pub use signal::{
     SIG_DFL, SIG_IGN, SigHandler, SignalError, sig_handler, signal,
 };
 #[cfg(target_arch = "x86")]
-pub use sigpending::{SigpendingError, sigpending};
+pub use sigpending::sigpending;
 #[cfg(target_arch = "x86")]
 pub use sigprocmask::{
     SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK, SigprocmaskError, sigprocmask,
@@ -361,7 +361,7 @@ pub use swapon::{SwaponError, swapon};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use symlink::{SymlinkError, symlink};
 pub use sync::sync;
-pub use sysinfo::{SysinfoError, sysinfo};
+pub use sysinfo::sysinfo;
 pub use syslog::{SyslogError, syslog};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use time::time;
@@ -369,9 +369,9 @@ pub use times::times;
 pub use truncate::{TruncateError, truncate};
 pub use umask::umask;
 pub use umount::{UmountError, umount};
-pub use uname::{NewunameError, newuname};
+pub use uname::newuname;
 #[cfg(target_arch = "x86")]
-pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
+pub use uname::{oldolduname, olduname};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use unlink::{UnlinkError, unlink};
 #[cfg(target_arch = "x86")]
@@ -405,6 +405,6 @@ pub mod linux_1_0 {
     pub use super::setup::{SetupError, setup};
     pub use super::stat::{StatError, stat_1_0 as stat};
     pub use super::statfs::{StatfsError, statfs_1_0 as statfs};
-    pub use super::sysinfo::{SysinfoError, sysinfo_1_0 as sysinfo};
+    pub use super::sysinfo::sysinfo_1_0 as sysinfo;
     pub use super::truncate::{TruncateError, truncate_1_0 as truncate};
 }
