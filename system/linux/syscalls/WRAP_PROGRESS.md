@@ -170,7 +170,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `ptrace`
 - [x] `read`
 - [x] `readdir` - x86
-- [ ] `readlink` - x86, x86_64
+- [x] `readlink` - x86, x86_64
 - [ ] `reboot`
 - [ ] `rename` - x86, x86_64
 - [ ] `rmdir` - x86, x86_64
