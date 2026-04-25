@@ -84,6 +84,8 @@ mod lchown;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod link;
 mod lseek;
+#[cfg(target_arch = "x86")]
+mod lstat;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod mkdir;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -91,7 +93,6 @@ mod mknod;
 mod mmap;
 #[cfg(target_arch = "x86")]
 mod modify_ldt;
-pub mod sys;
 mod mount;
 mod munmap;
 mod newfstat;
@@ -99,8 +100,9 @@ mod newfstat;
 mod newlstat;
 #[cfg(target_arch = "x86")]
 mod nice;
-
+pub mod sys;
 mod uname;
+
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::{AccessError, access};
 pub use acct::{AcctError, acct};
@@ -175,6 +177,8 @@ pub use lchown::{Lchown16Error, lchown16};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use link::{LinkError, link};
 pub use lseek::{LseekError, lseek};
+#[cfg(target_arch = "x86")]
+pub use lstat::{OldlstatError, oldlstat};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use mkdir::{MkdirError, mkdir};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -182,7 +186,6 @@ pub use mknod::{MknodError, mknod};
 pub use mmap::{MmapError, mmap};
 #[cfg(target_arch = "x86")]
 pub use modify_ldt::{ModifyLdtError, modify_ldt};
-
 pub use mount::{MountError, mount};
 pub use munmap::{MunmapError, munmap};
 pub use newfstat::{NewfstatError, newfstat};
@@ -191,6 +194,7 @@ pub use newlstat::{NewlstatError, newlstat};
 #[cfg(target_arch = "x86")]
 pub use nice::{NiceError, nice};
 pub use uname::{NewunameError, newuname};
+
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
