@@ -146,7 +146,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `iopl` - x86
 - [x] `ipc` - x86
 - [x] `kill`
-- [ ] `lchown16` - x86
+- [x] `lchown16` - x86
 - [ ] `link` - x86, x86_64
 - [ ] `lseek`
 - [ ] `mknod` - x86, x86_64
