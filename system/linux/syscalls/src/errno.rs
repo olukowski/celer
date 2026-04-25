@@ -10,6 +10,7 @@ pub enum Errno {
     Emfile,
     Efault,
     Eexist,
+    Exdev,
     Einval,
     Eintr,
     Eio,
@@ -43,6 +44,7 @@ impl Errno {
             24 => Self::Emfile,
             14 => Self::Efault,
             17 => Self::Eexist,
+            18 => Self::Exdev,
             22 => Self::Einval,
             4 => Self::Eintr,
             5 => Self::Eio,
@@ -94,6 +96,7 @@ mod tests {
         assert_eq!(Errno::from_raw(24), Errno::Emfile);
         assert_eq!(Errno::from_raw(14), Errno::Efault);
         assert_eq!(Errno::from_raw(17), Errno::Eexist);
+        assert_eq!(Errno::from_raw(18), Errno::Exdev);
         assert_eq!(Errno::from_raw(22), Errno::Einval);
         assert_eq!(Errno::from_raw(4), Errno::Eintr);
         assert_eq!(Errno::from_raw(5), Errno::Eio);

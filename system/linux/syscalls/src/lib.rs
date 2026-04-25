@@ -79,6 +79,8 @@ mod ipc;
 mod kill;
 #[cfg(target_arch = "x86")]
 mod lchown;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod link;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -150,6 +152,8 @@ pub use ipc::{
 pub use kill::{KillError, kill};
 #[cfg(target_arch = "x86")]
 pub use lchown::{Lchown16Error, lchown16};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use link::{LinkError, link};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
