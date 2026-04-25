@@ -184,7 +184,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `setpriority`
 - [x] `setregid16` - x86
 - [x] `setreuid16` - x86
-- [ ] `setrlimit`
+- [x] `setrlimit`
 - [ ] `setsid`
 - [ ] `settimeofday`
 - [ ] `setuid16` - x86

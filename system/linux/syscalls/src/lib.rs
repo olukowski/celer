@@ -132,6 +132,7 @@ mod setpriority;
 mod setregid;
 #[cfg(target_arch = "x86")]
 mod setreuid;
+mod setrlimit;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -259,6 +260,7 @@ pub use setpriority::{SetpriorityError, setpriority};
 pub use setregid::{Setregid16Error, setregid16};
 #[cfg(target_arch = "x86")]
 pub use setreuid::{Setreuid16Error, setreuid16};
+pub use setrlimit::{SetrlimitError, setrlimit};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
@@ -275,4 +277,5 @@ pub mod linux_1_0 {
     };
     pub use super::newfstat::{NewfstatError, newfstat_1_0 as newfstat};
     pub use super::newlstat::{NewlstatError, newlstat_1_0 as newlstat};
+    pub use super::setrlimit::{SetrlimitError, setrlimit_1_0 as setrlimit};
 }
