@@ -33,6 +33,7 @@ impl SetupError {
 ///   guard rejected a repeated call.
 /// - [`SetupError::Other`]: any other errno-shaped raw return.
 #[cfg(target_arch = "x86")]
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn setup(bios: *mut Void) -> Result<(), SetupError> {
     let ret = sys::linux_1_0::setup(bios);
     unit_from_ret(ret as isize, SetupError::from_errno)

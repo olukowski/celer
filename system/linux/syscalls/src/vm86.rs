@@ -48,6 +48,7 @@ impl Vm86Error {
 /// - [`Vm86Error::Enosys`]: the running kernel was built without vm86 support.
 /// - [`Vm86Error::Other`]: any other errno reported by the raw ABI.
 #[cfg(target_arch = "x86")]
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub unsafe fn vm86(v86: &mut Vm86Struct) -> Result<(), Vm86Error> {
     let ret = unsafe { sys::vm86(v86) };
     unit_from_ret(ret as isize, Vm86Error::from_errno)
