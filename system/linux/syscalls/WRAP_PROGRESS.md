@@ -153,7 +153,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `mkdir` - x86, x86_64
 - [x] `mmap`
 - [x] `modify_ldt` - x86
-- [ ] `mount`
+- [x] `mount`
 - [ ] `munmap`
 - [ ] `newfstat`
 - [ ] `newlstat` - x86, x86_64
