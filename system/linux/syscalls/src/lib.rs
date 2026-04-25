@@ -199,7 +199,7 @@ pub use nice::{NiceError, nice};
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
-pub use uname::{OldoldunameError, oldolduname};
+pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
