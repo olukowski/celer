@@ -119,6 +119,8 @@ mod rename;
 mod rmdir;
 #[cfg(target_arch = "x86")]
 mod stat;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod select;
 pub mod sys;
 mod uname;
 
@@ -231,6 +233,8 @@ pub use rename::{RenameError, rename};
 pub use rmdir::{RmdirError, rmdir};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use select::{SelectError, select};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
