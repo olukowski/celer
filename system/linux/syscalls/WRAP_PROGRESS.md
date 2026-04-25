@@ -186,7 +186,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `setreuid16` - x86
 - [x] `setrlimit`
 - [x] `setsid`
-- [ ] `settimeofday`
+- [x] `settimeofday`
 - [ ] `setuid16` - x86
 - [ ] `sgetmask` - x86
 - [ ] `sigaction` - x86

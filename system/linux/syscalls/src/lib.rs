@@ -134,6 +134,7 @@ mod setregid;
 mod setreuid;
 mod setrlimit;
 mod setsid;
+mod settimeofday;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -263,6 +264,7 @@ pub use setregid::{Setregid16Error, setregid16};
 pub use setreuid::{Setreuid16Error, setreuid16};
 pub use setrlimit::{SetrlimitError, setrlimit};
 pub use setsid::{SetsidError, setsid};
+pub use settimeofday::{SettimeofdayError, settimeofday};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
