@@ -1,6 +1,6 @@
 [package]
 name = "celer"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "A framework for building fast software"
@@ -11,5 +11,5 @@ readme = "README.md"
 members = ["system/linux/ctypes", "system/linux/syscalls"]
 
 [workspace.dependencies]
-celer_system_linux_ctypes = { path = "system/linux/ctypes", version = "0.1.0" }
-celer_system_linux_syscalls = { path = "system/linux/syscalls", version = "0.1.0" }
+celer_system_linux_ctypes = { path = "system/linux/ctypes", version = "0.1.1" }
+celer_system_linux_syscalls = { path = "system/linux/syscalls", version = "0.2.0" }
