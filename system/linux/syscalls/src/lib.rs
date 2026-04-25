@@ -74,6 +74,8 @@ mod ioctl;
 mod ioperm;
 #[cfg(target_arch = "x86")]
 mod iopl;
+#[cfg(target_arch = "x86")]
+mod ipc;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -137,6 +139,11 @@ pub use ioctl::{IoctlError, ioctl};
 pub use ioperm::{IopermError, ioperm};
 #[cfg(target_arch = "x86")]
 pub use iopl::{IoplError, iopl};
+#[cfg(target_arch = "x86")]
+pub use ipc::{
+    IpcError, MSGCTL, MSGGET, MSGRCV, MSGSND, SEMCTL, SEMGET, SEMOP, SHMAT,
+    SHMCTL, SHMDT, SHMGET, ipc,
+};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
