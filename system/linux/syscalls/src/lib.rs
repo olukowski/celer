@@ -194,6 +194,8 @@ pub use newlstat::{NewlstatError, newlstat};
 #[cfg(target_arch = "x86")]
 pub use nice::{NiceError, nice};
 pub use uname::{NewunameError, newuname};
+#[cfg(target_arch = "x86")]
+pub use uname::{OldoldunameError, oldolduname};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
