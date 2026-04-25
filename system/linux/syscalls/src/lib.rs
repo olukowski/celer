@@ -131,6 +131,8 @@ mod setpriority;
 #[cfg(target_arch = "x86")]
 mod setregid;
 #[cfg(target_arch = "x86")]
+mod setreuid;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -255,6 +257,8 @@ pub use setpgid::{SetpgidError, setpgid};
 pub use setpriority::{SetpriorityError, setpriority};
 #[cfg(target_arch = "x86")]
 pub use setregid::{Setregid16Error, setregid16};
+#[cfg(target_arch = "x86")]
+pub use setreuid::{Setreuid16Error, setreuid16};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
