@@ -206,7 +206,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `sync`
 - [x] `sysinfo`
 - [x] `syslog`
-- [ ] `time` - x86, x86_64
+- [x] `time` - x86, x86_64
 - [ ] `times`
 - [ ] `truncate`
 - [ ] `umask`

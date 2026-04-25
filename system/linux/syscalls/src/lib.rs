@@ -168,6 +168,8 @@ mod sync;
 pub mod sys;
 mod sysinfo;
 mod syslog;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod time;
 mod uname;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -340,6 +342,8 @@ pub use symlink::{SymlinkError, symlink};
 pub use sync::sync;
 pub use sysinfo::{SysinfoError, sysinfo};
 pub use syslog::{SyslogError, syslog};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use time::{TimeError, time};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
