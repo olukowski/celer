@@ -113,6 +113,8 @@ mod readdir;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod readlink;
 mod reboot;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod rename;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -221,6 +223,8 @@ pub use readdir::{ReaddirError, readdir};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use readlink::{ReadlinkError, readlink};
 pub use reboot::{RebootError, reboot};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use rename::{RenameError, rename};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};

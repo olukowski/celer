@@ -172,7 +172,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `readdir` - x86
 - [x] `readlink` - x86, x86_64
 - [x] `reboot`
-- [ ] `rename` - x86, x86_64
+- [x] `rename` - x86, x86_64
 - [ ] `rmdir` - x86, x86_64
 - [ ] `select` - x86, x86_64
 - [ ] `setdomainname`
