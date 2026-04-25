@@ -165,7 +165,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `oldstat` - x86
 - [x] `olduname` - x86
 - [x] `open` - x86, x86_64
-- [ ] `pause` - x86, x86_64
+- [x] `pause` - x86, x86_64
 - [ ] `pipe` - x86, x86_64
 - [ ] `ptrace`
 - [ ] `read`

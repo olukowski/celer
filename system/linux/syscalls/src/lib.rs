@@ -102,6 +102,8 @@ mod newlstat;
 mod nice;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod open;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod pause;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -199,6 +201,8 @@ pub use newlstat::{NewlstatError, newlstat};
 pub use nice::{NiceError, nice};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use open::{OpenError, open};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use pause::{PauseError, pause};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
