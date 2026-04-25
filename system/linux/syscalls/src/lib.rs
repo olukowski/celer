@@ -43,6 +43,8 @@ mod fork;
 mod fstatfs;
 mod fsync;
 mod ftruncate;
+#[cfg(target_arch = "x86")]
+mod get_kernel_syms;
 mod helpers;
 pub mod sys;
 
@@ -77,6 +79,8 @@ pub use fork::{ForkError, fork};
 pub use fstatfs::{FstatfsError, fstatfs};
 pub use fsync::{FsyncError, fsync};
 pub use ftruncate::{FtruncateError, ftruncate};
+#[cfg(target_arch = "x86")]
+pub use get_kernel_syms::{GetKernelSymsError, get_kernel_syms};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]

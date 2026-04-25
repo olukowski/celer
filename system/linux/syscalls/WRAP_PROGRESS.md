@@ -124,7 +124,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `fstatfs`
 - [x] `fsync`
 - [x] `ftruncate`
-- [ ] `get_kernel_syms` - x86
+- [x] `get_kernel_syms` - x86
 - [ ] `getegid16` - x86
 - [ ] `geteuid16` - x86
 - [ ] `getgid16` - x86
