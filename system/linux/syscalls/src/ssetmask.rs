@@ -1,72 +1,67 @@
 use celer_system_linux_ctypes::OldSigsetT;
 
-use crate::helpers::result_from_ret;
-use crate::{errno::Errno, sys};
-
-/// Errors returned by [`ssetmask`].
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum SsetmaskError {
-    Enosys,
-    Other(Errno),
-}
-
-impl SsetmaskError {
-    fn from_errno(errno: Errno) -> Self {
-        match errno {
-            Errno::Enosys => Self::Enosys,
-            errno => Self::Other(errno),
-        }
-    }
-}
+use crate::sys;
 
 /// Replace the caller's legacy blocked-signal mask word.
 ///
-/// This safe wrapper keeps the scalar mask argument and maps the raw return
-/// into `Result<OldSigsetT, SsetmaskError>`.
+/// This safe wrapper keeps the scalar mask argument and preserves the raw
+/// returned previous mask word. On current kernels that do not configure this
+/// legacy entry point, the returned bits are the raw `-ENOSYS` value described
+/// by [`sys::ssetmask`].
 ///
 /// On success, returns the previous legacy blocked-signal mask word.
 ///
 /// See [`sys::ssetmask`] for kernel behavior, reachable errors, and source
 /// references.
-///
-/// # Errors
-/// - [`SsetmaskError::Enosys`]: the legacy syscall is not configured.
-/// - [`SsetmaskError::Other`]: any other syscall error reported by the raw
-///   ABI.
 #[cfg(target_arch = "x86")]
-pub fn ssetmask(newmask: OldSigsetT) -> Result<OldSigsetT, SsetmaskError> {
-    let ret = sys::ssetmask(newmask);
-    result_from_ret(
-        ret as isize,
-        |ret| ret as OldSigsetT,
-        SsetmaskError::from_errno,
-    )
+pub fn ssetmask(newmask: OldSigsetT) -> OldSigsetT {
+    sys::ssetmask(newmask)
 }
 
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use super::{SsetmaskError, ssetmask};
-    use crate::Errno;
+    use celer_system_linux_ctypes::OldSigsetT;
+
+    use super::ssetmask;
     use crate::sys::test_support::process_global_state_guard;
+
+    const ENOSYS_BITS: OldSigsetT = (-38_i32) as OldSigsetT;
+
+    struct RestoreMask(OldSigsetT);
+
+    impl Drop for RestoreMask {
+        fn drop(&mut self) {
+            let _ = ssetmask(self.0);
+        }
+    }
 
     #[test]
     fn test_ssetmask_smoke() {
         let _guard = process_global_state_guard();
 
-        let result = ssetmask(0);
-        assert!(result.is_ok() || result == Err(SsetmaskError::Enosys));
+        let _ = ssetmask(0);
     }
 
     #[test]
-    fn test_ssetmask_error_mapping() {
-        assert_eq!(
-            SsetmaskError::from_errno(Errno::Enosys),
-            SsetmaskError::Enosys
-        );
-        assert_eq!(
-            SsetmaskError::from_errno(Errno::Eio),
-            SsetmaskError::Other(Errno::Eio)
+    fn test_ssetmask_preserves_errno_shaped_mask_word() {
+        let _guard = process_global_state_guard();
+
+        let original = ssetmask(0);
+        if original == ENOSYS_BITS {
+            return;
+        }
+        let _restore = RestoreMask(original);
+
+        let requested = (-4095_i32) as OldSigsetT;
+        let _ = ssetmask(requested);
+        let effective = ssetmask(0);
+
+        assert_ne!(effective, ENOSYS_BITS);
+        assert_ne!(
+            effective & ((1 as OldSigsetT) << 31),
+            0,
+            "effective mask should preserve high errno-shaped data bits"
         );
     }
 }

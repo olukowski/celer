@@ -321,7 +321,7 @@ pub use settimeofday::{SettimeofdayError, settimeofday};
 #[cfg(target_arch = "x86")]
 pub use setuid::{Setuid16Error, setuid16};
 #[cfg(target_arch = "x86")]
-pub use sgetmask::{SgetmaskError, sgetmask};
+pub use sgetmask::sgetmask;
 #[cfg(target_arch = "x86")]
 pub use sigaction::{SigactionError, sigaction};
 #[cfg(target_arch = "x86")]
@@ -346,7 +346,7 @@ pub use socketcall::{
     socketcall,
 };
 #[cfg(target_arch = "x86")]
-pub use ssetmask::{SsetmaskError, ssetmask};
+pub use ssetmask::ssetmask;
 #[cfg(target_arch = "x86")]
 pub use stat::OldstatError;
 #[cfg(target_arch = "x86")]
@@ -364,7 +364,7 @@ pub use sync::sync;
 pub use sysinfo::{SysinfoError, sysinfo};
 pub use syslog::{SyslogError, syslog};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-pub use time::{TimeError, time};
+pub use time::time;
 pub use times::times;
 pub use truncate::{TruncateError, truncate};
 pub use umask::umask;

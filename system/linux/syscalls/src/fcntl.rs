@@ -4,6 +4,8 @@ use crate::errno::Errno;
 use crate::helpers::result_from_ret;
 use crate::sys;
 
+const F_GETOWN: Int = 9;
+
 /// Errors returned by [`fcntl`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FcntlError {
@@ -40,9 +42,13 @@ impl FcntlError {
 /// This wrapper keeps the raw `cmd` and `arg` integers, but maps the raw
 /// syscall return value into `Result<Long, FcntlError>`.
 ///
-/// On success, returns the syscall's nonnegative result. Depending on `cmd`,
-/// that may be `0`, a duplicated file descriptor, or another command-specific
-/// scalar value.
+/// On success, returns the syscall's result. Depending on `cmd`, that may be
+/// `0`, a duplicated file descriptor, or another command-specific scalar
+/// value.
+///
+/// For `F_GETOWN`, Linux can return a negative process-group ID as a success
+/// value. This wrapper preserves that raw signed result instead of treating it
+/// as an errno-shaped failure.
 ///
 /// See [`sys::fcntl`] for kernel behavior, reachable errors, and source
 /// references.
@@ -68,6 +74,10 @@ pub unsafe fn fcntl(fd: Int, cmd: Int, arg: Long) -> Result<Long, FcntlError> {
     // that apply when `arg` names userspace memory.
     let ret = unsafe { sys::fcntl(fd as _, cmd, arg) };
 
+    if cmd == F_GETOWN {
+        return Ok(ret);
+    }
+
     result_from_ret(ret as isize, |ret| ret as Long, FcntlError::from_errno)
 }
 
@@ -84,11 +94,12 @@ mod tests {
 
     use crate::{Errno, close};
 
-    use super::{FcntlError, fcntl};
+    use super::{F_GETOWN, FcntlError, fcntl};
 
     const F_DUPFD: Int = 0;
     const F_GETFD: Int = 1;
     const F_SETFD: Int = 2;
+    const F_SETOWN: Int = 8;
     const FD_CLOEXEC: Int = 1;
 
     fn temp_path() -> std::path::PathBuf {
@@ -147,6 +158,30 @@ mod tests {
         assert_ne!(dup_fd, fd as Long);
 
         assert_eq!(close(dup_fd as Int), Ok(()));
+        assert_eq!(close(fd), Ok(()));
+        fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
+    fn test_fcntl_getown_preserves_negative_process_group() {
+        let path = temp_path();
+        let file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .read(true)
+            .write(true)
+            .open(&path)
+            .unwrap();
+
+        let fd = file.into_raw_fd();
+        let pgrp = unsafe { libc::getpgrp() } as Long;
+        assert!(pgrp > 0, "getpgrp should return a positive process group");
+
+        // SAFETY: `F_SETOWN` and `F_GETOWN` treat `arg` as a scalar.
+        assert_eq!(unsafe { fcntl(fd, F_SETOWN, -pgrp) }, Ok(0));
+        // SAFETY: `F_GETOWN` treats `arg` as ignored scalar input.
+        assert_eq!(unsafe { fcntl(fd, F_GETOWN, 0) }, Ok(-pgrp));
+
         assert_eq!(close(fd), Ok(()));
         fs::remove_file(&path).unwrap();
     }
