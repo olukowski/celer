@@ -133,6 +133,7 @@ mod setregid;
 #[cfg(target_arch = "x86")]
 mod setreuid;
 mod setrlimit;
+mod setsid;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -261,6 +262,7 @@ pub use setregid::{Setregid16Error, setregid16};
 #[cfg(target_arch = "x86")]
 pub use setreuid::{Setreuid16Error, setreuid16};
 pub use setrlimit::{SetrlimitError, setrlimit};
+pub use setsid::{SetsidError, setsid};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
