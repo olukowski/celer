@@ -150,7 +150,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `link` - x86, x86_64
 - [x] `lseek`
 - [x] `mknod` - x86, x86_64
-- [ ] `mkdir` - x86, x86_64
+- [x] `mkdir` - x86, x86_64
 - [ ] `mmap`
 - [ ] `modify_ldt` - x86
 - [ ] `mount`

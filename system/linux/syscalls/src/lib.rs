@@ -83,6 +83,8 @@ mod lchown;
 mod link;
 mod lseek;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod mkdir;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod mknod;
 pub mod sys;
 
@@ -158,6 +160,8 @@ pub use lchown::{Lchown16Error, lchown16};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use link::{LinkError, link};
 pub use lseek::{LseekError, lseek};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use mkdir::{MkdirError, mkdir};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use mknod::{MknodError, mknod};
 
