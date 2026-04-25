@@ -45,6 +45,8 @@ mod fsync;
 mod ftruncate;
 #[cfg(target_arch = "x86")]
 mod get_kernel_syms;
+#[cfg(target_arch = "x86")]
+mod getegid;
 mod helpers;
 pub mod sys;
 
@@ -81,6 +83,8 @@ pub use fsync::{FsyncError, fsync};
 pub use ftruncate::{FtruncateError, ftruncate};
 #[cfg(target_arch = "x86")]
 pub use get_kernel_syms::{GetKernelSymsError, get_kernel_syms};
+#[cfg(target_arch = "x86")]
+pub use getegid::getegid16;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
