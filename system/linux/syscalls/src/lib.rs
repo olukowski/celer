@@ -93,6 +93,8 @@ pub mod sys;
 mod mount;
 mod munmap;
 mod newfstat;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod newlstat;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::{AccessError, access};
@@ -177,6 +179,8 @@ pub use modify_ldt::{ModifyLdtError, modify_ldt};
 pub use mount::{MountError, mount};
 pub use munmap::{MunmapError, munmap};
 pub use newfstat::{NewfstatError, newfstat};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use newlstat::{NewlstatError, newlstat};
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
@@ -186,4 +190,5 @@ pub mod linux_1_0 {
         Ftruncate1_0Error as FtruncateError, ftruncate_1_0 as ftruncate,
     };
     pub use super::newfstat::{NewfstatError, newfstat_1_0 as newfstat};
+    pub use super::newlstat::{NewlstatError, newlstat_1_0 as newlstat};
 }
