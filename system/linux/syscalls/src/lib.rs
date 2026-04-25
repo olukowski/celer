@@ -66,6 +66,8 @@ mod gettimeofday;
 #[cfg(target_arch = "x86")]
 mod getuid;
 mod helpers;
+#[cfg(target_arch = "x86")]
+mod idle;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -121,6 +123,8 @@ pub use getrusage::{GetrusageError, getrusage};
 pub use gettimeofday::{GettimeofdayError, gettimeofday};
 #[cfg(target_arch = "x86")]
 pub use getuid::getuid16;
+#[cfg(target_arch = "x86")]
+pub use idle::{IdleError, idle};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
