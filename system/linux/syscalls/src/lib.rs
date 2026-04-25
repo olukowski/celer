@@ -112,6 +112,7 @@ mod read;
 mod readdir;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod readlink;
+mod reboot;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -219,6 +220,7 @@ pub use read::{ReadError, read};
 pub use readdir::{ReaddirError, readdir};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use readlink::{ReadlinkError, readlink};
+pub use reboot::{RebootError, reboot};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
