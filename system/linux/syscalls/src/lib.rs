@@ -121,6 +121,7 @@ mod rmdir;
 mod stat;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod select;
+mod setdomainname;
 pub mod sys;
 mod uname;
 
@@ -235,6 +236,7 @@ pub use rmdir::{RmdirError, rmdir};
 pub use stat::{OldstatError, oldstat};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use select::{SelectError, select};
+pub use setdomainname::{SetdomainnameError, setdomainname};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
