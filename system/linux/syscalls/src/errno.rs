@@ -5,6 +5,7 @@ pub enum Errno {
     Eagain,
     E2big,
     Ebadf,
+    Ebadmsg,
     Ebusy,
     Emfile,
     Efault,
@@ -18,9 +19,11 @@ pub enum Errno {
     Enoexec,
     Enomem,
     Enosys,
+    Enotty,
     Enotdir,
     Eoverflow,
     Eperm,
+    Ekeyrejected,
     Erofs,
     Esrch,
     Ewouldblock,
@@ -35,6 +38,7 @@ impl Errno {
             11 => Self::Eagain,
             7 => Self::E2big,
             9 => Self::Ebadf,
+            74 => Self::Ebadmsg,
             16 => Self::Ebusy,
             24 => Self::Emfile,
             14 => Self::Efault,
@@ -48,9 +52,11 @@ impl Errno {
             8 => Self::Enoexec,
             12 => Self::Enomem,
             38 => Self::Enosys,
+            25 => Self::Enotty,
             20 => Self::Enotdir,
             75 => Self::Eoverflow,
             1 => Self::Eperm,
+            129 => Self::Ekeyrejected,
             30 => Self::Erofs,
             3 => Self::Esrch,
             other => Self::Raw(other),
@@ -83,6 +89,7 @@ mod tests {
         assert_eq!(Errno::from_raw(11), Errno::Eagain);
         assert_eq!(Errno::from_raw(7), Errno::E2big);
         assert_eq!(Errno::from_raw(9), Errno::Ebadf);
+        assert_eq!(Errno::from_raw(74), Errno::Ebadmsg);
         assert_eq!(Errno::from_raw(16), Errno::Ebusy);
         assert_eq!(Errno::from_raw(24), Errno::Emfile);
         assert_eq!(Errno::from_raw(14), Errno::Efault);
@@ -96,9 +103,11 @@ mod tests {
         assert_eq!(Errno::from_raw(8), Errno::Enoexec);
         assert_eq!(Errno::from_raw(12), Errno::Enomem);
         assert_eq!(Errno::from_raw(38), Errno::Enosys);
+        assert_eq!(Errno::from_raw(25), Errno::Enotty);
         assert_eq!(Errno::from_raw(20), Errno::Enotdir);
         assert_eq!(Errno::from_raw(75), Errno::Eoverflow);
         assert_eq!(Errno::from_raw(1), Errno::Eperm);
+        assert_eq!(Errno::from_raw(129), Errno::Ekeyrejected);
         assert_eq!(Errno::from_raw(30), Errno::Erofs);
         assert_eq!(Errno::from_raw(3), Errno::Esrch);
         assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));

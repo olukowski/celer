@@ -140,7 +140,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `gettimeofday`
 - [x] `getuid16` - x86
 - [x] `idle` - x86
-- [ ] `init_module`
+- [x] `init_module`
 - [ ] `ioctl`
 - [ ] `ioperm` - x86
 - [ ] `iopl` - x86
