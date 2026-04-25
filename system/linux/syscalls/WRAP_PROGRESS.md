@@ -134,7 +134,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `getpgrp` - x86, x86_64
 - [x] `getpid`
 - [x] `getppid`
-- [ ] `getpriority`
+- [x] `getpriority`
 - [ ] `getrlimit`
 - [ ] `getrusage`
 - [ ] `gettimeofday`

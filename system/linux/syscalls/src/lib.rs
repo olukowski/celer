@@ -59,6 +59,7 @@ mod getpgid;
 mod getpgrp;
 mod getpid;
 mod getppid;
+mod getpriority;
 mod helpers;
 pub mod sys;
 
@@ -109,6 +110,7 @@ pub use getpgid::{GetpgidError, getpgid};
 pub use getpgrp::getpgrp;
 pub use getpid::getpid;
 pub use getppid::getppid;
+pub use getpriority::{GetpriorityError, getpriority};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
