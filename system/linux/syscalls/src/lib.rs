@@ -61,6 +61,7 @@ mod getpid;
 mod getppid;
 mod getpriority;
 mod getrlimit;
+mod getrusage;
 mod helpers;
 pub mod sys;
 
@@ -113,6 +114,7 @@ pub use getpid::getpid;
 pub use getppid::getppid;
 pub use getpriority::{GetpriorityError, getpriority};
 pub use getrlimit::{GetrlimitError, getrlimit};
+pub use getrusage::{GetrusageError, getrusage};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
