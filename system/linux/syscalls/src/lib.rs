@@ -152,6 +152,8 @@ mod sigreturn;
 #[cfg(target_arch = "x86")]
 mod sigsuspend;
 #[cfg(target_arch = "x86")]
+mod socketcall;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -301,6 +303,13 @@ pub use sigprocmask::{
 pub use sigreturn::sigreturn;
 #[cfg(target_arch = "x86")]
 pub use sigsuspend::{SigsuspendError, sigsuspend};
+#[cfg(target_arch = "x86")]
+pub use socketcall::{
+    SYS_ACCEPT, SYS_BIND, SYS_CONNECT, SYS_GETPEERNAME, SYS_GETSOCKNAME,
+    SYS_GETSOCKOPT, SYS_LISTEN, SYS_RECV, SYS_RECVFROM, SYS_SEND, SYS_SENDTO,
+    SYS_SETSOCKOPT, SYS_SHUTDOWN, SYS_SOCKET, SYS_SOCKETPAIR, SocketcallError,
+    socketcall,
+};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};

@@ -195,7 +195,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `sigprocmask` - x86
 - [x] `sigreturn` - x86
 - [x] `sigsuspend` - x86
-- [ ] `socketcall` - x86
+- [x] `socketcall` - x86
 - [ ] `ssetmask` - x86
 - [ ] `stat` - x86, x86_64
 - [ ] `statfs`
