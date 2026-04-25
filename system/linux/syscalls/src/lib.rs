@@ -63,6 +63,8 @@ mod getpriority;
 mod getrlimit;
 mod getrusage;
 mod gettimeofday;
+#[cfg(target_arch = "x86")]
+mod getuid;
 mod helpers;
 pub mod sys;
 
@@ -117,6 +119,8 @@ pub use getpriority::{GetpriorityError, getpriority};
 pub use getrlimit::{GetrlimitError, getrlimit};
 pub use getrusage::{GetrusageError, getrusage};
 pub use gettimeofday::{GettimeofdayError, gettimeofday};
+#[cfg(target_arch = "x86")]
+pub use getuid::getuid16;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
