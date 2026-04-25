@@ -142,6 +142,8 @@ mod sgetmask;
 #[cfg(target_arch = "x86")]
 mod sigaction;
 #[cfg(target_arch = "x86")]
+mod signal;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -277,6 +279,10 @@ pub use setuid::{Setuid16Error, setuid16};
 pub use sgetmask::{SgetmaskError, sgetmask};
 #[cfg(target_arch = "x86")]
 pub use sigaction::{SigactionError, sigaction};
+#[cfg(target_arch = "x86")]
+pub use signal::{
+    SIG_DFL, SIG_IGN, SigHandler, SignalError, sig_handler, signal,
+};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};

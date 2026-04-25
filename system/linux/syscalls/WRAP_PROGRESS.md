@@ -190,7 +190,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `setuid16` - x86
 - [x] `sgetmask` - x86
 - [x] `sigaction` - x86
-- [ ] `signal` - x86
+- [x] `signal` - x86
 - [ ] `sigpending` - x86
 - [ ] `sigprocmask` - x86
 - [ ] `sigreturn` - x86
