@@ -127,6 +127,7 @@ mod setgroups;
 mod sethostname;
 mod setitimer;
 mod setpgid;
+mod setpriority;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -249,6 +250,7 @@ pub use setgroups::{Setgroups16Error, setgroups16};
 pub use sethostname::{SethostnameError, sethostname};
 pub use setitimer::{SetitimerError, setitimer};
 pub use setpgid::{SetpgidError, setpgid};
+pub use setpriority::{SetpriorityError, setpriority};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
