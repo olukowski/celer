@@ -150,6 +150,8 @@ mod sigprocmask;
 #[cfg(target_arch = "x86")]
 mod sigreturn;
 #[cfg(target_arch = "x86")]
+mod sigsuspend;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -297,6 +299,8 @@ pub use sigprocmask::{
 };
 #[cfg(target_arch = "x86")]
 pub use sigreturn::sigreturn;
+#[cfg(target_arch = "x86")]
+pub use sigsuspend::{SigsuspendError, sigsuspend};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
