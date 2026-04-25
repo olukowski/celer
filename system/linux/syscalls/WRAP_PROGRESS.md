@@ -180,7 +180,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `setgroups16` - x86
 - [x] `sethostname`
 - [x] `setitimer`
-- [ ] `setpgid`
+- [x] `setpgid`
 - [ ] `setpriority`
 - [ ] `setregid16` - x86
 - [ ] `setreuid16` - x86
