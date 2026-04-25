@@ -91,6 +91,7 @@ mod mmap;
 mod modify_ldt;
 pub mod sys;
 mod mount;
+mod munmap;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::{AccessError, access};
@@ -173,6 +174,7 @@ pub use mmap::{MmapError, mmap};
 pub use modify_ldt::{ModifyLdtError, modify_ldt};
 
 pub use mount::{MountError, mount};
+pub use munmap::{MunmapError, munmap};
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
