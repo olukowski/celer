@@ -140,6 +140,8 @@ mod setuid;
 #[cfg(target_arch = "x86")]
 mod sgetmask;
 #[cfg(target_arch = "x86")]
+mod sigaction;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -273,6 +275,8 @@ pub use settimeofday::{SettimeofdayError, settimeofday};
 pub use setuid::{Setuid16Error, setuid16};
 #[cfg(target_arch = "x86")]
 pub use sgetmask::{SgetmaskError, sgetmask};
+#[cfg(target_arch = "x86")]
+pub use sigaction::{SigactionError, sigaction};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
