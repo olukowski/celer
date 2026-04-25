@@ -70,6 +70,8 @@ mod helpers;
 mod idle;
 mod init_module;
 mod ioctl;
+#[cfg(target_arch = "x86")]
+mod ioperm;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -129,6 +131,8 @@ pub use getuid::getuid16;
 pub use idle::{IdleError, idle};
 pub use init_module::{InitModuleError, init_module};
 pub use ioctl::{IoctlError, ioctl};
+#[cfg(target_arch = "x86")]
+pub use ioperm::{IopermError, ioperm};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
