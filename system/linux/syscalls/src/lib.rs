@@ -53,6 +53,7 @@ mod geteuid;
 mod getgid;
 #[cfg(target_arch = "x86")]
 mod getgroups;
+mod getitimer;
 mod helpers;
 pub mod sys;
 
@@ -97,6 +98,7 @@ pub use geteuid::geteuid16;
 pub use getgid::getgid16;
 #[cfg(target_arch = "x86")]
 pub use getgroups::{Getgroups16Error, getgroups16};
+pub use getitimer::{GetitimerError, getitimer};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
