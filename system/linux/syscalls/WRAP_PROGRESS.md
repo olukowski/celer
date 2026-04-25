@@ -202,7 +202,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `stime` - x86
 - [x] `swapoff`
 - [x] `swapon`
-- [ ] `symlink` - x86, x86_64
+- [x] `symlink` - x86, x86_64
 - [ ] `sync`
 - [ ] `sysinfo`
 - [ ] `syslog`
