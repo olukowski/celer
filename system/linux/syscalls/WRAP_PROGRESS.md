@@ -192,7 +192,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `sigaction` - x86
 - [x] `signal` - x86
 - [x] `sigpending` - x86
-- [ ] `sigprocmask` - x86
+- [x] `sigprocmask` - x86
 - [ ] `sigreturn` - x86
 - [ ] `sigsuspend` - x86
 - [ ] `socketcall` - x86
