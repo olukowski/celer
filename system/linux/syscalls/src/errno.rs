@@ -22,6 +22,7 @@ pub enum Errno {
     Eoverflow,
     Eperm,
     Erofs,
+    Esrch,
     Ewouldblock,
     Raw(u16),
 }
@@ -51,6 +52,7 @@ impl Errno {
             75 => Self::Eoverflow,
             1 => Self::Eperm,
             30 => Self::Erofs,
+            3 => Self::Esrch,
             other => Self::Raw(other),
         }
     }
@@ -98,6 +100,7 @@ mod tests {
         assert_eq!(Errno::from_raw(75), Errno::Eoverflow);
         assert_eq!(Errno::from_raw(1), Errno::Eperm);
         assert_eq!(Errno::from_raw(30), Errno::Erofs);
+        assert_eq!(Errno::from_raw(3), Errno::Esrch);
         assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));
     }
 
