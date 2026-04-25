@@ -109,6 +109,8 @@ mod pipe;
 mod ptrace;
 mod read;
 #[cfg(target_arch = "x86")]
+mod readdir;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -211,6 +213,8 @@ pub use pause::{PauseError, pause};
 pub use pipe::{PipeError, pipe};
 pub use ptrace::{PtraceError, ptrace};
 pub use read::{ReadError, read};
+#[cfg(target_arch = "x86")]
+pub use readdir::{ReaddirError, readdir};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
