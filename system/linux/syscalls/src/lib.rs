@@ -55,6 +55,8 @@ mod getgid;
 mod getgroups;
 mod getitimer;
 mod getpgid;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod getpgrp;
 mod helpers;
 pub mod sys;
 
@@ -101,6 +103,8 @@ pub use getgid::getgid16;
 pub use getgroups::{Getgroups16Error, getgroups16};
 pub use getitimer::{GetitimerError, getitimer};
 pub use getpgid::{GetpgidError, getpgid};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use getpgrp::getpgrp;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
