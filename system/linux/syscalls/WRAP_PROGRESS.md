@@ -177,7 +177,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `select` - x86, x86_64
 - [x] `setdomainname`
 - [x] `setgid16` - x86
-- [ ] `setgroups16` - x86
+- [x] `setgroups16` - x86
 - [ ] `sethostname`
 - [ ] `setitimer`
 - [ ] `setpgid`

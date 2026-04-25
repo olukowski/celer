@@ -124,6 +124,8 @@ mod select;
 mod setdomainname;
 #[cfg(target_arch = "x86")]
 mod setgid;
+#[cfg(target_arch = "x86")]
+mod setgroups;
 pub mod sys;
 mod uname;
 
@@ -241,6 +243,8 @@ pub use select::{SelectError, select};
 pub use setdomainname::{SetdomainnameError, setdomainname};
 #[cfg(target_arch = "x86")]
 pub use setgid::{Setgid16Error, setgid16};
+#[cfg(target_arch = "x86")]
+pub use setgroups::{Setgroups16Error, setgroups16};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
