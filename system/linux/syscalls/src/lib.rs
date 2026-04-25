@@ -127,6 +127,7 @@ mod setgid;
 #[cfg(target_arch = "x86")]
 mod setgroups;
 mod sethostname;
+mod setitimer;
 pub mod sys;
 mod uname;
 
@@ -247,6 +248,7 @@ pub use setgid::{Setgid16Error, setgid16};
 #[cfg(target_arch = "x86")]
 pub use setgroups::{Setgroups16Error, setgroups16};
 pub use sethostname::{SethostnameError, sethostname};
+pub use setitimer::{SetitimerError, setitimer};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
