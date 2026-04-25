@@ -209,7 +209,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `time` - x86, x86_64
 - [x] `times`
 - [x] `truncate`
-- [ ] `umask`
+- [x] `umask`
 - [ ] `umount`
 - [ ] `unlink` - x86, x86_64
 - [ ] `uselib` - x86
