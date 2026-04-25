@@ -127,7 +127,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `get_kernel_syms` - x86
 - [x] `getegid16` - x86
 - [x] `geteuid16` - x86
-- [ ] `getgid16` - x86
+- [x] `getgid16` - x86
 - [ ] `getgroups16` - x86
 - [ ] `getitimer`
 - [ ] `getpgid`

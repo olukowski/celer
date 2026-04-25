@@ -49,6 +49,8 @@ mod get_kernel_syms;
 mod getegid;
 #[cfg(target_arch = "x86")]
 mod geteuid;
+#[cfg(target_arch = "x86")]
+mod getgid;
 mod helpers;
 pub mod sys;
 
@@ -89,6 +91,8 @@ pub use get_kernel_syms::{GetKernelSymsError, get_kernel_syms};
 pub use getegid::getegid16;
 #[cfg(target_arch = "x86")]
 pub use geteuid::geteuid16;
+#[cfg(target_arch = "x86")]
+pub use getgid::getgid16;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
