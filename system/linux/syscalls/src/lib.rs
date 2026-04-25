@@ -144,6 +144,8 @@ mod sigaction;
 #[cfg(target_arch = "x86")]
 mod signal;
 #[cfg(target_arch = "x86")]
+mod sigpending;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -283,6 +285,8 @@ pub use sigaction::{SigactionError, sigaction};
 pub use signal::{
     SIG_DFL, SIG_IGN, SigHandler, SignalError, sig_handler, signal,
 };
+#[cfg(target_arch = "x86")]
+pub use sigpending::{SigpendingError, sigpending};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
