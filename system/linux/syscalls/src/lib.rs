@@ -161,6 +161,7 @@ mod statfs;
 #[cfg(target_arch = "x86")]
 mod stime;
 mod swapoff;
+mod swapon;
 pub mod sys;
 mod uname;
 
@@ -328,6 +329,7 @@ pub use statfs::{StatfsError, statfs};
 #[cfg(target_arch = "x86")]
 pub use stime::{StimeError, stime};
 pub use swapoff::{SwapoffError, swapoff};
+pub use swapon::{SwaponError, swapon};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
