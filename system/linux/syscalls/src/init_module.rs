@@ -1,5 +1,7 @@
 use core::ffi::CStr;
 
+#[cfg(target_arch = "x86")]
+use celer_system_linux_ctypes::{ModRoutines, UnsignedInt};
 use celer_system_linux_ctypes::{UnsignedLong, Void};
 
 use crate::errno::Errno;
@@ -109,11 +111,52 @@ pub fn init_module(image: &[u8], uargs: &CStr) -> Result<(), InitModuleError> {
     unit_from_ret(ret as isize, InitModuleError::from_errno)
 }
 
+/// Initialize a Linux 1.0 module allocation.
+///
+/// This safe wrapper mirrors the historical
+/// [`sys::linux_1_0::init_module`] ABI by taking NUL-terminated module names,
+/// a shared module-code slice, and a shared [`ModRoutines`] record.
+///
+/// See [`sys::linux_1_0::init_module`] for kernel behavior, reachable errors,
+/// and source references.
+///
+/// # Errors
+/// - [`InitModuleError::Eperm`]: the caller lacks permission.
+/// - [`InitModuleError::Enoent`]: no matching module allocation exists.
+/// - [`InitModuleError::Einval`]: the code image is too large for the target
+///   allocation.
+/// - [`InitModuleError::Ebusy`]: the module init routine rejected the load.
+/// - [`InitModuleError::Other`]: another historical errno.
+#[cfg(target_arch = "x86")]
+pub fn init_module_1_0(
+    module_name: &CStr,
+    code: &[u8],
+    routines: &ModRoutines,
+) -> Result<(), InitModuleError> {
+    let codesize = UnsignedInt::try_from(code.len())
+        .map_err(|_| InitModuleError::Einval)?;
+    // SAFETY: the wrappers provide readable pointers for the historical ABI.
+    let ret = unsafe {
+        sys::linux_1_0::init_module(
+            module_name.as_ptr(),
+            code.as_ptr().cast::<Void>(),
+            codesize,
+            routines,
+        )
+    };
+    unit_from_ret(ret as isize, InitModuleError::from_errno)
+}
+
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    #[cfg(target_arch = "x86")]
+    use celer_system_linux_ctypes::ModRoutines;
+
     use crate::Errno;
 
+    #[cfg(target_arch = "x86")]
+    use super::init_module_1_0;
     use super::{InitModuleError, init_module};
 
     #[test]
@@ -183,5 +226,21 @@ mod tests {
             InitModuleError::from_errno(Errno::Eio),
             InitModuleError::Other(Errno::Eio)
         );
+    }
+
+    #[cfg(target_arch = "x86")]
+    #[test]
+    fn test_init_module_1_0_missing_allocation() {
+        let routines = ModRoutines {
+            init: 0,
+            cleanup: 0,
+        };
+        let err = init_module_1_0(c"celer_missing_module", &[], &routines)
+            .expect_err("missing Linux 1.0 module allocation should fail");
+
+        assert!(matches!(
+            err,
+            InitModuleError::Eperm | InitModuleError::Enoent
+        ));
     }
 }
