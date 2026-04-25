@@ -164,6 +164,7 @@ mod swapoff;
 mod swapon;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod symlink;
+mod sync;
 pub mod sys;
 mod uname;
 
@@ -334,6 +335,7 @@ pub use swapoff::{SwapoffError, swapoff};
 pub use swapon::{SwaponError, swapon};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use symlink::{SymlinkError, symlink};
+pub use sync::sync;
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
