@@ -96,6 +96,7 @@ mod newfstat;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod newlstat;
 
+mod uname;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::{AccessError, access};
 pub use acct::{AcctError, acct};
@@ -181,6 +182,7 @@ pub use munmap::{MunmapError, munmap};
 pub use newfstat::{NewfstatError, newfstat};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use newlstat::{NewlstatError, newlstat};
+pub use uname::{NewunameError, newuname};
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
 pub mod linux_1_0 {
