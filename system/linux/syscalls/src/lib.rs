@@ -104,6 +104,8 @@ mod nice;
 mod open;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod pause;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod pipe;
 #[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
@@ -203,6 +205,8 @@ pub use nice::{NiceError, nice};
 pub use open::{OpenError, open};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use pause::{PauseError, pause};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use pipe::{PipeError, pipe};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
