@@ -199,7 +199,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `ssetmask` - x86
 - [x] `stat` - x86, x86_64
 - [x] `statfs`
-- [ ] `stime` - x86
+- [x] `stime` - x86
 - [ ] `swapoff`
 - [ ] `swapon`
 - [ ] `symlink` - x86, x86_64

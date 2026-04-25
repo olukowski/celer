@@ -158,6 +158,8 @@ mod ssetmask;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod stat;
 mod statfs;
+#[cfg(target_arch = "x86")]
+mod stime;
 pub mod sys;
 mod uname;
 
@@ -322,6 +324,8 @@ pub use stat::oldstat;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use stat::{StatError, stat};
 pub use statfs::{StatfsError, statfs};
+#[cfg(target_arch = "x86")]
+pub use stime::{StimeError, stime};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
