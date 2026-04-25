@@ -171,6 +171,7 @@ mod syslog;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod time;
 mod times;
+mod truncate;
 mod uname;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -346,6 +347,7 @@ pub use syslog::{SyslogError, syslog};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use time::{TimeError, time};
 pub use times::times;
+pub use truncate::{TruncateError, truncate};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
@@ -364,4 +366,5 @@ pub mod linux_1_0 {
     pub use super::stat::{StatError, stat_1_0 as stat};
     pub use super::statfs::{StatfsError, statfs_1_0 as statfs};
     pub use super::sysinfo::{SysinfoError, sysinfo_1_0 as sysinfo};
+    pub use super::truncate::{TruncateError, truncate_1_0 as truncate};
 }
