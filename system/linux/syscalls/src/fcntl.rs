@@ -19,6 +19,8 @@ pub enum FcntlError {
     Emfile,
     /// `EPERM`.
     Eperm,
+    /// `F_GETOWN` returned an errno-shaped negative value.
+    FgetownNegative(Long),
     /// Another errno returned by delegated security-hook or file-specific
     /// command handling.
     Other(Errno),
@@ -47,8 +49,9 @@ impl FcntlError {
 /// value.
 ///
 /// For `F_GETOWN`, Linux can return a negative process-group ID as a success
-/// value. This wrapper preserves that raw signed result instead of treating it
-/// as an errno-shaped failure.
+/// value. Because that uses the same raw value range as kernel errnos, this
+/// wrapper reports negative `F_GETOWN` returns as
+/// [`FcntlError::FgetownNegative`] with the raw value preserved.
 ///
 /// See [`sys::fcntl`] for kernel behavior, reachable errors, and source
 /// references.
@@ -68,14 +71,16 @@ impl FcntlError {
 /// - [`FcntlError::Emfile`]: a duplication command could not allocate a new
 ///   descriptor.
 /// - [`FcntlError::Eperm`]: the requested operation was not allowed.
+/// - [`FcntlError::FgetownNegative`]: `F_GETOWN` returned a negative value that
+///   may be either a process-group owner or an errno-shaped failure.
 /// - [`FcntlError::Other`]: another security-hook or file-specific errno.
 pub unsafe fn fcntl(fd: Int, cmd: Int, arg: Long) -> Result<Long, FcntlError> {
     // SAFETY: the caller must uphold any command-specific pointer preconditions
     // that apply when `arg` names userspace memory.
     let ret = unsafe { sys::fcntl(fd as _, cmd, arg) };
 
-    if cmd == F_GETOWN {
-        return Ok(ret);
+    if cmd == F_GETOWN && ret < 0 {
+        return Err(FcntlError::FgetownNegative(ret));
     }
 
     result_from_ret(ret as isize, |ret| ret as Long, FcntlError::from_errno)
@@ -163,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn test_fcntl_getown_preserves_negative_process_group() {
+    fn test_fcntl_getown_reports_negative_process_group_ambiguously() {
         let path = temp_path();
         let file = OpenOptions::new()
             .create(true)
@@ -180,7 +185,10 @@ mod tests {
         // SAFETY: `F_SETOWN` and `F_GETOWN` treat `arg` as a scalar.
         assert_eq!(unsafe { fcntl(fd, F_SETOWN, -pgrp) }, Ok(0));
         // SAFETY: `F_GETOWN` treats `arg` as ignored scalar input.
-        assert_eq!(unsafe { fcntl(fd, F_GETOWN, 0) }, Ok(-pgrp));
+        assert_eq!(
+            unsafe { fcntl(fd, F_GETOWN, 0) },
+            Err(FcntlError::FgetownNegative(-pgrp))
+        );
 
         assert_eq!(close(fd), Ok(()));
         fs::remove_file(&path).unwrap();
@@ -190,6 +198,15 @@ mod tests {
     fn test_fcntl_ebadf() {
         // SAFETY: `F_GETFD` treats `arg` as a scalar.
         assert_eq!(unsafe { fcntl(-1, F_GETFD, 0) }, Err(FcntlError::Ebadf));
+    }
+
+    #[test]
+    fn test_fcntl_getown_invalid_fd_is_ambiguous_negative() {
+        // SAFETY: `F_GETOWN` treats `arg` as ignored scalar input.
+        assert_eq!(
+            unsafe { fcntl(-1, F_GETOWN, 0) },
+            Err(FcntlError::FgetownNegative(-9))
+        );
     }
 
     #[test]
