@@ -1,0 +1,134 @@
+/// A Linux errno value.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Errno {
+    Eacces,
+    Eagain,
+    E2big,
+    Ebadf,
+    Ebadmsg,
+    Ebusy,
+    Emfile,
+    Efault,
+    Eexist,
+    Exdev,
+    Einval,
+    Eintr,
+    Eio,
+    Eloop,
+    Enodev,
+    Enoent,
+    Enoexec,
+    Enomem,
+    Enosys,
+    Enotty,
+    Enotdir,
+    Eoverflow,
+    Eperm,
+    Ekeyrejected,
+    Erofs,
+    Esrch,
+    Ewouldblock,
+    Raw(u16),
+}
+
+impl Errno {
+    /// Converts a positive Linux errno number into an [`Errno`].
+    pub const fn from_raw(raw: u16) -> Self {
+        match raw {
+            13 => Self::Eacces,
+            11 => Self::Eagain,
+            7 => Self::E2big,
+            9 => Self::Ebadf,
+            74 => Self::Ebadmsg,
+            16 => Self::Ebusy,
+            24 => Self::Emfile,
+            14 => Self::Efault,
+            17 => Self::Eexist,
+            18 => Self::Exdev,
+            22 => Self::Einval,
+            4 => Self::Eintr,
+            5 => Self::Eio,
+            40 => Self::Eloop,
+            19 => Self::Enodev,
+            2 => Self::Enoent,
+            8 => Self::Enoexec,
+            12 => Self::Enomem,
+            38 => Self::Enosys,
+            25 => Self::Enotty,
+            20 => Self::Enotdir,
+            75 => Self::Eoverflow,
+            1 => Self::Eperm,
+            129 => Self::Ekeyrejected,
+            30 => Self::Erofs,
+            3 => Self::Esrch,
+            other => Self::Raw(other),
+        }
+    }
+
+    /// Returns `true` when `value` is in Linux's kernel errno return range.
+    pub const fn is_errno(value: isize) -> bool {
+        value >= -4095 && value <= -1
+    }
+
+    /// Converts a raw kernel return value into an errno when it is in the
+    /// kernel errno return range.
+    pub const fn from_kernel_ret(value: isize) -> Option<Self> {
+        if Self::is_errno(value) {
+            Some(Self::from_raw((-value) as u16))
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Errno;
+
+    #[test]
+    fn test_from_raw_named_values() {
+        assert_eq!(Errno::from_raw(13), Errno::Eacces);
+        assert_eq!(Errno::from_raw(11), Errno::Eagain);
+        assert_eq!(Errno::from_raw(7), Errno::E2big);
+        assert_eq!(Errno::from_raw(9), Errno::Ebadf);
+        assert_eq!(Errno::from_raw(74), Errno::Ebadmsg);
+        assert_eq!(Errno::from_raw(16), Errno::Ebusy);
+        assert_eq!(Errno::from_raw(24), Errno::Emfile);
+        assert_eq!(Errno::from_raw(14), Errno::Efault);
+        assert_eq!(Errno::from_raw(17), Errno::Eexist);
+        assert_eq!(Errno::from_raw(18), Errno::Exdev);
+        assert_eq!(Errno::from_raw(22), Errno::Einval);
+        assert_eq!(Errno::from_raw(4), Errno::Eintr);
+        assert_eq!(Errno::from_raw(5), Errno::Eio);
+        assert_eq!(Errno::from_raw(40), Errno::Eloop);
+        assert_eq!(Errno::from_raw(19), Errno::Enodev);
+        assert_eq!(Errno::from_raw(2), Errno::Enoent);
+        assert_eq!(Errno::from_raw(8), Errno::Enoexec);
+        assert_eq!(Errno::from_raw(12), Errno::Enomem);
+        assert_eq!(Errno::from_raw(38), Errno::Enosys);
+        assert_eq!(Errno::from_raw(25), Errno::Enotty);
+        assert_eq!(Errno::from_raw(20), Errno::Enotdir);
+        assert_eq!(Errno::from_raw(75), Errno::Eoverflow);
+        assert_eq!(Errno::from_raw(1), Errno::Eperm);
+        assert_eq!(Errno::from_raw(129), Errno::Ekeyrejected);
+        assert_eq!(Errno::from_raw(30), Errno::Erofs);
+        assert_eq!(Errno::from_raw(3), Errno::Esrch);
+        assert_eq!(Errno::from_raw(4095), Errno::Raw(4095));
+    }
+
+    #[test]
+    fn test_is_errno_range() {
+        assert!(!Errno::is_errno(0));
+        assert!(Errno::is_errno(-1));
+        assert!(Errno::is_errno(-4095));
+        assert!(!Errno::is_errno(-4096));
+    }
+
+    #[test]
+    fn test_from_kernel_ret() {
+        assert_eq!(Errno::from_kernel_ret(-1), Some(Errno::Eperm));
+        assert_eq!(Errno::from_kernel_ret(-4095), Some(Errno::Raw(4095)));
+        assert_eq!(Errno::from_kernel_ret(0), None);
+        assert_eq!(Errno::from_kernel_ret(-4096), None);
+    }
+}
