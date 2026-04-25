@@ -86,6 +86,7 @@ mod lseek;
 mod mkdir;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod mknod;
+mod mmap;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -164,6 +165,7 @@ pub use lseek::{LseekError, lseek};
 pub use mkdir::{MkdirError, mkdir};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use mknod::{MknodError, mknod};
+pub use mmap::{MmapError, mmap};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
