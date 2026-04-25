@@ -81,6 +81,7 @@ mod kill;
 mod lchown;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod link;
+mod lseek;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -154,6 +155,7 @@ pub use kill::{KillError, kill};
 pub use lchown::{Lchown16Error, lchown16};
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use link::{LinkError, link};
+pub use lseek::{LseekError, lseek};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]

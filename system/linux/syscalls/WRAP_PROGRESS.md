@@ -148,7 +148,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `kill`
 - [x] `lchown16` - x86
 - [x] `link` - x86, x86_64
-- [ ] `lseek`
+- [x] `lseek`
 - [ ] `mknod` - x86, x86_64
 - [ ] `mkdir` - x86, x86_64
 - [ ] `mmap`
