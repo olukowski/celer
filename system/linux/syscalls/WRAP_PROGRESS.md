@@ -143,7 +143,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `init_module`
 - [x] `ioctl`
 - [x] `ioperm` - x86
-- [ ] `iopl` - x86
+- [x] `iopl` - x86
 - [ ] `ipc` - x86
 - [ ] `kill`
 - [ ] `lchown16` - x86

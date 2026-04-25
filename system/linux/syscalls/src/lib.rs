@@ -72,6 +72,8 @@ mod init_module;
 mod ioctl;
 #[cfg(target_arch = "x86")]
 mod ioperm;
+#[cfg(target_arch = "x86")]
+mod iopl;
 pub mod sys;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -133,6 +135,8 @@ pub use init_module::{InitModuleError, init_module};
 pub use ioctl::{IoctlError, ioctl};
 #[cfg(target_arch = "x86")]
 pub use ioperm::{IopermError, ioperm};
+#[cfg(target_arch = "x86")]
+pub use iopl::{IoplError, iopl};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
