@@ -173,6 +173,7 @@ mod time;
 mod times;
 mod truncate;
 mod umask;
+mod umount;
 mod uname;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -350,6 +351,7 @@ pub use time::{TimeError, time};
 pub use times::times;
 pub use truncate::{TruncateError, truncate};
 pub use umask::umask;
+pub use umount::{UmountError, umount};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
