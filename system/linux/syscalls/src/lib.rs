@@ -148,6 +148,8 @@ mod sigpending;
 #[cfg(target_arch = "x86")]
 mod sigprocmask;
 #[cfg(target_arch = "x86")]
+mod sigreturn;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -293,6 +295,8 @@ pub use sigpending::{SigpendingError, sigpending};
 pub use sigprocmask::{
     SIG_BLOCK, SIG_SETMASK, SIG_UNBLOCK, SigprocmaskError, sigprocmask,
 };
+#[cfg(target_arch = "x86")]
+pub use sigreturn::sigreturn;
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
