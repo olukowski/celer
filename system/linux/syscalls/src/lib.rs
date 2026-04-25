@@ -47,6 +47,8 @@ mod ftruncate;
 mod get_kernel_syms;
 #[cfg(target_arch = "x86")]
 mod getegid;
+#[cfg(target_arch = "x86")]
+mod geteuid;
 mod helpers;
 pub mod sys;
 
@@ -85,6 +87,8 @@ pub use ftruncate::{FtruncateError, ftruncate};
 pub use get_kernel_syms::{GetKernelSymsError, get_kernel_syms};
 #[cfg(target_arch = "x86")]
 pub use getegid::getegid16;
+#[cfg(target_arch = "x86")]
+pub use geteuid::geteuid16;
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
