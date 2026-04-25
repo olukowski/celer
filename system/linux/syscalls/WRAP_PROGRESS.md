@@ -211,15 +211,15 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `truncate`
 - [x] `umask`
 - [x] `umount`
-- [ ] `unlink` - x86, x86_64
-- [ ] `uselib` - x86
-- [ ] `ustat` - x86, x86_64
-- [ ] `utime` - x86, x86_64
-- [ ] `vhangup`
-- [ ] `vm86` - x86
-- [ ] `wait4`
-- [ ] `waitpid` - x86
-- [ ] `write`
+- [x] `unlink` - x86, x86_64
+- [x] `uselib` - x86
+- [x] `ustat` - x86, x86_64
+- [x] `utime` - x86, x86_64
+- [x] `vhangup`
+- [x] `vm86` - x86
+- [x] `wait4`
+- [x] `waitpid` - x86
+- [x] `write`
 
 ## Linux 1.0 Historical Variants
 
@@ -228,12 +228,12 @@ whether the wrap layer mirrors them before checking them off.
 
 - [x] `linux_1_0::fstatfs`
 - [x] `linux_1_0::ftruncate`
-- [ ] `linux_1_0::init_module`
-- [ ] `linux_1_0::newfstat`
-- [ ] `linux_1_0::newlstat`
-- [ ] `linux_1_0::setrlimit`
-- [ ] `linux_1_0::setup`
-- [ ] `linux_1_0::stat`
-- [ ] `linux_1_0::statfs`
-- [ ] `linux_1_0::sysinfo`
-- [ ] `linux_1_0::truncate`
+- [x] `linux_1_0::init_module`
+- [x] `linux_1_0::newfstat`
+- [x] `linux_1_0::newlstat`
+- [x] `linux_1_0::setrlimit`
+- [x] `linux_1_0::setup`
+- [x] `linux_1_0::stat`
+- [x] `linux_1_0::statfs`
+- [x] `linux_1_0::sysinfo`
+- [x] `linux_1_0::truncate`
