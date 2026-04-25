@@ -155,7 +155,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `modify_ldt` - x86
 - [x] `mount`
 - [x] `munmap`
-- [ ] `newfstat`
+- [x] `newfstat`
 - [ ] `newlstat` - x86, x86_64
 - [ ] `newuname`
 - [ ] `nice` - x86
