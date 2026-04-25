@@ -141,7 +141,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `getuid16` - x86
 - [x] `idle` - x86
 - [x] `init_module`
-- [ ] `ioctl`
+- [x] `ioctl`
 - [ ] `ioperm` - x86
 - [ ] `iopl` - x86
 - [ ] `ipc` - x86
