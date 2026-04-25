@@ -40,6 +40,8 @@ mod fchown;
 mod fcntl;
 #[cfg(target_arch = "x86")]
 mod fork;
+#[cfg(target_arch = "x86")]
+mod fstat;
 mod fstatfs;
 mod fsync;
 mod ftruncate;
@@ -127,6 +129,8 @@ pub use fchown::{Fchown16Error, fchown16};
 pub use fcntl::{FcntlError, fcntl};
 #[cfg(target_arch = "x86")]
 pub use fork::{ForkError, fork};
+#[cfg(target_arch = "x86")]
+pub use fstat::{OldfstatError, oldfstat};
 pub use fstatfs::{FstatfsError, fstatfs};
 pub use fsync::{FsyncError, fsync};
 pub use ftruncate::{FtruncateError, ftruncate};
