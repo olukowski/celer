@@ -155,7 +155,7 @@ mod sigsuspend;
 mod socketcall;
 #[cfg(target_arch = "x86")]
 mod ssetmask;
-#[cfg(target_arch = "x86")]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod stat;
 pub mod sys;
 mod uname;
@@ -315,7 +315,11 @@ pub use socketcall::{
 #[cfg(target_arch = "x86")]
 pub use ssetmask::{SsetmaskError, ssetmask};
 #[cfg(target_arch = "x86")]
-pub use stat::{OldstatError, oldstat};
+pub use stat::OldstatError;
+#[cfg(target_arch = "x86")]
+pub use stat::oldstat;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use stat::{StatError, stat};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
@@ -331,4 +335,5 @@ pub mod linux_1_0 {
     pub use super::newfstat::{NewfstatError, newfstat_1_0 as newfstat};
     pub use super::newlstat::{NewlstatError, newlstat_1_0 as newlstat};
     pub use super::setrlimit::{SetrlimitError, setrlimit_1_0 as setrlimit};
+    pub use super::stat::{StatError, stat_1_0 as stat};
 }
