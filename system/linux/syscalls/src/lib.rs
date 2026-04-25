@@ -138,6 +138,8 @@ mod settimeofday;
 #[cfg(target_arch = "x86")]
 mod setuid;
 #[cfg(target_arch = "x86")]
+mod setup;
+#[cfg(target_arch = "x86")]
 mod sgetmask;
 #[cfg(target_arch = "x86")]
 mod sigaction;
@@ -175,6 +177,21 @@ mod truncate;
 mod umask;
 mod umount;
 mod uname;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod unlink;
+#[cfg(target_arch = "x86")]
+mod uselib;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod ustat;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod utime;
+mod vhangup;
+#[cfg(target_arch = "x86")]
+mod vm86;
+mod wait4;
+#[cfg(target_arch = "x86")]
+mod waitpid;
+mod write;
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub use access::{AccessError, access};
@@ -355,6 +372,21 @@ pub use umount::{UmountError, umount};
 pub use uname::{NewunameError, newuname};
 #[cfg(target_arch = "x86")]
 pub use uname::{OldoldunameError, OldunameError, oldolduname, olduname};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use unlink::{UnlinkError, unlink};
+#[cfg(target_arch = "x86")]
+pub use uselib::{UselibError, uselib};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use ustat::{UstatError, ustat};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+pub use utime::{UtimeError, utime};
+pub use vhangup::{VhangupError, vhangup};
+#[cfg(target_arch = "x86")]
+pub use vm86::{Vm86Error, vm86};
+pub use wait4::{Wait4Error, wait4};
+#[cfg(target_arch = "x86")]
+pub use waitpid::{WaitpidError, waitpid};
+pub use write::{WriteError, write};
 
 /// Wrapped historical Linux 1.0 syscall ABIs.
 #[cfg(target_arch = "x86")]
@@ -364,9 +396,13 @@ pub mod linux_1_0 {
     pub use super::ftruncate::{
         Ftruncate1_0Error as FtruncateError, ftruncate_1_0 as ftruncate,
     };
+    pub use super::init_module::{
+        InitModuleError, init_module_1_0 as init_module,
+    };
     pub use super::newfstat::{NewfstatError, newfstat_1_0 as newfstat};
     pub use super::newlstat::{NewlstatError, newlstat_1_0 as newlstat};
     pub use super::setrlimit::{SetrlimitError, setrlimit_1_0 as setrlimit};
+    pub use super::setup::{SetupError, setup};
     pub use super::stat::{StatError, stat_1_0 as stat};
     pub use super::statfs::{StatfsError, statfs_1_0 as statfs};
     pub use super::sysinfo::{SysinfoError, sysinfo_1_0 as sysinfo};
