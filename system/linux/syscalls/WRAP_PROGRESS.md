@@ -135,7 +135,7 @@ Shared conversion helpers should live in a private `helpers` module.
 - [x] `getpid`
 - [x] `getppid`
 - [x] `getpriority`
-- [ ] `getrlimit`
+- [x] `getrlimit`
 - [ ] `getrusage`
 - [ ] `gettimeofday`
 - [ ] `getuid16` - x86
