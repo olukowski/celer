@@ -154,6 +154,8 @@ mod sigsuspend;
 #[cfg(target_arch = "x86")]
 mod socketcall;
 #[cfg(target_arch = "x86")]
+mod ssetmask;
+#[cfg(target_arch = "x86")]
 mod stat;
 pub mod sys;
 mod uname;
@@ -310,6 +312,8 @@ pub use socketcall::{
     SYS_SETSOCKOPT, SYS_SHUTDOWN, SYS_SOCKET, SYS_SOCKETPAIR, SocketcallError,
     socketcall,
 };
+#[cfg(target_arch = "x86")]
+pub use ssetmask::{SsetmaskError, ssetmask};
 #[cfg(target_arch = "x86")]
 pub use stat::{OldstatError, oldstat};
 pub use uname::{NewunameError, newuname};
